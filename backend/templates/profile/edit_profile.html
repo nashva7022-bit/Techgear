@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Edit Profile | TechGear{% endblock %}
+
+{% block content %}
+<div class="py-12 max-w-3xl mx-auto px-4 md:px-8">
+    
+    <!-- Back to Dashboard Link -->
+    <a href="{% url 'dashboard' %}" class="inline-flex items-center text-sm font-bold text-gray-500 hover:text-black dark:hover:text-white transition mb-8 uppercase tracking-wider">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Back to Dashboard
+    </a>
+
+    <div class="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl p-8 md:p-12 shadow-sm">
+        
+        <h1 class="text-3xl font-extrabold text-black dark:text-white mb-2">Edit Profile</h1>
+        <p class="text-base text-gray-500 mb-10">Update your personal information and profile photo.</p>
+
+        <!-- IMPORTANT: enctype="multipart/form-data" is required for image uploads -->
+        <form method="POST" action="{% url 'edit_profile' %}" enctype="multipart/form-data" class="space-y-8">
+            {% csrf_token %}
+
+            <!-- ========================================== -->
+            <!-- PHOTO UPLOAD SECTION -->
+            <!-- ========================================== -->
+            <div class="flex flex-col sm:flex-row items-center space-y-6 sm:space-y-0 sm:space-x-8 border-b border-gray-100 dark:border-gray-800 pb-10">
+                
+                <!-- Image Preview Area -->
+                <div class="relative group">
+                    <img id="profile-preview" 
+                         src="{% if user.profile_image %}{{ user.profile_image.url }}{% else %}https://ui-avatars.com/api/?name={{ user.first_name }}&background=000&color=fff&size=150{% endif %}" 
+                         alt="Profile Preview" 
+                         class="w-32 h-32 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700 shadow-sm transition duration-300">
+                    
+                    <!-- Hover Overlay for Image -->
+                    <div onclick="document.getElementById('image-upload').click()" class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition duration-300">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </div>
+                </div>
+
+                <!-- Hidden Input Fields -->
+                <input type="file" id="image-upload" name="profile_image" accept="image/*" class="hidden">
+                <input type="hidden" id="remove-image-flag" name="remove_image" value="false">
+
+                <!-- Upload / Remove Buttons -->
+                <div class="text-center sm:text-left">
+                    <button type="button" onclick="document.getElementById('image-upload').click()" class="bg-gray-100 dark:bg-gray-800 text-black dark:text-white font-bold px-6 py-2.5 rounded-md text-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition shadow-sm mb-3">
+                        Change Photo
+                    </button>
+                    <br>
+                    <button type="button" onclick="removePhoto()" class="text-sm font-bold text-red-500 hover:text-red-700 transition">
+                        Remove current photo
+                    </button>
+                    <p class="text-xs text-gray-500 mt-3">JPG, GIF, or PNG. Max size 2MB.</p>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- TEXT FIELDS -->
+            <!-- ========================================== -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <!-- First Name -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-2">First Name</label>
+                    <input type="text" name="first_name" value="{{ user.first_name }}" required 
+                           class="w-full px-5 py-3.5 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition text-base">
+                </div>
+
+                <!-- Last Name -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-2">Last Name</label>
+                    <input type="text" name="last_name" value="{{ user.last_name }}" required 
+                           class="w-full px-5 py-3.5 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition text-base">
+                </div>
+
+                <!-- Phone Number -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-2">Phone Number</label>
+                    <input type="text" name="phone" value="{{ user.phone|default:'' }}" placeholder="+1 (555) 000-0000"
+                           class="w-full px-5 py-3.5 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition text-base">
+                </div>
+
+                <!-- Email (Disabled - Read Only) -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-2 flex justify-between">
+                        Email Address
+                        <a href="{% url 'change_email' %}" class="text-black dark:text-white hover:underline">Change?</a>
+                    </label>
+                    <input type="email" value="{{ user.email }}" disabled 
+                           class="w-full px-5 py-3.5 rounded-md border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800 text-gray-500 cursor-not-allowed text-base opacity-70">
+                </div>
+
+            </div>
+
+            <!-- ========================================== -->
+            <!-- ACTION BUTTONS -->
+            <!-- ========================================== -->
+            <div class="flex flex-col sm:flex-row justify-end space-y-4 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-100 dark:border-gray-800">
+                <a href="{% url 'dashboard' %}" class="text-center px-8 py-3.5 rounded-md font-bold text-base text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                    Cancel
+                </a>
+                <button type="submit" class="bg-gray-900 dark:bg-white text-white dark:text-black px-10 py-3.5 rounded-md font-bold text-base hover:bg-black dark:hover:bg-gray-200 transition shadow-sm">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- JAVASCRIPT FOR LIVE IMAGE PREVIEW -->
+<!-- ========================================== -->
+<script>
+    const fileInput = document.getElementById('image-upload');
+    const imagePreview = document.getElementById('profile-preview');
+    const removeFlag = document.getElementById('remove-image-flag');
+
+    // 1. Live Preview when a user selects a file
+    fileInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            // Ensure the remove flag is false if they upload a new one
+            removeFlag.value = 'false'; 
+            
+            // Read the file and update the image tag instantly
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // 2. Logic to clear the image if "Remove Photo" is clicked
+    function removePhoto() {
+        // Clear the actual file input
+        fileInput.value = ""; 
+        // Tell Django to delete the image from the database on submit
+        removeFlag.value = 'true'; 
+        // Instantly replace the preview with a fallback UI Avatar
+        imagePreview.src = "https://ui-avatars.com/api/?name={{ user.first_name }}&background=000&color=fff&size=150";
+    }
+</script>
+{% endblock %}

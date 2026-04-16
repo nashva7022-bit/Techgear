@@ -1,0 +1,337 @@
+{% extends "admin_panel/admin_base.html" %}
+{% block content %}
+
+<style>
+    .blur-bg { filter: blur(8px); pointer-events: none; transition: all 0.4s ease; }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+    .drawer-open { overflow: hidden; }
+</style>
+
+<div class="max-w-7xl mx-auto transition-all duration-300 {% if selected_user %}blur-bg{% endif %}">
+
+    <div class="mb-6 flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-bold">Users Management</h2>
+            <p class="text-gray-500 text-sm">Manage and monitor users</p>
+        </div>
+
+        <div class="relative inline-block text-left">
+    <form method="GET" id="sort-form">
+        <input type="hidden" name="search" value="{{ search_query| default:'' }}">
+        
+        <div class="group relative">
+            <button type="button" 
+                    class="flex items-center space-x-2 bg-white border border-gray-200 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all duration-300 shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path>
+                </svg>
+                <span>Sort: {% if request.GET.sort == "date_joined" %}Oldest{% else %}Latest{% endif %}</span>
+            </button>
+
+            <div class="absolute right-0 mt-2 w-48 bg-black rounded-2xl shadow-2xl border border-gray-800 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden">
+                <div class="p-1">
+                    <button type="submit" name="sort" value="-date_joined" 
+                            class="w-full text-left px-5 py-3 text-[10px] font-black text-gray-400 hover:bg-gray-900 hover:text-white transition-colors uppercase tracking-widest rounded-t-xl border-b border-gray-900">
+                        Latest First
+                    </button>
+                    <button type="submit" name="sort" value="date_joined" 
+                            class="w-full text-left px-5 py-3 text-[10px] font-black text-gray-400 hover:bg-gray-900 hover:text-white transition-colors uppercase tracking-widest rounded-b-xl">
+                        Oldest First
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+    </div>
+    
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white p-4 rounded-xl border">
+            <p class="text-sm text-gray-500">Total Users</p>
+            <h3 class="text-2xl font-bold">{{ total_users }}</h3>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border">
+            <p class="text-sm text-gray-500">Active Users</p>
+            <h3 class="text-2xl font-bold text-green-600">{{ active_users }}</h3>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border">
+            <p class="text-sm text-gray-500">Admins</p>
+            <h3 class="text-2xl font-bold">{{ admin_users }}</h3>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border">
+            <p class="text-sm text-gray-500">Blocked</p>
+            <h3 class="text-2xl font-bold text-red-500">{{ blocked_users }}</h3>
+        </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl border mb-6">
+    <form method="GET" action="{% url 'admin_user_management' %}" class="flex items-center gap-3 max-w-2xl">
+        
+        <input type="hidden" name="sort" value="{{ request.GET.sort|default:'-date_joined' }}">
+        
+        <div class="relative flex-grow">
+            <span class="absolute left-3.5 top-3 text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+            </span>
+
+            <input type="text" name="search" value="{{ search_query|default:'' }}"
+                   placeholder="Search name or email..."
+                   class="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-black outline-none text-sm transition-all">
+            
+            {% if search_query %}
+            <a href="?sort={{ request.GET.sort|default:'-date_joined' }}" 
+               class="absolute right-3 top-2.5 text-gray-400 hover:text-black transition-colors">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+            </a>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="bg-black text-white px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-gray-800 transition-all active:scale-95 shadow-lg shadow-black/10">
+            Search
+        </button>
+
+        {% if search_query %}
+        <a href="{% url 'admin_user_management' %}?sort={{ request.GET.sort }}" 
+           class="px-4 py-2.5 border border-gray-200 text-gray-500 hover:bg-gray-50 rounded-xl text-xs font-bold uppercase tracking-widest transition-all">
+            Clear
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+    <div class="bg-white rounded-xl border overflow-hidden">
+        <table class="w-full text-sm table-fixed">
+            <thead class="bg-gray-50 text-gray-600">
+                <tr>
+                    <th class="px-6 py-3 w-1/4 text-left">User ID</th>
+                    <th class="px-6 py-3 w-1/4 text-left">User</th>
+                    <th class="w-1/4 text-left">Email</th>
+                    <th class="w-1/6 text-left">Status</th>
+                    <th class="w-1/6 text-left">Registered</th>
+                    <th class="w-1/6 text-left">Orders</th>
+                    <th class="text-right px-6 w-1/6">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for user in users %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 font-mono text-xs text-gray-500">#{{ user.id }}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full overflow-hidden bg-gray-200">
+                                {% if user.profile_image %}
+                                    <img src="{{ user.profile_image.url }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="w-full h-full bg-black text-white flex items-center justify-center text-xs">
+                                        {{ user.first_name|first|upper }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <p class="font-medium">
+                                <a href="?view_user={{ user.id }}&search={{ search_query }}&sort={{ request.GET.sort }}&page={{ users.number }}" 
+                                   class="no-underline text-gray-900 hover:text-black transition-colors duration-200">
+                                    {{ user.first_name }} {{ user.last_name }}
+                                </a>
+                            </p>
+                        </div>
+                    </td>
+                    <td class="truncate">{{ user.email }}</td>
+                    <td>
+                        {% if user.is_blocked %}
+                            <span class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs">Blocked</span>
+                        {% else %}
+                            <span class="bg-green-100 text-green-600 px-2 py-1 rounded text-xs">Active</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                    <td>{{ user.order_count|default:"0" }}</td>
+                    <td class="text-right px-6">
+    <form id="block-form-{{ user.id }}" method="POST" action="{% url 'toggle_block_user' user.id %}">
+        {% csrf_token %}
+        <button type="button" 
+                onclick="openToggleModal('{{ user.id }}', '{{ user.first_name|escapejs }}', {{ user.is_blocked|yesno:'true,false' }})"
+                class="font-black text-[11px] uppercase tracking-widest hover:underline {% if user.is_blocked %}text-green-600{% else %}text-red-600{% endif %}">
+            {% if user.is_blocked %}Unblock{% else %}Block{% endif %}
+        </button>
+    </form>
+</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center py-6 text-gray-400">No users found</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-6 flex justify-between items-center">
+        {% if users.has_previous %}
+            <a href="?page={{ users.previous_page_number }}&search={{ search_query }}&sort={{ request.GET.sort }}" class="px-4 py-2 border rounded-lg">Previous</a>
+        {% else %}
+            <div></div>
+        {% endif %}
+        <p class="text-sm text-gray-500 text-center">Page {{ users.number }} of {{ users.paginator.num_pages }}</p>
+        {% if users.has_next %}
+            <a href="?page={{ users.next_page_number }}&search={{ search_query }}&sort={{ request.GET.sort }}" class="px-4 py-2 border rounded-lg">Next</a>
+        {% else %}
+            <div></div>
+        {% endif %}
+    </div>
+</div>
+
+{% if selected_user %}
+<a href="?search={{ search_query }}&sort={{ request.GET.sort }}&page={{ users.number }}" 
+   class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity"></a>
+
+<div class="fixed top-0 right-0 h-full w-full md:w-[45%] lg:w-[35%] bg-black text-white shadow-2xl z-50 flex flex-col transform transition-transform duration-300">
+    
+    <div class="p-6 border-b border-gray-800 flex justify-between items-center bg-black/50 backdrop-blur-md">
+        <h3 class="text-lg font-bold tracking-tight">Account Intelligence</h3>
+        <a href="?search={{ search_query }}&sort={{ request.GET.sort }}&page={{ users.number }}" 
+           class="p-2 rounded-full hover:bg-gray-800 transition-colors text-gray-400 hover:text-white">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </a>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+        <div class="flex items-center space-x-5 mb-10">
+            <div class="w-20 h-20 rounded-3xl bg-white text-black flex items-center justify-center text-3xl font-black shadow-2xl">
+                {{ selected_user.first_name|first|upper }}
+            </div>
+            <div>
+                <h2 class="text-2xl font-extrabold tracking-tight">{{ selected_user.get_full_name }}</h2>
+                <p class="text-gray-500 font-mono text-xs">UID: {{ selected_user.id|stringformat:"04d" }}</p>
+                <div class="mt-2">
+                    {% if selected_user.is_blocked %}
+                        <span class="px-2 py-0.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-full text-[10px] font-bold uppercase">Restricted</span>
+                    {% else %}
+                        <span class="px-2 py-0.5 bg-green-500/10 text-green-500 border border-green-500/20 rounded-full text-[10px] font-bold uppercase">Authorized Member</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="space-y-1.5">
+                <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Email Terminal</label>
+                <div class="w-full bg-gray-900 border border-gray-800 rounded-2xl px-5 py-4 text-sm font-medium text-gray-300">
+                    {{ selected_user.email }}
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Engagement Period</label>
+                <div class="w-full bg-gray-900 border border-gray-800 rounded-2xl px-5 py-4 text-sm font-medium text-gray-300">
+                    Registered on {{ selected_user.date_joined|date:"F d, Y" }}
+                </div>
+            </div>
+
+            <div class="pt-6">
+                <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-1">Shipping Directory</h4>
+                <div class="space-y-4">
+                    {% for addr in user_addresses %}
+                    <div class="bg-gray-900/40 border border-gray-800 rounded-[2rem] p-6 hover:bg-gray-900/60 transition-all">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="bg-white text-black px-3 py-0.5 rounded-full text-[9px] font-black uppercase">{{ addr.label }}</span>
+                            {% if addr.is_default %}
+                                <span class="text-blue-500 text-[10px] font-black uppercase tracking-tighter">● PRIMARY</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-white font-bold">{{ addr.full_name }}</p>
+                        <p class="text-gray-400 text-xs mt-1 leading-relaxed">
+                            {{ addr.address_line_1 }},<br>
+                            {% if addr.address_line_2 %}{{ addr.address_line_2 }},<br>{% endif %}
+                            {{ addr.city }}, {{ addr.state }} — {{ addr.postal_code }}
+                        </p>
+                    </div>
+                    {% empty %}
+                    <div class="p-8 border-2 border-dashed border-gray-800 rounded-[2rem] text-center">
+                        <p class="text-gray-600 text-xs italic">No associated shipping data found.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+<div id="toggle-block-modal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+    
+    <div class="relative flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl transform transition-all">
+            <div class="text-center">
+                <div id="modal-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4">
+                    </div>
+                <h3 id="modal-title" class="text-lg font-black uppercase tracking-tighter text-gray-900">Change Status?</h3>
+                <p id="modal-description" class="text-xs text-gray-500 font-bold uppercase tracking-widest mt-2 px-4">
+                    Are you sure you want to update this user's access?
+                </p>
+            </div>
+            
+            <div class="mt-8 flex flex-col gap-3">
+                <button id="confirm-toggle-btn" class="w-full text-white py-4 rounded-full font-bold uppercase tracking-widest text-[10px] transition-all">
+                    Confirm Change
+                </button>
+                <button onclick="closeToggleModal()" class="w-full bg-gray-100 text-gray-600 py-4 rounded-full font-bold uppercase tracking-widest text-[10px] hover:bg-gray-200 transition-all">
+                    Nevermind
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let activeUserId = null;
+
+    function openToggleModal(userId, name, isBlocked) {
+        activeUserId = userId;
+        const modal = document.getElementById('toggle-block-modal');
+        const title = document.getElementById('modal-title');
+        const desc = document.getElementById('modal-description');
+        const btn = document.getElementById('confirm-toggle-btn');
+        const iconContainer = document.getElementById('modal-icon-container');
+
+        if (isBlocked) {
+            // UI Configuration for Unblocking
+            title.innerText = "Authorize User?";
+            desc.innerText = `Restore full account access for ${name}?`;
+            btn.innerText = "Yes, Unblock User";
+            btn.className = "w-full bg-black text-white py-4 rounded-full font-bold uppercase tracking-widest text-[10px] hover:bg-gray-800 transition-all";
+            iconContainer.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-50 text-green-600";
+            iconContainer.innerHTML = '<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+        } else {
+            // UI Configuration for Blocking
+            title.innerText = "Restrict User?";
+            desc.innerText = `Suspended users cannot place orders. Restrict ${name}?`;
+            btn.innerText = "Yes, Block User";
+            btn.className = "w-full bg-red-600 text-white py-4 rounded-full font-bold uppercase tracking-widest text-[10px] hover:bg-red-700 transition-all";
+            iconContainer.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-50 text-red-600";
+            iconContainer.innerHTML = '<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>';
+        }
+
+        modal.classList.remove('hidden');
+    }
+
+    function closeToggleModal() {
+        document.getElementById('toggle-block-modal').classList.add('hidden');
+        activeUserId = null;
+    }
+
+    // Listens for the confirmation click to submit the specific user form
+    document.getElementById('confirm-toggle-btn').addEventListener('click', function() {
+        if (activeUserId) {
+            document.getElementById(`block-form-${activeUserId}`).submit();
+        }
+    });
+</script>
+
+{% endblock %}

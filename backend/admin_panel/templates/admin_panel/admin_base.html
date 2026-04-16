@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tech Gear Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 font-sans">
+
+    <!-- Sidebar -->
+    {% include 'admin_panel/components/sidebar.html' %}
+
+    <!--msg-->
+
+    {% if messages %}
+<div id="message-container" class="fixed top-5 right-5 z-[100] space-y-3">
+    {% for message in messages %}
+    <div class="django-message p-4 rounded-xl shadow-2xl border flex items-center justify-between min-w-[300px] transition-all duration-500 transform translate-x-0
+        {% if message.tags == 'error' %} bg-red-50 border-red-200 text-red-700 {% else %} bg-white border-gray-100 text-black {% endif %}">
+        
+        <div class="flex items-center gap-3">
+            {% if message.tags == 'success' %}
+                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            {% endif %}
+            <span class="text-xs font-black uppercase tracking-widest">{{ message }}</span>
+        </div>
+        
+        <button onclick="this.parentElement.remove()" class="ml-4 text-gray-400 hover:text-black">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    // Auto-hide messages after 4 seconds
+    setTimeout(() => {
+        const messages = document.querySelectorAll('.django-message');
+        messages.forEach(msg => {
+            msg.style.opacity = '0';
+            msg.style.transform = 'translateX(100px)';
+            setTimeout(() => msg.remove(), 500);
+        });
+    }, 4000);
+</script>
+{% endif %}
+
+    <!-- Main -->
+    <main class="ml-64 min-h-screen">
+
+        <!-- Top Navbar -->
+        <div class="bg-black px-8 py-4 flex justify-between items-center border-b border-gray-800">
+    <div class="flex items-center space-x-2">
+        
+        <span class="h-4 w-[1px] bg-gray-700 mx-2"></span>
+        <h1 class="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">Management</h1>
+    </div>
+
+    <div class="flex items-center space-x-4">
+        <div class="text-right mr-2">
+            
+            
+        </div>
+        <div class="w-10 h-10 bg-gray-900 rounded-full border border-gray-800 flex items-center justify-center text-white font-bold ring-2 ring-black">
+            N
+        </div>
+    </div>
+</div>
+
+        <!-- Page Content -->
+        <div class="p-6">
+            {% block content %}{% endblock %}
+        </div>
+
+    </main>
+
+</body>
+</html>

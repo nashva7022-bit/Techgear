@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Home | TechGear{% endblock %}
+
+{% block content %}
+
+<section class="bg-white">
+    <div class="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-2 items-center gap-10">
+        <div>
+            <h1 class="text-5xl font-extrabold leading-tight tracking-tight mb-6">
+                Customize Your <br> Tech Style
+            </h1>
+            <p class="text-gray-500 text-lg mb-8 leading-relaxed">
+                Design your own phone cases, laptop skins, and accessories with premium quality.
+            </p>
+            <button class="bg-black text-white px-7 py-3 rounded-lg font-medium hover:bg-gray-800 transition duration-300 shadow-sm">
+                Shop Now
+            </button>
+        </div>
+        <div class="overflow-hidden rounded-2xl">
+            <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8"
+                 class="w-full h-[420px] object-cover hover:scale-105 transition duration-500">
+        </div>
+    </div>
+</section>
+
+<section class="bg-gray-50 border-y border-gray-100 py-16">
+    <div class="max-w-7xl mx-auto px-6">
+        <h2 class="text-2xl font-bold mb-10 tracking-tight text-center">Shop by Categories</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+            <div class="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm hover:shadow-xl hover:border-black transition-all duration-500 group h-[320px] flex flex-col justify-between items-center text-center cursor-pointer">
+                <div class="w-full h-40 flex items-center justify-center overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1592890288564-76628a30a657?q=80&w=1000&auto=format&fit=crop" 
+                         class="w-32 h-32 object-contain group-hover:scale-110 transition-transform duration-500">
+                </div>
+                <div>
+                    <p class="font-black text-sm uppercase tracking-widest text-gray-900">Phone Cases</p>
+                    <p class="text-xs text-gray-400 mt-1">Premium Protection</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm hover:shadow-xl hover:border-black transition-all duration-500 group h-[320px] flex flex-col justify-between items-center text-center cursor-pointer">
+                <div class="w-full h-40 flex items-center justify-center overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?q=80&w=1000&auto=format&fit=crop" 
+                         class="w-40 h-40 object-contain group-hover:scale-110 transition-transform duration-500">
+                </div>
+                <div>
+                    <p class="font-black text-sm uppercase tracking-widest text-gray-900">Laptop Skins</p>
+                    <p class="text-xs text-gray-400 mt-1">Ultra-Thin Vinyl</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm hover:shadow-xl hover:border-black transition-all duration-500 group h-[320px] flex flex-col justify-between items-center text-center cursor-pointer">
+                <div class="w-full h-40 flex items-center justify-center overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1616348436168-de43ad0db179?q=80&w=1000&auto=format&fit=crop" 
+                         class="w-32 h-32 object-contain group-hover:scale-110 transition-transform duration-500">
+                </div>
+                <div>
+                    <p class="font-black text-sm uppercase tracking-widest text-gray-900">Screen Armor</p>
+                    <p class="text-xs text-gray-400 mt-1">9H Hardness Glass</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm hover:shadow-xl hover:border-black transition-all duration-500 group h-[320px] flex flex-col justify-between items-center text-center cursor-pointer">
+                <div class="w-full h-40 flex items-center justify-center overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1541807084-5c52b6b3adef?q=80&w=1000&auto=format&fit=crop" 
+                         class="w-32 h-32 object-contain group-hover:scale-110 transition-transform duration-500">
+                </div>
+                <div>
+                    <p class="font-black text-sm uppercase tracking-widest text-gray-900">Phone Grips</p>
+                    <p class="text-xs text-gray-400 mt-1">Secure Handling</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="bg-white py-16">
+    <div class="max-w-4xl mx-auto text-center">
+        <h2 class="text-xl font-semibold mb-8">Shop by Brand</h2>
+        <div class="flex flex-wrap justify-center gap-4">
+            <span class="px-6 py-3 border rounded-full text-sm font-medium hover:bg-black hover:text-white transition cursor-pointer">Apple</span>
+            <span class="px-6 py-3 border rounded-full text-sm font-medium hover:bg-black hover:text-white transition cursor-pointer">Samsung</span>
+            <span class="px-6 py-3 border rounded-full text-sm font-medium hover:bg-black hover:text-white transition cursor-pointer">Dell</span>
+            <span class="px-6 py-3 border rounded-full text-sm font-medium hover:bg-black hover:text-white transition cursor-pointer">HP</span>
+            <span class="px-6 py-3 border rounded-full text-sm font-medium hover:bg-black hover:text-white transition cursor-pointer">Lenovo</span>
+        </div>
+    </div>
+</section>
+
+<section class="bg-black text-white py-20 text-center">
+    <h2 class="text-2xl md:text-3xl font-bold mb-4">Create your own phone case or laptop skin</h2>
+    <p class="text-gray-400 mb-6 text-sm">Add your own design, text, and creativity</p>
+    <button class="bg-white text-black px-6 py-3 rounded-full font-medium hover:scale-105 transition">
+        Customize Now
+    </button>
+</section>
+
+<section class="bg-gray-50 border-y border-gray-100 py-16">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-xl font-semibold">Trending Products</h2>
+            <a href="#" class="text-sm text-gray-500 hover:text-black uppercase tracking-widest font-bold">View all</a>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow-lg transition group">
+                <div class="overflow-hidden rounded-lg mb-4">
+                    <img src="https://images.unsplash.com/photo-1592890288564-76628a30a657?q=80&w=1000&auto=format&fit=crop">
+                </div>
+                <p class="text-sm text-gray-600">Premium iPhone Case</p>
+                <p class="font-semibold mt-1">₹499</p>
+            </div>
+
+            <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow-lg transition group">
+                <div class="overflow-hidden rounded-lg mb-4">
+                    <img src="https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?q=80&w=1000&auto=format&fit=crop" class="w-full h-[200px] object-cover group-hover:scale-105 transition duration-500">
+                </div>
+                <p class="text-sm text-gray-600">MacBook Skin Carbon</p>
+                <p class="font-semibold mt-1">₹799</p>
+            </div>
+
+            <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow-lg transition group">
+                <div class="overflow-hidden rounded-lg mb-4">
+                    <img src="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?q=80&w=1000&auto=format&fit=crop">
+                </div>
+                <p class="text-sm text-gray-600">Sleek Airpods Skin</p>
+                <p class="font-semibold mt-1">₹299</p>
+            </div>
+
+            <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow-lg transition group">
+                <div class="overflow-hidden rounded-lg mb-4">
+                    <img src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=1000&auto=format&fit=crop" class="w-full h-[200px] object-cover group-hover:scale-105 transition duration-500">
+                </div>
+                <p class="text-sm text-gray-600">iPad Pro Skin</p>
+                <p class="font-semibold mt-1">₹649</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="max-w-7xl mx-auto px-6 py-16 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+    <div>
+        <p class="font-semibold">High Quality</p>
+        <p class="text-sm text-gray-500">Premium materials</p>
+    </div>
+    <div>
+        <p class="font-semibold">Fast Delivery</p>
+        <p class="text-sm text-gray-500">Within 3–5 days</p>
+    </div>
+    <div>
+        <p class="font-semibold">Easy Customization</p>
+        <p class="text-sm text-gray-500">Simple tools</p>
+    </div>
+    <div>
+        <p class="font-semibold">Secure Payment</p>
+        <p class="text-sm text-gray-500">100% safe</p>
+    </div>
+</section>
+
+<section class="bg-gray-50 border-t border-gray-100 py-16">
+    <div class="max-w-5xl mx-auto text-center">
+        <h2 class="text-lg font-semibold mb-10">What Our Customers Say</h2>
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition">
+                ⭐⭐⭐⭐⭐
+                <p class="text-sm mt-3 text-gray-600">Amazing product quality.</p>
+            </div>
+            <div class="bg-white p-6 border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition">
+                ⭐⭐⭐⭐⭐
+                <p class="text-sm mt-3 text-gray-600">Fast delivery and great support.</p>
+            </div>
+            <div class="bg-white p-6 border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition">
+                ⭐⭐⭐⭐⭐
+                <p class="text-sm mt-3 text-gray-600">Loved customization options.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

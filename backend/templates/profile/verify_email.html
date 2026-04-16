@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}Verify Email | TechGear{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-[75vh]">
+    <div class="max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 dark:border-gray-800 p-8 sm:p-10 text-center">
+        
+        <div class="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+            <svg class="w-8 h-8 text-black dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+        </div>
+
+        <h2 class="text-3xl font-extrabold text-black dark:text-white mb-2">Check your email</h2>
+        <p class="text-sm text-gray-500 font-medium mb-8">
+            We've sent a 6-digit verification code to your email. Enter it below to change your Email.
+        </p>
+
+        <form method="POST" action="{% url 'verify_email' %}" id="otp-form" class="space-y-6">
+            {% csrf_token %}
+            <input type="hidden" name="otp" id="real-otp-input" required>
+
+            <div class="flex justify-center gap-2 sm:gap-3" id="otp-container">
+                <input type="text" maxlength="1" class="otp-input w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-extrabold rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white focus:border-black dark:focus:border-white focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition shadow-sm">
+                <input type="text" maxlength="1" class="otp-input w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-extrabold rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white focus:border-black dark:focus:border-white focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition shadow-sm">
+                <input type="text" maxlength="1" class="otp-input w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-extrabold rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white focus:border-black dark:focus:border-white focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition shadow-sm">
+                <input type="text" maxlength="1" class="otp-input w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-extrabold rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white focus:border-black dark:focus:border-white focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition shadow-sm">
+                <input type="text" maxlength="1" class="otp-input w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-extrabold rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white focus:border-black dark:focus:border-white focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition shadow-sm">
+                <input type="text" maxlength="1" class="otp-input w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-extrabold rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white focus:border-black dark:focus:border-white focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition shadow-sm">
+            </div>
+
+            <button type="submit" class="w-full bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 text-white font-bold py-3.5 px-4 rounded-full mt-4 transition duration-200 shadow-md transform active:scale-[0.98]">
+                Verify Email
+            </button>
+        </form>
+
+        <div class="mt-8 text-sm">
+            <div id="timer-wrapper">
+                <p id="timer-text" class="text-gray-500 font-medium mb-3">
+                    Resend code in <span id="time-remaining" class="font-bold text-black dark:text-white">30</span>s
+                </p>
+            </div>
+
+            <form method="POST" action="{% url 'resend_otp' %}" id="resend-form" class="hidden">
+                {% csrf_token %}
+                <button type="submit" class="inline-block text-black dark:text-white font-bold border border-black dark:border-white px-5 py-2 rounded-full transition-all duration-300 hover:bg-black hover:text-white">
+                    Resend OTP
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // 1. OTP SPLIT INPUT LOGIC
+    const inputs = document.querySelectorAll('.otp-input');
+    const hiddenInput = document.getElementById('real-otp-input');
+    const otpForm = document.getElementById('otp-form');
+
+    inputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            if (e.target.value !== '' && index < inputs.length - 1) {
+                inputs[index + 1].focus();
+            }
+            updateHiddenInput();
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                inputs[index - 1].focus();
+            }
+        });
+    });
+
+    function updateHiddenInput() {
+        hiddenInput.value = Array.from(inputs).map(inp => inp.value).join('');
+    }
+
+    // 2. TIMER AND POST RESEND LOGIC
+    let timeLeft = 30; // Matches your service delay
+    const timerWrapper = document.getElementById('timer-wrapper');
+    const resendForm = document.getElementById('resend-form');
+    const timeSpan = document.getElementById('time-remaining');
+
+    function checkTimer() {
+        if (timeLeft <= 0) {
+            timerWrapper.classList.add('hidden');
+            resendForm.classList.remove('hidden');
+        } else {
+            timeSpan.innerText = timeLeft;
+            timeLeft--;
+            setTimeout(checkTimer, 1000);
+        }
+    }
+
+    checkTimer();
+</script>
+{% endblock %}
