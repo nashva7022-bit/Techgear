@@ -18,7 +18,7 @@
 
         <div class="relative inline-block text-left">
     <form method="GET" id="sort-form">
-        <input type="hidden" name="search" value="{{ search_query| default:'' }}">
+        <input type="hidden" name="search" value="{{ search_query|default:'' }}">
         
         <div class="group relative">
             <button type="button" 
@@ -47,7 +47,7 @@
     </div>
     
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-6">
         <div class="bg-white p-4 rounded-xl border">
             <p class="text-sm text-gray-500">Total Users</p>
             <h3 class="text-2xl font-bold">{{ total_users }}</h3>
@@ -59,6 +59,11 @@
         </div>
 
         <div class="bg-white p-4 rounded-xl border">
+    <p class="text-sm text-gray-500">Pending Users</p>
+    <h3 class="text-2xl font-bold text-yellow-500">{{ pending_users }}</h3>
+</div>
+
+        <div class="bg-white p-4 rounded-xl border">
             <p class="text-sm text-gray-500">Admins</p>
             <h3 class="text-2xl font-bold">{{ admin_users }}</h3>
         </div>
@@ -68,12 +73,8 @@
             <h3 class="text-2xl font-bold text-red-500">{{ blocked_users }}</h3>
         </div>
     </div>
-
-    <div class="bg-white p-4 rounded-xl border mb-6">
-    <form method="GET" action="{% url 'admin_user_management' %}" class="flex items-center gap-3 max-w-2xl">
-        
-        <input type="hidden" name="sort" value="{{ request.GET.sort|default:'-date_joined' }}">
-        
+<div class="bg-white p-4 rounded-xl border mb-6">
+    <div class="flex items-center gap-3 max-w-2xl">
         <div class="relative flex-grow">
             <span class="absolute left-3.5 top-3 text-gray-400">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,110 +82,34 @@
                 </svg>
             </span>
 
-            <input type="text" name="search" value="{{ search_query|default:'' }}"
+            <input type="text" id="search-input" name="search" value="{{ search_query|default:'' }}"
                    placeholder="Search name or email..."
-                   class="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-black outline-none text-sm transition-all">
+                   autocomplete="off"
+                   class="w-full pl-10 pr-12 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-black outline-none text-sm transition-all">
             
-            {% if search_query %}
-            <a href="?sort={{ request.GET.sort|default:'-date_joined' }}" 
-               class="absolute right-3 top-2.5 text-gray-400 hover:text-black transition-colors">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            <div id="search-loader" class="absolute right-12 top-3 hidden">
+                <svg class="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-            </a>
-            {% endif %}
-        </div>
+            </div>
 
-        <button type="submit" class="bg-black text-white px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-gray-800 transition-all active:scale-95 shadow-lg shadow-black/10">
+            <button type="button" id="clear-search" 
+                    class="absolute right-3 top-2.5 text-gray-400 hover:text-black transition-all duration-200 opacity-0 pointer-events-none">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+        
+        <button type="button" id="search-btn" class="bg-black text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-sm">
             Search
         </button>
-
-        {% if search_query %}
-        <a href="{% url 'admin_user_management' %}?sort={{ request.GET.sort }}" 
-           class="px-4 py-2.5 border border-gray-200 text-gray-500 hover:bg-gray-50 rounded-xl text-xs font-bold uppercase tracking-widest transition-all">
-            Clear
-        </a>
-        {% endif %}
-    </form>
+    </div>
 </div>
 
-    <div class="bg-white rounded-xl border overflow-hidden">
-        <table class="w-full text-sm table-fixed">
-            <thead class="bg-gray-50 text-gray-600">
-                <tr>
-                    <th class="px-6 py-3 w-1/4 text-left">User ID</th>
-                    <th class="px-6 py-3 w-1/4 text-left">User</th>
-                    <th class="w-1/4 text-left">Email</th>
-                    <th class="w-1/6 text-left">Status</th>
-                    <th class="w-1/6 text-left">Registered</th>
-                    <th class="w-1/6 text-left">Orders</th>
-                    <th class="text-right px-6 w-1/6">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y">
-                {% for user in users %}
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 font-mono text-xs text-gray-500">#{{ user.id }}</td>
-                    <td class="px-6 py-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-8 h-8 rounded-full overflow-hidden bg-gray-200">
-                                {% if user.profile_image %}
-                                    <img src="{{ user.profile_image.url }}" class="w-full h-full object-cover">
-                                {% else %}
-                                    <div class="w-full h-full bg-black text-white flex items-center justify-center text-xs">
-                                        {{ user.first_name|first|upper }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            <p class="font-medium">
-                                <a href="?view_user={{ user.id }}&search={{ search_query }}&sort={{ request.GET.sort }}&page={{ users.number }}" 
-                                   class="no-underline text-gray-900 hover:text-black transition-colors duration-200">
-                                    {{ user.first_name }} {{ user.last_name }}
-                                </a>
-                            </p>
-                        </div>
-                    </td>
-                    <td class="truncate">{{ user.email }}</td>
-                    <td>
-                        {% if user.is_blocked %}
-                            <span class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs">Blocked</span>
-                        {% else %}
-                            <span class="bg-green-100 text-green-600 px-2 py-1 rounded text-xs">Active</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ user.date_joined|date:"M d, Y" }}</td>
-                    <td>{{ user.order_count|default:"0" }}</td>
-                    <td class="text-right px-6">
-    <form id="block-form-{{ user.id }}" method="POST" action="{% url 'toggle_block_user' user.id %}">
-        {% csrf_token %}
-        <button type="button" 
-                onclick="openToggleModal('{{ user.id }}', '{{ user.first_name|escapejs }}', {{ user.is_blocked|yesno:'true,false' }})"
-                class="font-black text-[11px] uppercase tracking-widest hover:underline {% if user.is_blocked %}text-green-600{% else %}text-red-600{% endif %}">
-            {% if user.is_blocked %}Unblock{% else %}Block{% endif %}
-        </button>
-    </form>
-</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="7" class="text-center py-6 text-gray-400">No users found</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <div class="mt-6 flex justify-between items-center">
-        {% if users.has_previous %}
-            <a href="?page={{ users.previous_page_number }}&search={{ search_query }}&sort={{ request.GET.sort }}" class="px-4 py-2 border rounded-lg">Previous</a>
-        {% else %}
-            <div></div>
-        {% endif %}
-        <p class="text-sm text-gray-500 text-center">Page {{ users.number }} of {{ users.paginator.num_pages }}</p>
-        {% if users.has_next %}
-            <a href="?page={{ users.next_page_number }}&search={{ search_query }}&sort={{ request.GET.sort }}" class="px-4 py-2 border rounded-lg">Next</a>
-        {% else %}
-            <div></div>
-        {% endif %}
-    </div>
+<div id="user-table-container" class="bg-white rounded-xl border overflow-hidden">
+    {% include 'admin_panel/partials/user_table.html' %}
 </div>
 
 {% if selected_user %}
@@ -211,10 +136,14 @@
                 <p class="text-gray-500 font-mono text-xs">UID: {{ selected_user.id|stringformat:"04d" }}</p>
                 <div class="mt-2">
                     {% if selected_user.is_blocked %}
-                        <span class="px-2 py-0.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-full text-[10px] font-bold uppercase">Restricted</span>
-                    {% else %}
-                        <span class="px-2 py-0.5 bg-green-500/10 text-green-500 border border-green-500/20 rounded-full text-[10px] font-bold uppercase">Authorized Member</span>
-                    {% endif %}
+    <span class="px-2 py-0.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-full text-[10px] font-bold uppercase">Blocked</span>
+
+{% elif not selected_user.is_verified %}
+    <span class="px-2 py-0.5 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 rounded-full text-[10px] font-bold uppercase">Pending</span>
+
+{% else %}
+    <span class="px-2 py-0.5 bg-green-500/10 text-green-500 border border-green-500/20 rounded-full text-[10px] font-bold uppercase">Active</span>
+{% endif %}
                 </div>
             </div>
         </div>
@@ -332,6 +261,67 @@
             document.getElementById(`block-form-${activeUserId}`).submit();
         }
     });
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+    const clearBtn = document.getElementById('clear-search');
+    const tableContainer = document.getElementById('user-table-container');
+    const loader = document.getElementById('search-loader');
+
+    async function performSearch() {
+        const query = searchInput.value;
+        
+        // Toggle Clear Button Visibility
+        if (query.length > 0) {
+            clearBtn.classList.remove('opacity-0', 'pointer-events-none');
+        } else {
+            clearBtn.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        if (loader) loader.classList.remove('hidden');
+
+        try {
+            const response = await fetch(`?search=${encodeURIComponent(query)}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const html = await response.text();
+            
+            // Standard update logic
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newContent = doc.getElementById('user-table-container');
+            tableContainer.innerHTML = newContent ? newContent.innerHTML : html;
+            
+        } catch (error) {
+            console.error('Search Error:', error);
+        } finally {
+            if (loader) loader.classList.add('hidden');
+        }
+    }
+
+    // --- NEW: CLEAR BUTTON LOGIC ---
+    clearBtn.addEventListener('click', () => {
+        searchInput.value = ''; // Empty the input
+        clearBtn.classList.add('opacity-0', 'pointer-events-none'); // Hide the X
+        performSearch(); // Refresh table to show all users
+        searchInput.focus(); // Keep focus for the user
+    });
+
+    // Button Click
+    searchBtn.addEventListener('click', performSearch);
+
+    // Enter Key
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') performSearch();
+    });
+
+    // Live Typing (Debounced)
+    let typingTimer;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(performSearch, 300);
+    });
+});
 </script>
 
 {% endblock %}

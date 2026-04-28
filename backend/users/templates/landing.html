@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}TechGear — Premium Phone & Laptop Accessories{% endblock %}
+
+{% block content %}
+
+
+
+   <style>
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(-3deg); }
+  50% { transform: translateY(-18px) rotate(-3deg); }
+}
+@keyframes float2 {
+  0%, 100% { transform: translateY(0px) rotate(4deg); }
+  50% { transform: translateY(-12px) rotate(4deg); }
+}
+@keyframes float3 {
+  0%, 100% { transform: translateY(0px) rotate(-2deg); }
+  50% { transform: translateY(-22px) rotate(-2deg); }
+}
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.4; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes blob {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+}
+.float-1 { animation: float 4s ease-in-out infinite; }
+.float-2 { animation: float2 5s ease-in-out infinite 0.5s; }
+.float-3 { animation: float3 4.5s ease-in-out infinite 1s; }
+.slide-up { animation: slide-up 0.8s ease forwards; }
+.slide-up-delay-1 { animation: slide-up 0.8s ease 0.2s forwards; opacity: 0; }
+.slide-up-delay-2 { animation: slide-up 0.8s ease 0.4s forwards; opacity: 0; }
+.slide-up-delay-3 { animation: slide-up 0.8s ease 0.6s forwards; opacity: 0; }
+.blob-shape {
+  animation: blob 8s ease-in-out infinite;
+  border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+}
+.spin-slow { animation: spin-slow 20s linear infinite; }
+</style>
+ 
+<!-- HERO SECTION -->
+<section class="min-h-[92vh] flex items-center px-6 py-16 relative overflow-hidden">
+ 
+  <!-- Background decorative elements -->
+  <div class="absolute inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute top-20 right-10 w-96 h-96 bg-white/5 blob-shape"></div>
+    <div class="absolute -bottom-20 -left-20 w-72 h-72 bg-white/5 rounded-full"></div>
+    <!-- Spinning ring -->
+    <div class="absolute top-32 right-32 w-64 h-64 border border-white/10 rounded-full spin-slow"></div>
+    <div class="absolute top-40 right-40 w-48 h-48 border border-white/5 rounded-full spin-slow" style="animation-direction:reverse;"></div>
+    <!-- Dots grid -->
+    <div class="absolute bottom-20 right-1/4 grid grid-cols-5 gap-3 opacity-20">
+      {% for i in "12345678901234567890123456" %}
+        <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
+      {% endfor %}
+    </div>
+  </div>
+ 
+  <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
+ 
+    <!-- LEFT: Text -->
+    <div>
+      <div class="slide-up">
+        <span class="inline-flex items-center gap-2 bg-white/15 text-white text-xs font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full border border-white/20 mb-6">
+          <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+          New Arrivals Available
+        </span>
+      </div>
+ 
+      <h1 class="slide-up-delay-1 text-5xl md:text-6xl xl:text-7xl font-extrabold text-white leading-[1.05] tracking-tight mb-6">
+        Style Meets<br>
+        <span class="relative inline-block">
+          <span class="text-[#F2EFEA]">Protection.</span>
+          <svg class="absolute -bottom-2 left-0 w-full" viewBox="0 0 300 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 10C50 4 100 2 150 5C200 8 250 6 298 2" stroke="white" stroke-opacity="0.3" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </span>
+      </h1>
+ 
+      <p class="slide-up-delay-2 text-white/70 text-lg leading-relaxed max-w-md mb-10">
+        Premium phone cases, laptop skins, screen protectors and grips — crafted for people who care about style and protection.
+      </p>
+ 
+      <div class="slide-up-delay-3 flex flex-col sm:flex-row gap-4">
+        <a href="{% url 'signup' %}"
+           class="group relative bg-white text-[#557373] font-bold px-8 py-4 rounded-full text-sm uppercase tracking-widest hover:shadow-2xl transition-all duration-300 overflow-hidden inline-flex items-center justify-center gap-2">
+          <span class="relative z-10">Shop Now</span>
+          <svg class="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+          <div class="absolute inset-0 bg-[#F2EFEA] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </a>
+        <a href="#categories"
+           class="border border-white/30 text-white font-bold px-8 py-4 rounded-full text-sm uppercase tracking-widest hover:bg-white/10 transition-all duration-300 inline-flex items-center justify-center gap-2">
+          Explore All
+        </a>
+      </div>
+ 
+      <!-- Mini stats -->
+      <div class="slide-up-delay-3 flex items-center gap-8 mt-12 pt-8 border-t border-white/10">
+        <div>
+          <p class="text-2xl font-extrabold text-white">10K+</p>
+          <p class="text-white/50 text-xs font-medium">Customers</p>
+        </div>
+        <div class="w-px h-10 bg-white/10"></div>
+        <div>
+          <p class="text-2xl font-extrabold text-white">500+</p>
+          <p class="text-white/50 text-xs font-medium">Products</p>
+        </div>
+        <div class="w-px h-10 bg-white/10"></div>
+        <div>
+          <p class="text-2xl font-extrabold text-white">4.9★</p>
+          <p class="text-white/50 text-xs font-medium">Rated</p>
+        </div>
+      </div>
+    </div>
+ 
+    <!-- RIGHT: Floating product cards -->
+    <div class="relative h-[520px] hidden lg:block">
+ 
+      <!-- Pulse rings behind main image -->
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64">
+        <div class="absolute inset-0 bg-white/10 rounded-full" style="animation: pulse-ring 3s ease-out infinite;"></div>
+        <div class="absolute inset-0 bg-white/10 rounded-full" style="animation: pulse-ring 3s ease-out infinite 1s;"></div>
+        <div class="absolute inset-0 bg-white/10 rounded-full" style="animation: pulse-ring 3s ease-out infinite 2s;"></div>
+      </div>
+ 
+      <!-- MAIN CENTER IMAGE -->
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 float-1 z-20">
+        <div class="w-56 h-72 rounded-3xl overflow-hidden border-4 border-white/20 shadow-2xl bg-white/10">
+          <!-- Replace src with your Cloudinary hero image URL -->
+          <img src="https://res.cloudinary.com/da4xw9ois/image/upload/v1777004876/photo-1577111458923-f11b4caea28c_o9db0j.jpg" alt="Featured Product"
+               class="w-full h-full object-cover"
+               onerror="this.style.display='none'; this.parentElement.innerHTML += '<div class=\'w-full h-full flex flex-col items-center justify-center gap-3\'><svg class=\'w-16 h-16 text-white/30\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1\' d=\'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z\'/></svg><p class=\'text-white/30 text-xs font-medium\'>Hero Image</p></div>'">
+        </div>
+        <!-- Badge on main image -->
+        <div class="absolute -top-3 -right-3 bg-white text-[#557373] text-xs font-black px-3 py-1.5 rounded-full shadow-lg">
+          NEW ✦
+        </div>
+      </div>
+ 
+      <!-- TOP LEFT CARD -->
+      <div class="absolute top-8 left-4 float-2 z-10">
+        <div class="w-36 h-44 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl bg-white/10">
+          <!-- Replace with your Cloudinary URL -->
+          <img src="https://res.cloudinary.com/da4xw9ois/image/upload/v1777004559/photo-1682094506687-bd8416aad2d6_facwma.jpg" alt="Phone Cases"
+               class="w-full h-full object-cover"
+               onerror="this.style.display='none'; this.parentElement.innerHTML += '<div class=\'w-full h-full flex flex-col items-center justify-center gap-2\'><svg class=\'w-10 h-10 text-white/30\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1\' d=\'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z\'/></svg></div>'">
+        </div>
+        <div class="mt-2 bg-white/15 backdrop-blur-sm rounded-xl px-3 py-2 border border-white/10">
+          <p class="text-white text-xs font-bold">Phone Cases</p>
+          <p class="text-white/50 text-[10px]">124 Products</p>
+        </div>
+      </div>
+ 
+      <!-- BOTTOM RIGHT CARD -->
+      <div class="absolute bottom-10 right-0 float-3 z-10">
+        <div class="w-36 h-44 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl bg-white/10">
+          <!-- Replace with your Cloudinary URL -->
+          <img src="https://res.cloudinary.com/da4xw9ois/image/upload/v1777005038/photo-1496427011580-872ac031756b_qpd4un.jpg" alt="Laptop Skins"
+               class="w-full h-full object-cover"
+               onerror="this.style.display='none'; this.parentElement.innerHTML += '<div class=\'w-full h-full flex flex-col items-center justify-center gap-2\'><svg class=\'w-10 h-10 text-white/30\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1\' d=\'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z\'/></svg></div>'">
+        </div>
+        <div class="mt-2 bg-white/15 backdrop-blur-sm rounded-xl px-3 py-2 border border-white/10">
+          <p class="text-white text-xs font-bold">Laptop Skins</p>
+          <p class="text-white/50 text-[10px]">86 Products</p>
+        </div>
+      </div>
+ 
+      <!-- FLOATING MINI BADGE — top right -->
+      <div class="absolute top-16 right-8 z-30 float-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-4 py-3 shadow-xl">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-green-400/20 rounded-full flex items-center justify-center">
+            <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <div>
+            <p class="text-white text-xs font-bold">Premium Quality</p>
+            <p class="text-white/50 text-[10px]">Certified Materials</p>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- FLOATING MINI BADGE — bottom left -->
+      <div class="absolute bottom-24 left-0 z-30 float-1 bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-4 py-3 shadow-xl">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-yellow-400/20 rounded-full flex items-center justify-center">
+            <svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+          </div>
+          <div>
+            <p class="text-white text-xs font-bold">4.9 / 5 Stars</p>
+            <p class="text-white/50 text-[10px]">2,400+ Reviews</p>
+          </div>
+        </div>
+      </div>
+ 
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES SECTION -->
+<section id="categories" class="py-24 px-6">
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-14">
+            <span class="text-white/50 text-xs font-bold uppercase tracking-[0.2em]">Browse By</span>
+            <h2 class="text-4xl font-extrabold text-white mt-2">Our Categories</h2>
+            <p class="text-white/60 mt-3 text-base max-w-xl mx-auto">Everything your device needs — from everyday protection to full personalisation.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+            <!-- Phone Cases -->
+            <div class="group bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:bg-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer">
+                <!-- IMAGE PLACEHOLDER — replace src with your Cloudinary URL -->
+                <div class="h-48 bg-white/5 flex items-center justify-center overflow-hidden">
+                    <img src="https://res.cloudinary.com/da4xw9ois/image/upload/v1777004667/photo-1743865001634-0bf8a22b94cf_vwmtbo.jpg" alt="Phone Cases"
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                         onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-16 h-16 text-white/20\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1\' d=\'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z\'/></svg></div>'">
+                </div>
+                <div class="p-5">
+                    <h3 class="text-white font-bold text-lg mb-1">Phone Cases</h3>
+                    <p class="text-white/50 text-sm mb-4">Slim, rugged, custom — we have it all.</p>
+                    <a href="{% url 'signup' %}" class="inline-flex items-center gap-2 text-white/80 text-xs font-bold uppercase tracking-wider hover:text-white transition group-hover:gap-3">
+                        Shop Now
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Laptop Skins -->
+            <div class="group bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:bg-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer">
+                <div class="h-48 bg-white/5 flex items-center justify-center overflow-hidden">
+                    <img src="https://res.cloudinary.com/da4xw9ois/image/upload/v1777004876/photo-1577111458923-f11b4caea28c_o9db0j.jpg" alt="Laptop Skins"
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                         onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-16 h-16 text-white/20\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1\' d=\'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z\'/></svg></div>'">
+                </div>
+                <div class="p-5">
+                    <h3 class="text-white font-bold text-lg mb-1">Laptop Skins</h3>
+                    <p class="text-white/50 text-sm mb-4">Premium vinyl skins for all laptop models.</p>
+                    <a href="{% url 'signup' %}" class="inline-flex items-center gap-2 text-white/80 text-xs font-bold uppercase tracking-wider hover:text-white transition group-hover:gap-3">
+                        Shop Now
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Screen Protectors -->
+            <div class="group bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:bg-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer">
+                <div class="h-48 bg-white/5 flex items-center justify-center overflow-hidden">
+                    <img src="https://res.cloudinary.com/da4xw9ois/image/upload/v1777005300/photo-1544228865-7d73678c0f28_xdyjtn.jpg" alt="Screen Protectors"
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                         onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-16 h-16 text-white/20\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1\' d=\'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z\'/></svg></div>'">
+                </div>
+                <div class="p-5">
+                    <h3 class="text-white font-bold text-lg mb-1">Screen Protectors</h3>
+                    <p class="text-white/50 text-sm mb-4">Crystal clear protection for every screen.</p>
+                    <a href="{% url 'signup' %}" class="inline-flex items-center gap-2 text-white/80 text-xs font-bold uppercase tracking-wider hover:text-white transition group-hover:gap-3">
+                        Shop Now
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Phone Grips -->
+            <div class="group bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:bg-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer">
+                <div class="h-48 bg-white/5 flex items-center justify-center overflow-hidden">
+                    <img src="https://res.cloudinary.com/da4xw9ois/image/upload/v1777004757/photo-1679110454518-de036af8adff_ljr8x1.jpg" alt="Phone Grips"
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                         onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-16 h-16 text-white/20\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1\' d=\'M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11\'/></svg></div>'">
+                </div>
+                <div class="p-5">
+                    <h3 class="text-white font-bold text-lg mb-1">Phone Grips</h3>
+                    <p class="text-white/50 text-sm mb-4">Secure, stylish grip for your device.</p>
+                    <a href="{% url 'signup' %}" class="inline-flex items-center gap-2 text-white/80 text-xs font-bold uppercase tracking-wider hover:text-white transition group-hover:gap-3">
+                        Shop Now
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- WHY TECHGEAR SECTION -->
+<section class="py-20 px-6 bg-white/5 border-y border-white/10">
+    <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-14">
+            <span class="text-white/50 text-xs font-bold uppercase tracking-[0.2em]">Why Choose Us</span>
+            <h2 class="text-4xl font-extrabold text-white mt-2">Built Different</h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="text-center p-8 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition">
+                <div class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                </div>
+                <h3 class="text-white font-bold text-lg mb-2">Premium Quality</h3>
+                <p class="text-white/50 text-sm leading-relaxed">Every product is crafted with high-grade materials built to last and protect.</p>
+            </div>
+            <div class="text-center p-8 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition">
+                <div class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                </div>
+                <h3 class="text-white font-bold text-lg mb-2">Fully Customisable</h3>
+                <p class="text-white/50 text-sm leading-relaxed">Add your name, photo or design to phone cases and laptop skins.</p>
+            </div>
+            <div class="text-center p-8 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition">
+                <div class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h3 class="text-white font-bold text-lg mb-2">Fast Delivery</h3>
+                <p class="text-white/50 text-sm leading-relaxed">Quick dispatch with real-time tracking on every order placed.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA SECTION -->
+<section class="py-24 px-6 text-center">
+    <div class="max-w-2xl mx-auto">
+        <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-5 leading-tight">
+            Ready to gear up?
+        </h2>
+        <p class="text-white/60 text-lg mb-10">
+            Join thousands of happy customers protecting their devices in style.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'signup' %}" class="bg-white text-[#557373] font-bold px-10 py-4 rounded-full text-sm uppercase tracking-widest hover:bg-[#F2EFEA] transition shadow-xl">
+                Create Account
+            </a>
+            <a href="{% url 'login' %}" class="border border-white/30 text-white font-bold px-10 py-4 rounded-full text-sm uppercase tracking-widest hover:bg-white/10 transition">
+                Login
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

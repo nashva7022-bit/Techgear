@@ -22,12 +22,12 @@ class SignupForm(forms.ModelForm):
         if not email:
             raise ValidationError("Email is required.")
         # Secure case-insensitive check
-        if User.objects.filter(email__iexact=email).exists():
+        if User.objects.filter(email__iexact=email,is_active=True).exists():
             raise ValidationError("An account with this email already exists.")
         return email
 
     def clean_phone(self):
-        phone = (self.cleaned_data.get('phone') or '').strip()
+        phone = (self.cleaned_data.get ('phone') or '').strip()
         if phone and not phone.isdigit():
             raise ValidationError("Phone number must contain only digits.")
         if len(phone) < 10:
@@ -51,10 +51,13 @@ class SignupForm(forms.ModelForm):
             if password != confirm:
                 self.add_error('confirm_password', "Passwords do not match.")
             else:
-                # Triggers Django's secure settings.AUTH_PASSWORD_VALIDATORS
-                validate_password(password)
+                try:
+                    # Explicitly validate against Django's security standards
+                    validate_password(password)
+                except ValidationError as e:
+                    # Shows the specific reason (e.g., "Too common") on the password field
+                    self.add_error('password', e)
         return cleaned_data
-
 
 # ---------------- EDIT PROFILE FORM ----------------
 class EditProfileForm(forms.ModelForm):
@@ -81,9 +84,13 @@ class EditProfileForm(forms.ModelForm):
 
     def clean_phone(self):
         phone = (self.cleaned_data.get('phone') or '').strip()
+        if len(phone) !=10:
+            raise ValidationError('phone number must be 10 digits')
         if phone and not phone.isdigit():
             raise ValidationError("Phone must contain only numbers.")
         return phone
+        
+    
 
     def clean_profile_image(self):
         image = self.cleaned_data.get('profile_image')
@@ -95,6 +102,13 @@ class EditProfileForm(forms.ModelForm):
                 if hasattr(image, 'content_type') and not image.content_type.startswith('image/'):
                     raise ValidationError("File must be a valid image format.")
         return image
+    
+
+    # forms.py addition
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-white text-site-bg focus:ring-2 focus:ring-site-bg/20 outline-none transition'})
 
 
 # ---------------- CHANGE PASSWORD FORM ----------------
@@ -104,17 +118,25 @@ class ChangePasswordForm(forms.Form):
     confirm_password = forms.CharField(widget=forms.PasswordInput)
 
     def __init__(self, user, *args, **kwargs):
+        # 1. Capture the user passed from the view
         self.user = user
         super().__init__(*args, **kwargs)
+        
+        # 2. Add professional Tailwind styling automatically
+        input_style = "w-full px-5 py-4 rounded-xl border border-site-bg/20 bg-white/50 text-site-bg placeholder-site-bg/30 focus:outline-none focus:ring-2 focus:ring-site-bg"
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': input_style})
 
     def clean_old_password(self):
         old_password = self.cleaned_data.get('old_password')
+        # self.user now exists because of the __init__ above!
         if not self.user.check_password(old_password):
             raise ValidationError("Incorrect old password.")
         return old_password
 
     def clean_new_password(self):
         new_password = self.cleaned_data.get('new_password')
+        # Standard Django validation
         validate_password(new_password, self.user)
         return new_password
 
@@ -130,7 +152,14 @@ class ChangePasswordForm(forms.Form):
 
 # ---------------- CHANGE EMAIL FORM ----------------
 class ChangeEmailForm(forms.Form):
-    email = forms.EmailField()
+    email = forms.EmailField(
+        label="Email Address",
+        widget=forms.EmailInput(attrs={
+            'placeholder': 'name@company.com',
+            # Tailwind classes for Standard, Curved, and Spaced look
+            'class': 'w-full px-5 py-4 rounded-xl border border-site-bg/20 bg-white text-site-bg focus:ring-2 focus:ring-site-bg outline-none transition duration-200 text-lg'
+        })
+    )
 
     def clean_email(self):
         email = self.cleaned_data.get('email', '').lower().strip()
@@ -166,4 +195,23 @@ class AddressForm(forms.ModelForm):
         phone = self.cleaned_data.get('phone', '').strip()
         if phone and not phone.isdigit():
             raise ValidationError("Phone number must contain only digits.")
+        if len(phone) !=10:
+            raise ValidationError('phone number must be 10 digits')
         return phone
+
+        
+    def clean_postal_code(self):
+        postal_code = self.cleaned_data.get('postal_code', '').strip()
+        
+        # 1. Check for non-digits
+        if postal_code and not postal_code.isdigit():
+            raise ValidationError("Postal code must contain only digits.")
+        
+        # 2. Check length (India uses 6 digits)
+        if len(postal_code) != 6:
+            raise ValidationError("Postal code must be exactly 6 digits.")
+            
+        return postal_code   
+    
+
+        

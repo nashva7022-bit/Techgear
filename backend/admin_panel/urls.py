@@ -12,4 +12,8 @@ urlpatterns = [
 
    #dashboard
     path('dashboard/', views.admin_dashboard, name='admin_dashboard'),
+
+    #products
+   
+
 ]

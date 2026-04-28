@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% block title %}Verify Email | TechGear{% endblock %}
+
+{% block content %}
+<div class="min-h-[85vh] flex items-center justify-center px-4 py-12">
+  <div class="w-full max-w-md">
+
+    <!-- Card -->
+    <div class="rounded-2xl overflow-hidden shadow-2xl" style="background:#3a5252;">
+
+      <!-- Top accent bar -->
+      <div class="h-1 w-full" style="background: linear-gradient(90deg, #557373, #6b8f8f, #557373);"></div>
+
+      <div class="p-8 md:p-10">
+
+        <!-- Icon -->
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6" style="background:rgba(255,255,255,0.08);">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+        </div>
+
+        <!-- Title -->
+        <div class="text-center mb-8">
+          <h1 class="text-2xl font-extrabold text-white mb-2">Check Your Email</h1>
+          <p class="text-white/40 text-sm leading-relaxed">
+            We sent a 6-digit verification code to
+            <span class="text-white/70 font-semibold block mt-1">{{ user_email }}</span>
+          </p>
+        </div>
+
+        <!-- Django messages — error/success -->
+        {% if messages %}
+          {% for message in messages %}
+            <div class="flex items-start gap-2 rounded-xl px-4 py-3 mb-6 border
+              {% if message.tags == 'error' %}
+                border-red-400/30 text-red-400
+              {% else %}
+                border-green-400/30 text-green-400
+              {% endif %}"
+              style="background: {% if message.tags == 'error' %}rgba(248,113,113,0.1){% else %}rgba(74,222,128,0.1){% endif %};">
+              <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {% if message.tags == 'error' %}
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                {% else %}
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                {% endif %}
+              </svg>
+              <p class="text-sm font-medium">{{ message }}</p>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <!-- OTP FORM -->
+        <form method="POST" action="{% url 'verify_otp' %}" id="otp-form" novalidate>
+          {% csrf_token %}
+
+          <!-- OTP input boxes -->
+          <div class="flex justify-center gap-3 mb-6">
+            {% for i in "123456" %}
+            <input
+              type="text"
+              name="otp_digit"
+              maxlength="1"
+              inputmode="numeric"
+              pattern="[0-9]"
+              class="otp-box w-12 h-14 text-center text-xl font-bold rounded-xl border outline-none transition-all text-white"
+              style="background:rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.1);"
+              autocomplete="off"
+            >
+            {% endfor %}
+          </div>
+
+          <!-- Client side empty check error -->
+          <p id="otp-error" class="hidden flex items-center justify-center gap-1 text-red-400 text-xs font-medium mb-4">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Please enter all 6 digits before submitting.
+          </p>
+
+          <!-- Submit button -->
+          <button type="submit" id="submit-btn"
+                  class="w-full py-3.5 rounded-xl font-bold text-sm uppercase tracking-widest transition-all duration-300 bg-white text-[#557373] hover:bg-[#F2EFEA] shadow-lg">
+            Verify Email
+          </button>
+        </form>
+
+        <!-- Timer & Resend -->
+        <div class="mt-8 text-center">
+
+          <!-- Timer — shown while counting -->
+          <div id="timer-section">
+            <div class="flex items-center justify-center gap-2 mb-3">
+              <svg class="w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <p class="text-white/40 text-sm">
+                Code expires in
+                <span id="timer-display" class="text-white font-bold tabular-nums">2:00</span>
+              </p>
+            </div>
+            <!-- Progress bar -->
+            <div class="w-full rounded-full h-1 overflow-hidden" style="background:rgba(255,255,255,0.08);">
+              <div id="progress-bar" class="h-1 rounded-full transition-all duration-1000" style="background:rgba(255,255,255,0.4); width:100%;"></div>
+            </div>
+            <p class="text-white/20 text-xs mt-3">Resend will be available when timer ends.</p>
+          </div>
+
+          <!-- Resend section — shown after timer ends -->
+          <div id="resend-section" class="hidden">
+            <p class="text-white/40 text-sm mb-4">
+              Didn't receive the code?
+            </p>
+            <form method="POST" action="{% url 'resend_otp' %}">
+              {% csrf_token %}
+              <button type="submit"
+                      class="inline-flex items-center gap-2 border border-white/20 text-white text-sm font-bold px-6 py-2.5 rounded-full hover:bg-white/10 transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Resend OTP
+              </button>
+            </form>
+          </div>
+
+        </div>
+
+        <!-- Back to signup -->
+        <div class="mt-8 pt-6 border-t text-center" style="border-color:rgba(255,255,255,0.08);">
+          <a href="{% url 'signup' %}" class="text-white/30 text-xs hover:text-white/60 transition flex items-center justify-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Back to Signup
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─── OTP INPUT BEHAVIOUR ───────────────────────────────────────────
+const boxes = document.querySelectorAll('.otp-box');
+
+boxes.forEach((box, i) => {
+  // Numbers only + auto advance
+  box.addEventListener('input', (e) => {
+    // Remove non-digits
+    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+    if (e.target.value && i < boxes.length - 1) {
+      boxes[i + 1].focus();
+    }
+    // Clear error when typing
+    document.getElementById('otp-error').classList.add('hidden');
+    // Reset border colour
+    boxes.forEach(b => b.style.borderColor = 'rgba(255,255,255,0.1)');
+  });
+
+  // Backspace goes back
+  box.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && !e.target.value && i > 0) {
+      boxes[i - 1].focus();
+    }
+  });
+
+  // Paste handler — spreads pasted digits across boxes
+  box.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+    pasted.split('').forEach((char, idx) => {
+      if (boxes[idx]) boxes[idx].value = char;
+    });
+    const nextEmpty = [...boxes].findIndex(b => !b.value);
+    if (nextEmpty !== -1) boxes[nextEmpty].focus();
+    else boxes[boxes.length - 1].focus();
+  });
+
+  // Focus style
+  box.addEventListener('focus', () => {
+    box.style.borderColor = 'rgba(255,255,255,0.4)';
+    box.style.background = 'rgba(255,255,255,0.12)';
+  });
+  box.addEventListener('blur', () => {
+    if (!box.value) {
+      box.style.borderColor = 'rgba(255,255,255,0.1)';
+      box.style.background = 'rgba(255,255,255,0.07)';
+    }
+  });
+});
+
+// Focus first box on load
+boxes[0].focus();
+
+// ─── FORM SUBMIT VALIDATION ────────────────────────────────────────
+document.getElementById('otp-form').addEventListener('submit', (e) => {
+  const values = [...boxes].map(b => b.value.trim());
+  const filled = values.filter(v => v !== '');
+
+  if (filled.length < 6) {
+    e.preventDefault();
+    // Show error
+    const err = document.getElementById('otp-error');
+    err.classList.remove('hidden');
+    err.classList.add('flex');
+    // Highlight empty boxes red
+    boxes.forEach(b => {
+      if (!b.value) {
+        b.style.borderColor = 'rgba(248,113,113,0.7)';
+        b.style.background = 'rgba(248,113,113,0.1)';
+      }
+    });
+    return;
+  }
+});
+
+// ─── TIMER ────────────────────────────────────────────────────────
+let timeLeft = {{ remaining_time }};
+const totalTime = 120;
+const timerDisplay = document.getElementById('timer-display');
+const progressBar = document.getElementById('progress-bar');
+const timerSection = document.getElementById('timer-section');
+const resendSection = document.getElementById('resend-section');
+
+function formatTime(secs) {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function updateTimer() {
+  if (timeLeft <= 0) {
+    // Timer ended — show resend
+    timerSection.classList.add('hidden');
+    resendSection.classList.remove('hidden');
+    return;
+  }
+
+  timerDisplay.textContent = formatTime(timeLeft);
+
+  // Progress bar — shrinks as time runs out
+  const pct = (timeLeft / totalTime) * 100;
+  progressBar.style.width = pct + '%';
+
+  // Colour changes as time runs low
+  if (timeLeft <= 30) {
+    progressBar.style.background = 'rgba(248,113,113,0.7)';
+    timerDisplay.style.color = 'rgba(248,113,113,0.9)';
+  } else if (timeLeft <= 60) {
+    progressBar.style.background = 'rgba(251,191,36,0.7)';
+    timerDisplay.style.color = 'rgba(251,191,36,0.9)';
+  }
+
+  timeLeft--;
+  setTimeout(updateTimer, 1000);
+}
+
+// Start immediately
+if (timeLeft <= 0) {
+  timerSection.classList.add('hidden');
+  resendSection.classList.remove('hidden');
+} else {
+  updateTimer();
+}
+
+// ─── HIGHLIGHT BOXES RED IF DJANGO RETURNED ERROR ─────────────────
+{% if messages %}
+{% for message in messages %}
+{% if message.tags == 'error' %}
+// Flash boxes red briefly on error
+boxes.forEach(b => {
+  b.style.borderColor = 'rgba(248,113,113,0.5)';
+  b.style.background = 'rgba(248,113,113,0.08)';
+  b.value = ''; // Clear wrong/expired OTP
+});
+boxes[0].focus();
+setTimeout(() => {
+  boxes.forEach(b => {
+    b.style.borderColor = 'rgba(255,255,255,0.1)';
+    b.style.background = 'rgba(255,255,255,0.07)';
+  });
+}, 2000);
+{% endif %}
+{% endfor %}
+{% endif %}
+</script>
+
+{% endblock %}

@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load socialaccount %}
+{% block title %}Sign Up | TechGear{% endblock %}
+
+{% block content %}
+<div class="min-h-[85vh] flex items-center justify-center px-4 py-12">
+  <div class="w-full max-w-5xl flex rounded-2xl overflow-hidden shadow-2xl" style="background:#3a5252;">
+
+    <!-- LEFT IMAGE PANEL -->
+    <div class="hidden md:flex md:w-1/2 relative flex-col items-center justify-center p-10 overflow-hidden" style="background:#2d4040;">
+      <!-- Decorative rings -->
+      <div class="absolute top-10 right-10 w-40 h-40 rounded-full border border-white/5 spin-slow"></div>
+      <div class="absolute bottom-10 left-10 w-28 h-28 rounded-full border border-white/5"></div>
+
+      <!-- Image placeholder -->
+      <div class="relative z-10 w-64 h-64 rounded-3xl overflow-hidden border-4 border-white/10 shadow-2xl mb-8 flex items-center justify-center" style="background:#3a5252;">
+        <!-- Replace src with your Cloudinary image URL -->
+        <img src="{% static 'images/lap_skin.jpg' %}" alt="TechGear"
+             class="w-full h-full object-cover"
+             onerror="this.style.display='none'">
+        <div class="absolute inset-0 flex flex-col items-center justify-center gap-2">
+          <svg class="w-16 h-16 text-white/10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Left panel text -->
+      <div class="relative z-10 text-center">
+        <div class="w-10 h-10 bg-white text-[#557373] rounded-xl flex items-center justify-center font-black text-lg mx-auto mb-4">TG</div>
+        <h2 class="text-2xl font-extrabold text-white mb-2">Join TechGear</h2>
+        <p class="text-white/40 text-sm leading-relaxed max-w-xs">
+          Premium phone cases, laptop skins and accessories — crafted for style and protection.
+        </p>
+        <div class="flex items-center justify-center gap-6 mt-8 pt-8 border-t border-white/10">
+          <div class="text-center">
+            <p class="text-xl font-extrabold text-white">10K+</p>
+            <p class="text-white/40 text-[10px] uppercase tracking-wider">Customers</p>
+          </div>
+          <div class="w-px h-8 bg-white/10"></div>
+          <div class="text-center">
+            <p class="text-xl font-extrabold text-white">500+</p>
+            <p class="text-white/40 text-[10px] uppercase tracking-wider">Products</p>
+          </div>
+          <div class="w-px h-8 bg-white/10"></div>
+          <div class="text-center">
+            <p class="text-xl font-extrabold text-white">4.9★</p>
+            <p class="text-white/40 text-[10px] uppercase tracking-wider">Rated</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT FORM PANEL -->
+    <div class="w-full md:w-1/2 p-8 md:p-10 overflow-y-auto">
+
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-extrabold text-white mb-1">Create Account</h1>
+        <p class="text-white/40 text-sm">Fill in your details to get started.</p>
+      </div>
+
+      <!-- FORM -->
+      <form method="POST" action="{% url 'signup' %}" novalidate class="space-y-5">
+        {% csrf_token %}
+
+        <!-- Full Name -->
+        <div>
+          <label class="block text-xs font-bold text-white/60 uppercase tracking-wider mb-1.5">
+            Full Name <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            name="full_name"
+            value="{{ form.full_name.value|default:'' }}"
+            placeholder="e.g. Nashva M"
+            class="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 border outline-none transition-all
+              {% if form.full_name.errors %}
+                border-red-400 bg-red-400/10 focus:border-red-400
+              {% else %}
+                border-white/10 focus:border-white/40
+              {% endif %}"
+            style="background: rgba(255,255,255,0.07);"
+          >
+          {% if form.full_name.errors %}
+            <p class="flex items-center gap-1 text-red-400 text-xs mt-1.5 font-medium">
+              <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              {{ form.full_name.errors.0 }}
+            </p>
+          {% endif %}
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label class="block text-xs font-bold text-white/60 uppercase tracking-wider mb-1.5">
+            Email Address <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="email"
+            name="email"
+            value="{{ form.email.value|default:'' }}"
+            placeholder="name@example.com"
+            class="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 border outline-none transition-all
+              {% if form.email.errors %}
+                border-red-400 bg-red-400/10 focus:border-red-400
+              {% else %}
+                border-white/10 focus:border-white/40
+              {% endif %}"
+            style="background: rgba(255,255,255,0.07);"
+          >
+          {% if form.email.errors %}
+            <p class="flex items-center gap-1 text-red-400 text-xs mt-1.5 font-medium">
+              <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              {{ form.email.errors.0 }}
+            </p>
+          {% endif %}
+        </div>
+
+        <!-- Phone -->
+        <div>
+          <label class="block text-xs font-bold text-white/60 uppercase tracking-wider mb-1.5">
+            Phone Number <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="tel"
+            name="phone"
+            value="{{ form.phone.value|default:'' }}"
+            placeholder="10-digit number"
+            maxlength="15"
+            class="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 border outline-none transition-all
+              {% if form.phone.errors %}
+                border-red-400 bg-red-400/10 focus:border-red-400
+              {% else %}
+                border-white/10 focus:border-white/40
+              {% endif %}"
+            style="background: rgba(255,255,255,0.07);"
+          >
+          {% if form.phone.errors %}
+            <p class="flex items-center gap-1 text-red-400 text-xs mt-1.5 font-medium">
+              <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              {{ form.phone.errors.0 }}
+            </p>
+          {% endif %}
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label class="block text-xs font-bold text-white/60 uppercase tracking-wider mb-1.5">
+            Password <span class="text-red-400">*</span>
+          </label>
+          <div class="relative">
+            <input
+              type="password"
+              name="password"
+              id="password"
+              placeholder="Min 8 chars, uppercase, number, symbol"
+              class="w-full px-4 py-3 pr-12 rounded-xl text-sm text-white placeholder-white/20 border outline-none transition-all
+                {% if form.password.errors %}
+                  border-red-400 bg-red-400/10 focus:border-red-400
+                {% else %}
+                  border-white/10 focus:border-white/40
+                {% endif %}"
+              style="background: rgba(255,255,255,0.07);"
+            >
+            <button type="button" onclick="togglePass('password','eye1')"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition">
+              <svg id="eye1" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+          </div>
+          {% if form.password.errors %}
+            <p class="flex items-center gap-1 text-red-400 text-xs mt-1.5 font-medium">
+              <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              {{ form.password.errors.0 }}
+            </p>
+          {% endif %}
+        </div>
+
+        {% if not form.password.errors %}
+<p class="text-white/25 text-xs mt-1.5">
+  Must include uppercase, lowercase, number and special character.
+</p>
+{% endif %}
+
+        <!-- Confirm Password -->
+        <div>
+          <label class="block text-xs font-bold text-white/60 uppercase tracking-wider mb-1.5">
+            Confirm Password <span class="text-red-400">*</span>
+          </label>
+          <div class="relative">
+            <input
+              type="password"
+              name="confirm_password"
+              id="confirm_password"
+              placeholder="Re-enter your password"
+              class="w-full px-4 py-3 pr-12 rounded-xl text-sm text-white placeholder-white/20 border outline-none transition-all
+                {% if form.confirm_password.errors %}
+                  border-red-400 bg-red-400/10 focus:border-red-400
+                {% else %}
+                  border-white/10 focus:border-white/40
+                {% endif %}"
+              style="background: rgba(255,255,255,0.07);"
+            >
+            <button type="button" onclick="togglePass('confirm_password','eye2')"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition">
+              <svg id="eye2" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+          </div>
+          {% if form.confirm_password.errors %}
+            <p class="flex items-center gap-1 text-red-400 text-xs mt-1.5 font-medium">
+              <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              {{ form.confirm_password.errors.0 }}
+            </p>
+          {% endif %}
+        </div>
+
+        <!-- Non field errors -->
+        {% if form.non_field_errors %}
+          <div class="flex items-start gap-2 bg-red-400/10 border border-red-400/30 rounded-xl px-4 py-3">
+            <svg class="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div>
+              {% for error in form.non_field_errors %}
+                <p class="text-red-400 text-xs font-medium">{{ error }}</p>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Submit -->
+        <button type="submit"
+                class="w-full py-3.5 rounded-xl font-bold text-sm uppercase tracking-widest transition-all duration-300 mt-2 bg-white text-[#557373] hover:bg-[#F2EFEA] shadow-lg">
+          Create Account
+        </button>
+
+        <!-- Divider -->
+        <div class="flex items-center gap-3 my-2">
+          <div class="flex-1 h-px bg-white/10"></div>
+          <span class="text-white/30 text-xs font-bold uppercase tracking-wider">Or</span>
+          <div class="flex-1 h-px bg-white/10"></div>
+        </div>
+
+        <!-- Google -->
+        <a href="{% provider_login_url 'google' %}"
+           class="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-white/10 text-white text-sm font-bold hover:bg-white/5 transition"
+           style="background:rgba(255,255,255,0.05);">
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          Continue with Google
+        </a>
+
+        <!-- Login link -->
+        <p class="text-center text-white/40 text-sm pt-2">
+          Already have an account?
+          <a href="{% url 'login' %}" class="text-white font-bold hover:text-white/70 transition ml-1">Login</a>
+        </p>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+const eyeOpen = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>`;
+const eyeClosed = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>`;
+
+function togglePass(inputId, iconId) {
+  const input = document.getElementById(inputId);
+  const icon = document.getElementById(iconId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.innerHTML = eyeClosed;
+  } else {
+    input.type = 'password';
+    icon.innerHTML = eyeOpen;
+  }
+}
+
+// Replace the current history entry so back button
+// goes to landing page instead of resubmitting form
+if (window.history.replaceState) {
+    window.history.replaceState(null, null, window.location.href);
+}
+</script>
+{% endblock %}

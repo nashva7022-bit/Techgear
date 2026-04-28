@@ -5,13 +5,14 @@ from django.contrib.auth.hashers import make_password
 from .models import OTP
 
 
-def generate_and_send_otp(user, email):
+def generate_and_send_otp(user, email, purpose='signup'):
     otp = str(random.randint(100000, 999999))
 
     OTP.objects.create(
-        user=user,
-        otp=make_password(otp)
-    )
+    user=user,
+    otp=make_password(otp),
+    purpose=purpose
+)
 
     send_mail(
         subject="Your OTP Code",

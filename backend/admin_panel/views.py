@@ -65,16 +65,12 @@ def admin_dashboard(request):
 @never_cache
 @staff_member_required(login_url='admin_login')
 def user_list(request):
-   
-    # Base Query (exclude admins)
-    users_query = User.objects.filter(is_superuser=False)
-
-    # Add Order Count (IMPORTANT for Figma)
-    users_query = users_query.annotate(
-        order_count=Count('order')  # make sure Order model exists
+    # 1. Base Query
+    users_query = User.objects.filter(is_superuser=False).annotate(
+        order_count=Count('order')
     )
 
-    # Search (email, first name, last name)
+    # 2. Search
     query = request.GET.get('search', '').strip()
     if query:
         users_query = users_query.filter(
@@ -83,54 +79,43 @@ def user_list(request):
             Q(last_name__icontains=query)
         )
 
-    # Sorting (LATEST FIRST — REQUIRED)
+    # 3. Sorting
     sort = request.GET.get('sort', '-date_joined')
-
-    # Safety check 
     if sort not in ['-date_joined', 'date_joined']:
         sort = '-date_joined'
-
     users_query = users_query.order_by(sort)
 
-    
-
-    # Pagination
-    paginator = Paginator(users_query, 3)
+    # 4. Pagination
+    paginator = Paginator(users_query, 10)
     page_number = request.GET.get('page')
     users = paginator.get_page(page_number)
 
-    # Stats logic
-    total_users = User.objects.filter(is_superuser=False).count()
-    active_users = User.objects.filter(is_superuser=False, is_blocked=False).count()
-    blocked_users = User.objects.filter(is_superuser=False, is_blocked=True).count()
-    admin_users = User.objects.filter(is_superuser=True).count()
-   
-
-   
-    view_user_id = request.GET.get('view_user')
-    selected_user = None
-    user_addresses = None
-
-    if view_user_id:
-        selected_user = get_object_or_404(User, id=view_user_id)
-        # Pulls addresses using the related_name='addresses' from your Address model
-        user_addresses = selected_user.addresses.all().order_by('-is_default')
-
- #sending in to the html file
+    # 5. Stats (Using the base_stats variable to avoid repeating filter logic)
+    base_stats = User.objects.filter(is_superuser=False)
+    
     context = {
         'users': users,
         'search_query': query,
-        'total_users': total_users,
-        'active_users': active_users,
-        'blocked_users': blocked_users,
-        'admin_users': admin_users,
-        'selected_user': selected_user,
-        'user_addresses': user_addresses,
+        'total_users': base_stats.count(),
+        'active_users': base_stats.filter(is_verified=True, is_blocked=False).count(),
+        'blocked_users': base_stats.filter(is_blocked=True).count(),
+        'pending_users': base_stats.filter(is_verified=False).count(),
+        'admin_users': User.objects.filter(is_superuser=True).count(),
     }
 
+    # 6. Detail Drawer Logic
+    view_user_id = request.GET.get('view_user')
+    if view_user_id:
+        selected_user = get_object_or_404(User, id=view_user_id)
+        context['selected_user'] = selected_user
+        context['user_addresses'] = selected_user.addresses.all().order_by('-is_default')
+
+    # 7. AJAX Check for Live Search
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, 'admin_panel/partials/user_table.html', context)
+
+    # 8. Standard Return (Make sure this is outside the IF and correctly indented)
     return render(request, 'admin_panel/user_management.html', context)
-
-
 # BLOCK / UNBLOCK USER
 
 @never_cache
@@ -147,9 +132,14 @@ def toggle_user_status(request, user_id):
 #It flips the current status to the opposite
     # Toggle block
     user.is_blocked = not user.is_blocked
-    user.is_active = not user.is_blocked
-    user.save()
 
+    if user.is_blocked:
+        user.is_active = False
+    else:
+        user.is_active = user.is_verified  # only verified users become active
+
+    user.save()
+    
     status = "blocked" if user.is_blocked else "unblocked"
     messages.success(request, f"{user.email} has been {status}.")
 
@@ -164,3 +154,4 @@ def admin_logout(request):
     logout(request)
     messages.success(request, "Logged out successfully.")
     return redirect('admin_login')
+

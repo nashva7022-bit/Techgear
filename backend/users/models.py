@@ -14,7 +14,7 @@ class User(AbstractUser):
     # Security & Verification Flags
     is_blocked = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
-    
+    is_active= models.BooleanField(default=False)
     # Profile Data
     profile_image = models.ImageField(upload_to='profile_images/', blank=True, null=True)
 
@@ -39,7 +39,7 @@ class Address(models.Model):
     full_name = models.CharField(max_length=100)
     phone = models.CharField(max_length=15)
     # Add these fields specifically
-    label = models.CharField(max_length=50, default="Home") 
+    address_label = models.CharField(max_length=50, default="Home") 
     address_line_1 = models.CharField(max_length=255)
     address_line_2 = models.CharField(max_length=255, blank=True, null=True)
     city = models.CharField(max_length=100)
@@ -80,6 +80,7 @@ class OTP(models.Model):
     attempts = models.IntegerField(default=0)
     resend_count = models.IntegerField(default=0)
     is_used = models.BooleanField(default=False)
+    purpose = models.CharField(max_length=20, default='signup')
 
     class Meta:
         # DB Indexing makes looking up OTPs incredibly fast, even with 100,000+ users
@@ -92,7 +93,7 @@ class OTP(models.Model):
     def __str__(self):
         return f"OTP for {self.user.email} (Attempts: {self.attempts})"
     
-    # --- PUT THIS AT THE VERY BOTTOM OF models.py ---
+    
 from allauth.account.signals import user_signed_up
 from django.dispatch import receiver
 
