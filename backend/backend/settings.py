@@ -17,7 +17,7 @@ load_dotenv(dotenv_path=env_path)
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-do-not-use-in-production')
 
 DEBUG = os.getenv("DEBUG", "True") == "True"
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.10.10.156']
 
 #  Cloudinary configuration
 cloudinary.config(

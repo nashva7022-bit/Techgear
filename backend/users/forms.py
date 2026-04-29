@@ -138,6 +138,7 @@ class ChangePasswordForm(forms.Form):
         new_password = self.cleaned_data.get('new_password')
         # Standard Django validation
         validate_password(new_password, self.user)
+        
         return new_password
 
     def clean(self):
