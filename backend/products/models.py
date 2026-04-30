@@ -61,8 +61,7 @@ class Product(models.Model):
 
     # Customization flags
     is_customizable    = models.BooleanField(default=False)
-    allow_custom_text  = models.BooleanField(default=False)
-    allow_custom_image = models.BooleanField(default=False)
+    
 
     is_active          = models.BooleanField(default=True)
     created_at         = models.DateTimeField(auto_now_add=True)
@@ -98,7 +97,7 @@ class Product(models.Model):
 
     @property
     def min_price(self):
-        prices = self.variants.filter(is_active=True).values_list('price', flat=True)
+        prices = list(self.variants.filter(is_active=True).values_list('price', flat=True))
         return min(prices) if prices else None
 
 
@@ -148,7 +147,7 @@ class ProductVariant(models.Model):
     case_type    = models.CharField(max_length=50, blank=True)  # e.g. "Slim", "Rugged"
     color        = models.CharField(max_length=50, choices=COLOR_CHOICES, default='black')
     color_code   = models.CharField(max_length=7, default='#000000')  # hex
-    sku          = models.CharField(max_length=50, unique=True, blank=True)
+    sku = models.CharField(max_length=50, unique=True, blank=True, null=True)
     price        = models.DecimalField(max_digits=10, decimal_places=2)
     stock        = models.PositiveIntegerField(default=0)
     is_active    = models.BooleanField(default=True)

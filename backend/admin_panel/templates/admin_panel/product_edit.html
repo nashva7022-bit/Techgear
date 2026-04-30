@@ -1,0 +1,187 @@
+{% extends 'admin_panel/admin_base.html' %}
+{% block content %}
+
+<!-- Back + Header -->
+<div class="mb-8">
+  <a href="{% url 'admin_product_list' %}" class="inline-flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-black transition mb-4 uppercase tracking-widest">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    Back to Products
+  </a>
+  <h1 class="text-2xl font-black text-gray-900 tracking-tight">Edit Product</h1>
+</div>
+
+<form method="POST" enctype="multipart/form-data" id="editForm" novalidate>
+  {% csrf_token %}
+
+  <div class="space-y-6">
+    <!-- BASIC INFORMATION -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100"><h2 class="text-sm font-black text-gray-900 uppercase tracking-widest">Basic Information</h2></div>
+      <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="md:col-span-2">
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Product Name *</label>
+          <input type="text" name="name" value="{{ product.name }}" class="w-full px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Brand *</label>
+          <select name="brand" class="w-full px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium">
+            {% for value, label in form.fields.brand.choices %}
+            <option value="{{ value }}" {% if product.brand == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Category *</label>
+          <select name="category" class="w-full px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium">
+            {% for cat in form.fields.category.queryset %}
+            <option value="{{ cat.pk }}" {% if product.category.pk == cat.pk %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="flex items-center gap-6 p-4 bg-gray-50 rounded-xl">
+           <label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" name="is_active" {% if product.is_active %}checked{% endif %}> Active</label>
+           <label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" name="is_customizable" {% if product.is_customizable %}checked{% endif %}> Customizable</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- DESCRIPTION -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100"><h2 class="text-sm font-black text-gray-900 uppercase tracking-widest">Description</h2></div>
+        <div class="p-6"><textarea name="description" rows="3" class="w-full px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium">{{ product.description }}</textarea></div>
+    </div>
+
+    <!-- SPECIFICATIONS -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between">
+            <h2 class="text-sm font-black text-gray-900 uppercase tracking-widest">Specifications</h2>
+            <button type="button" onclick="addSpec()" class="bg-black text-white px-3 py-1 rounded-lg text-xs font-bold">Add</button>
+        </div>
+        <div class="p-6" id="specsContainer">
+            {% for spec in specifications %}
+            <div class="flex items-center gap-3 mb-2 spec-row">
+                <input type="text" name="spec_name" value="{{ spec.name }}" class="flex-1 px-4 py-2 bg-gray-50 border rounded-xl text-sm">
+                <input type="text" name="spec_value" value="{{ spec.value }}" class="flex-1 px-4 py-2 bg-gray-50 border rounded-xl text-sm">
+                <button type="button" onclick="this.closest('.spec-row').remove()" class="text-red-500">✕</button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- EXISTING VARIANTS -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100"><h2 class="text-sm font-black text-gray-900 uppercase tracking-widest">Variants</h2></div>
+        <div class="p-6 space-y-6">
+            {% for variant in existing_variants %}
+            <div class="border border-gray-100 rounded-2xl p-5" id="existingVariant_{{ variant.pk }}">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-sm flex items-center gap-2">
+                        <div class="w-4 h-4 rounded-full" style="background-color: {{ variant.color_code }};"></div>
+                        {{ variant.device_model }} ({{ variant.color }})
+                    </h3>
+                    <input type="checkbox" name="existing_variant_{{ variant.pk }}_is_active" {% if variant.is_active %}checked{% endif %}>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div><label class="text-[10px] font-bold text-gray-500 uppercase">Device</label>
+                    <input type="text" value="{{ variant.device_model }}" disabled class="w-full px-4 py-2 bg-gray-100 border rounded-xl text-sm"></div>
+                    <div><label class="text-[10px] font-bold text-gray-500 uppercase">Color</label>
+                    <select name="existing_variant_{{ variant.pk }}_color" class="w-full px-4 py-2 bg-gray-50 border rounded-xl text-sm">
+                        {% for val, lbl in color_choices %}<option value="{{ val }}" {% if variant.color == val %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+                    </select></div>
+                    <div><label class="text-[10px] font-bold text-gray-500 uppercase">Code</label>
+                    <input type="text" name="existing_variant_{{ variant.pk }}_color_code" value="{{ variant.color_code }}" class="w-full px-4 py-2 bg-gray-50 border rounded-xl text-sm"></div>
+                    <div><label class="text-[10px] font-bold text-gray-500 uppercase">Case Type</label>
+                    <input type="text" name="existing_variant_{{ variant.pk }}_case_type" value="{{ variant.case_type }}" class="w-full px-4 py-2 bg-gray-50 border rounded-xl text-sm"></div>
+                    <div><label class="text-[10px] font-bold text-gray-500 uppercase">Price</label>
+                    <input type="number" name="existing_variant_{{ variant.pk }}_price" value="{{ variant.price }}" class="w-full px-4 py-2 bg-gray-50 border rounded-xl text-sm"></div>
+                    <div><label class="text-[10px] font-bold text-gray-500 uppercase">Stock</label>
+                    <input type="number" name="existing_variant_{{ variant.pk }}_stock" value="{{ variant.stock }}" class="w-full px-4 py-2 bg-gray-50 border rounded-xl text-sm"></div>
+                </div>
+
+                <!-- IMAGE MANAGEMENT -->
+                <div class="border-t pt-4">
+                    <p class="text-[10px] font-bold text-gray-500 uppercase mb-3">Images</p>
+                    <div class="grid grid-cols-6 gap-3" id="imgGrid_{{ variant.pk }}">
+                        {% for img in variant.images.all %}
+                        <div class="relative aspect-square" id="imgCard_{{ img.pk }}">
+                            <img src="{{ img.image.url }}" class="w-full h-full object-cover rounded-xl border">
+                            <button type="button" onclick="toggleImageDelete({{ img.pk }}, {{ variant.pk }}, {{ variant.images.count }})" class="absolute top-1 right-1 bg-white text-red-500 rounded-full w-6 h-6 flex items-center justify-center font-bold">✕</button>
+                            <input type="checkbox" name="existing_variant_{{ variant.pk }}_delete_images" value="{{ img.pk }}" id="check_{{ img.pk }}" class="hidden">
+                        </div>
+                        {% endfor %}
+                        <label for="file_{{ variant.pk }}" class="flex flex-col items-center justify-center aspect-square border-2 border-dashed rounded-xl cursor-pointer hover:bg-gray-50">
+                            <span class="text-[9px] font-bold uppercase">Add</span>
+                        </label>
+                        <input type="file" id="file_{{ variant.pk }}" name="existing_variant_{{ variant.pk }}_images" multiple accept="image/*" class="hidden" onchange="previewNewImages(this, {{ variant.pk }})">
+                    </div>
+                    <p id="err_{{ variant.pk }}" class="text-xs text-red-500 mt-2 hidden">Min 3 images required.</p>
+                    <div id="preview_{{ variant.pk }}" class="grid grid-cols-6 gap-3 mt-3"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <button type="submit" class="bg-black text-white px-8 py-3 rounded-xl text-xs font-bold uppercase">Save Changes</button>
+  </div>
+</form>
+
+<script>
+    const existingVariantFiles = {};
+    const pendingDeletes = {};
+
+    function addSpec() {
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-3 mb-2 spec-row';
+        row.innerHTML = `<input type="text" name="spec_name" class="flex-1 px-4 py-2 bg-gray-50 border rounded-xl text-sm"><input type="text" name="spec_value" class="flex-1 px-4 py-2 bg-gray-50 border rounded-xl text-sm"><button type="button" onclick="this.closest('.spec-row').remove()" class="text-red-500">✕</button>`;
+        document.getElementById('specsContainer').appendChild(row);
+    }
+
+    function toggleImageDelete(imgPk, variantPk, totalSaved) {
+        if (!pendingDeletes[variantPk]) pendingDeletes[variantPk] = new Set();
+        const cb = document.getElementById(`check_${imgPk}`);
+        const errEl = document.getElementById(`err_${variantPk}`);
+        const queued = (existingVariantFiles[variantPk] || []).length;
+        
+        if (pendingDeletes[variantPk].has(imgPk)) {
+            pendingDeletes[variantPk].delete(imgPk);
+            cb.checked = false;
+            document.getElementById(`imgCard_${imgPk}`).style.opacity = '1';
+        } else {
+            if ((totalSaved - pendingDeletes[variantPk].size - 1 + queued) < 3) {
+                errEl.classList.remove('hidden');
+                return;
+            }
+            pendingDeletes[variantPk].add(imgPk);
+            cb.checked = true;
+            document.getElementById(`imgCard_${imgPk}`).style.opacity = '0.3';
+            errEl.classList.add('hidden');
+        }
+    }
+
+    function previewNewImages(input, pk) {
+        if (!existingVariantFiles[pk]) existingVariantFiles[pk] = [];
+        const previewDiv = document.getElementById(`preview_${pk}`);
+        Array.from(input.files).forEach(f => {
+            existingVariantFiles[pk].push(f);
+            const reader = new FileReader();
+            reader.onload = e => {
+                const div = document.createElement('div');
+                div.className = 'aspect-square';
+                div.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover rounded-xl border-2 border-blue-400">`;
+                previewDiv.appendChild(div);
+            };
+            reader.readAsDataURL(f);
+        });
+        syncInputs(pk);
+    }
+
+    function syncInputs(pk) {
+        const dt = new DataTransfer();
+        (existingVariantFiles[pk] || []).forEach(f => dt.items.add(f));
+        document.getElementById(`file_${pk}`).files = dt.files;
+    }
+</script>
+
+{% endblock %}

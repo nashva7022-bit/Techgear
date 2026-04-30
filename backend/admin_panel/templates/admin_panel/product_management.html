@@ -2,450 +2,379 @@
 {% block content %}
 
 <!-- Header -->
-<div class="flex items-start justify-between mb-8">
+<div class="flex items-start justify-between mb-6">
   <div>
-    <h1 class="text-2xl font-black text-gray-900 tracking-tight">Product Management</h1>
-    <p class="text-sm text-gray-500 mt-1 font-medium">Manage your product catalog, images, pricing and variants.</p>
+    <h1 class="text-xl font-bold text-gray-900">Product Management</h1>
+    <p class="text-sm text-gray-500 mt-0.5">Manage your store's product catalog.</p>
   </div>
   <a href="{% url 'admin_product_add' %}"
-     class="inline-flex items-center gap-2 bg-black text-white px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition shadow-sm">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-    </svg>
+     class="inline-flex items-center gap-2 bg-black text-white px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-gray-800 transition">
+    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
     Add New Product
   </a>
 </div>
 
-<!-- Stats Cards -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-  <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
-    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Products</p>
-    <p class="text-3xl font-black text-gray-900 leading-none">{{ total }}</p>
+<!-- Stats -->
+<div class="grid grid-cols-3 gap-4 mb-6">
+  <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+    <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">Total Products</p>
+    <p class="text-2xl font-black text-gray-900">{{ total }}</p>
   </div>
-  <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
-    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Active</p>
-    <p class="text-3xl font-black text-green-600 leading-none">{{ active }}</p>
+  <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+    <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">Active</p>
+    <p class="text-2xl font-black text-green-600">{{ active }}</p>
   </div>
-  <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
-    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Inactive</p>
-    <p class="text-3xl font-black text-red-500 leading-none">{{ inactive }}</p>
+  <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+    <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">Inactive</p>
+    <p class="text-2xl font-black text-red-500">{{ inactive }}</p>
   </div>
 </div>
 
-<!-- Search + Sort Bar -->
-<div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-8 flex flex-wrap items-center justify-between gap-4">
+<!-- Filters -->
+<form method="GET" action="{% url 'admin_product_list' %}" id="filter-form" class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-6">
+  <div class="flex flex-wrap items-end gap-3">
 
-  <!-- Search Form -->
-  <form method="GET" action="{% url 'admin_product_list' %}" class="flex-1 max-w-md flex gap-2">
-    <div class="relative flex-1">
-      <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
-      </svg>
-      <input type="text" name="search" value="{{ search }}"
-             placeholder="Search by name, SKU, category..."
-             class="w-full pl-11 pr-10 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black transition-all">
-      {% if search %}
-      <a href="?sort={{ sort_by }}"
-         class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition" title="Clear search">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
+    <!-- Category dropdown -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Category</label>
+      <select name="category"
+              class="py-2.5 px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-black bg-white text-gray-700 cursor-pointer min-w-[150px]"
+              onchange="document.getElementById('filter-form').submit()">
+        <option value="">All Categories</option>
+        {% for cat in categories %}
+        <option value="{{ cat.id }}" {% if category_id == cat.id|stringformat:'s' %}selected{% endif %}>
+          {{ cat.name }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Brand dropdown -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Brand</label>
+      <select name="brand"
+              class="py-2.5 px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-black bg-white text-gray-700 cursor-pointer min-w-[140px]"
+              onchange="document.getElementById('filter-form').submit()">
+        <option value="">All Brands</option>
+        {% for value, label in brand_choices %}
+        <option value="{{ value }}" {% if brand == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Sort -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Sort By</label>
+      <select name="sort"
+              class="py-2.5 px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-black bg-white text-gray-700 cursor-pointer min-w-[150px]"
+              onchange="document.getElementById('filter-form').submit()">
+        <option value="newest"    {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+        <option value="oldest"    {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+        <option value="name_asc"  {% if sort_by == 'name_asc' %}selected{% endif %}>Name A–Z</option>
+        <option value="name_desc" {% if sort_by == 'name_desc' %}selected{% endif %}>Name Z–A</option>
+      </select>
+    </div>
+
+    <!-- Search -->
+    <div class="flex flex-col gap-1 flex-1 min-w-[200px]">
+      <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Search</label>
+      <div class="relative">
+        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
+        <input type="text" name="search" value="{{ search }}"
+               placeholder="Search product name..."
+               class="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-black transition bg-white">
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="flex gap-2">
+      <button type="submit"
+              class="px-4 py-2.5 bg-black text-white text-xs font-bold rounded-lg hover:bg-gray-800 transition">
+        Apply
+      </button>
+      {% if search or category_id or brand or sort_by != 'newest' %}
+      <a href="{% url 'admin_product_list' %}"
+         class="px-4 py-2.5 border border-gray-200 text-xs font-bold rounded-lg hover:bg-gray-50 transition text-gray-500 flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        Clear
       </a>
       {% endif %}
     </div>
-    <input type="hidden" name="sort" value="{{ sort_by }}">
-    <button type="submit"
-            class="px-5 py-2.5 bg-black text-white text-xs font-bold rounded-xl hover:bg-gray-800 transition">
-      Search
-    </button>
-  </form>
 
-  <!-- Sort Dropdown -->
-  <div class="flex items-center gap-3">
-    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">Sort By:</p>
-    <div class="relative">
-      <select onchange="applySort(this.value)"
-              class="appearance-none bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold px-4 py-2.5 pr-8 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer">
-        <option value="newest"     {% if sort_by == 'newest'     %}selected{% endif %}>Newest First</option>
-        <option value="oldest"     {% if sort_by == 'oldest'     %}selected{% endif %}>Oldest First</option>
-        <option value="name_asc"   {% if sort_by == 'name_asc'   %}selected{% endif %}>Name (A → Z)</option>
-        <option value="name_desc"  {% if sort_by == 'name_desc'  %}selected{% endif %}>Name (Z → A)</option>
-        <option value="price_asc"  {% if sort_by == 'price_asc'  %}selected{% endif %}>Price (Low → High)</option>
-        <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price (High → Low)</option>
-      </select>
-      <svg class="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-      </svg>
-    </div>
   </div>
-</div>
+
+  <!-- Active filters display -->
+  {% if search or category_id or brand %}
+  <div class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-50 flex-wrap">
+    <span class="text-xs text-gray-400 font-semibold">Active filters:</span>
+    {% if category_id %}
+    {% for cat in categories %}{% if cat.id|stringformat:'s' == category_id %}
+    <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-600 text-xs font-bold px-2.5 py-1 rounded-full border border-blue-100">
+      Category: {{ cat.name }}
+    </span>
+    {% endif %}{% endfor %}
+    {% endif %}
+    {% if brand %}
+    {% for value, label in brand_choices %}{% if value == brand %}
+    <span class="inline-flex items-center gap-1 bg-purple-50 text-purple-600 text-xs font-bold px-2.5 py-1 rounded-full border border-purple-100">
+      Brand: {{ label }}
+    </span>
+    {% endif %}{% endfor %}
+    {% endif %}
+    {% if search %}
+    <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">
+      Search: "{{ search }}"
+    </span>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</form>
 
 <!-- Products Table -->
 {% if page_obj %}
-<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-8">
-  <div class="overflow-x-auto">
-    <table class="w-full">
-      <thead>
-        <tr class="border-b border-gray-100">
-          <th class="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">Product</th>
-          <th class="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 py-4">Category</th>
-          <th class="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 py-4">Price</th>
-          <th class="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 py-4">Stock</th>
-          <th class="text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 py-4">Customizable</th>
-          <th class="text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 py-4">Status</th>
-          <th class="text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">Actions</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-50">
-        {% for product in page_obj %}
-        <tr class="hover:bg-gray-50/50 transition-colors duration-150" id="row-{{ product.pk }}">
+<div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-5">
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="border-b border-gray-100 bg-gray-50">
+        <th class="text-left px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider w-10">
+          <input type="checkbox" id="select-all" class="accent-black cursor-pointer">
+        </th>
+        <th class="text-left px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Product</th>
+        <th class="text-left px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Category</th>
+        <th class="text-left px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Brand</th>
+        <th class="text-left px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Price Range</th>
+        <th class="text-left px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Stock</th>
+        <th class="text-left px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
+        <th class="text-right px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-50">
+      {% for product in page_obj %}
+      <tr class="hover:bg-gray-50 transition">
 
-          <!-- Product image + name + SKU -->
-          <td class="px-6 py-4">
-            <div class="flex items-center gap-4">
-              <div class="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-100">
-                {% if product.primary_image %}
-                  <img src="{{ product.primary_image.image.url }}"
-                       alt="{{ product.name }}"
-                       class="w-full h-full object-cover">
-                {% else %}
-                  <div class="w-full h-full flex items-center justify-center">
-                    <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                  </div>
-                {% endif %}
-              </div>
-              <div class="min-w-0">
-                <p class="text-sm font-bold text-gray-900 truncate max-w-[180px]">{{ product.name }}</p>
-                <p class="text-[10px] text-gray-400 font-mono mt-0.5">{{ product.sku }}</p>
-              </div>
-            </div>
-          </td>
+        <!-- Checkbox -->
+        <td class="px-4 py-3">
+          <input type="checkbox" class="row-check accent-black cursor-pointer">
+        </td>
 
-          <!-- Category -->
-          <td class="px-4 py-4">
-            {% if product.category %}
-              <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-100 text-gray-600 text-[11px] font-bold">
-                {{ product.category.name }}
-              </span>
-            {% else %}
-              <span class="text-xs text-gray-300 italic">Uncategorised</span>
-            {% endif %}
-          </td>
-
-          <!-- Price -->
-          <td class="px-4 py-4">
-            <p class="text-sm font-black text-gray-900">₹{{ product.base_price }}</p>
-          </td>
-
-          <!-- Stock -->
-          <td class="px-4 py-4">
-            {% with stock=product.total_stock %}
-              {% if stock == 0 %}
-                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-red-500">
-                  <span class="w-1.5 h-1.5 rounded-full bg-red-400 inline-block"></span>
-                  Out of stock
-                </span>
-              {% elif stock <= 5 %}
-                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-500">
-                  <span class="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block"></span>
-                  {{ stock }} left
-                </span>
+        <!-- Product -->
+        <td class="px-4 py-3">
+          <div class="flex items-center gap-3">
+            <!-- Primary image from first variant -->
+            <div class="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+              {% if product.primary_image %}
+              <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}"
+                   class="w-full h-full object-cover">
               {% else %}
-                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-green-600">
-                  <span class="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"></span>
-                  {{ stock }} in stock
-                </span>
+              <div class="w-full h-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </div>
               {% endif %}
+            </div>
+            <div class="min-w-0">
+              <p class="font-semibold text-gray-900 truncate max-w-[160px]">{{ product.name }}</p>
+              {% if product.is_customizable %}
+              <span class="text-[10px] font-bold text-yellow-600 bg-yellow-50 px-1.5 py-0.5 rounded-full border border-yellow-100">
+                Customizable
+              </span>
+              {% endif %}
+            </div>
+          </div>
+        </td>
+
+        <!-- Category -->
+        <td class="px-4 py-3">
+          {% if product.category %}
+          <span class="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-lg">
+            {{ product.category.name }}
+          </span>
+          {% else %}
+          <span class="text-xs text-gray-300">—</span>
+          {% endif %}
+        </td>
+
+        <!-- Brand -->
+        <td class="px-4 py-3">
+          <span class="text-xs font-semibold text-gray-600">{{ product.get_brand_display }}</span>
+        </td>
+
+        <!-- Price range -->
+        <td class="px-4 py-3">
+          {% with variants=product.variants.all %}
+          {% if variants %}
+            {% with prices=variants|dictsort:"price" %}
+            <span class="font-bold text-gray-900 text-xs">
+              ₹{{ product.min_price }}
+              {% if variants.count > 1 %}+{% endif %}
+            </span>
             {% endwith %}
-          </td>
+          {% else %}
+          <span class="text-xs text-gray-300">No variants</span>
+          {% endif %}
+          {% endwith %}
+        </td>
 
-          <!-- Customizable toggle -->
-          <td class="px-4 py-4 text-center">
-            <button onclick="toggleCustomization({{ product.pk }}, this)"
-                    data-url="{% url 'admin_product_toggle_customization' product.pk %}"
-                    class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none
-                           {% if product.is_customizable %}bg-black{% else %}bg-gray-200{% endif %}"
-                    title="{% if product.is_customizable %}Disable customization{% else %}Enable customization{% endif %}">
-              <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200
-                           {% if product.is_customizable %}translate-x-4{% else %}translate-x-0.5{% endif %}">
-              </span>
-            </button>
-          </td>
+        <!-- Stock status -->
+        <td class="px-4 py-3">
+          {% if product.total_stock > 10 %}
+          <div class="flex items-center gap-1.5">
+            <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+            <span class="text-xs font-bold text-green-600">In Stock ({{ product.total_stock }})</span>
+          </div>
+          {% elif product.total_stock > 0 %}
+          <div class="flex items-center gap-1.5">
+            <div class="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
+            <span class="text-xs font-bold text-yellow-600">Low Stock ({{ product.total_stock }})</span>
+          </div>
+          {% else %}
+          <div class="flex items-center gap-1.5">
+            <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+            <span class="text-xs font-bold text-red-500">Out of Stock</span>
+          </div>
+          {% endif %}
+        </td>
 
-          <!-- Status badge -->
-          <td class="px-4 py-4 text-center">
-            {% if product.is_active %}
-              <span class="text-[9px] font-bold px-2 py-1 rounded-full bg-green-50 text-green-600 border border-green-100 uppercase tracking-widest">
-                Active
-              </span>
-            {% else %}
-              <span class="text-[9px] font-bold px-2 py-1 rounded-full bg-red-50 text-red-500 border border-red-100 uppercase tracking-widest">
-                Inactive
-              </span>
-            {% endif %}
-          </td>
+        <!-- Active status -->
+        <td class="px-4 py-3">
+          {% if product.is_active %}
+          <span class="text-xs font-bold px-2 py-1 rounded-full bg-green-50 text-green-600 border border-green-100">Active</span>
+          {% else %}
+          <span class="text-xs font-bold px-2 py-1 rounded-full bg-red-50 text-red-500 border border-red-100">Inactive</span>
+          {% endif %}
+        </td>
 
-          <!-- Actions -->
-          <td class="px-6 py-4">
-            <div class="flex items-center justify-center gap-1">
-
-              <!-- View -->
-              <a href="{% url 'admin_product_edit' product.pk %}"
-                 title="View"
-                 class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-black hover:bg-gray-100 transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                </svg>
-              </a>
-
-              <!-- Edit -->
-              <a href="{% url 'admin_product_edit' product.pk %}"
-                 title="Edit"
-                 class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-black hover:bg-gray-100 transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                </svg>
-              </a>
-
-              <!-- Deactivate / Activate -->
+        <!-- Actions -->
+        <td class="px-4 py-3">
+          <div class="flex items-center justify-end gap-1">
+            <a href="{% url 'admin_product_edit' product.pk %}"
+               class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+               title="Edit product">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            </a>
+            <button onclick="confirmToggle('{{ product.pk }}', '{{ product.name|escapejs }}', {{ product.is_active|yesno:'true,false' }})"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg transition
+                    {% if product.is_active %}text-gray-300 hover:text-red-500 hover:bg-red-50{% else %}text-gray-300 hover:text-green-600 hover:bg-green-50{% endif %}"
+                    title="{% if product.is_active %}Deactivate{% else %}Activate{% endif %}">
               {% if product.is_active %}
-              <button onclick="confirmToggle('{{ product.pk }}', '{{ product.name|escapejs }}', 'deactivate')"
-                      data-url="{% url 'admin_product_delete' product.pk %}"
-                      id="toggleBtn-{{ product.pk }}"
-                      title="Deactivate"
-                      class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
-                </svg>
-              </button>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
               {% else %}
-              <button onclick="confirmToggle('{{ product.pk }}', '{{ product.name|escapejs }}', 'activate')"
-                      data-url="{% url 'admin_product_delete' product.pk %}"
-                      id="toggleBtn-{{ product.pk }}"
-                      title="Activate"
-                      class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-300 hover:text-green-500 hover:bg-green-50 transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-              </button>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               {% endif %}
+            </button>
+          </div>
+        </td>
 
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 
-<!-- Pagination -->
-<div class="mt-4 flex items-center justify-between border-t border-gray-100 pt-6">
-  <p class="text-xs text-gray-400 font-medium">
-    Showing
-    <span class="text-black font-bold">{{ page_obj.start_index }}</span>–<span class="text-black font-bold">{{ page_obj.end_index }}</span>
-    of <span class="text-black font-bold">{{ page_obj.paginator.count }}</span> products
+<!-- Pagination — preserves all filters -->
+<div class="flex items-center justify-between">
+  <p class="text-xs text-gray-400">
+    Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }} products
   </p>
-
-  <div class="flex items-center gap-1.5">
+  <div class="flex items-center gap-1">
     {% if page_obj.has_previous %}
-    <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}&sort={{ sort_by }}"
-       class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-black hover:text-black transition">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-      </svg>
-    </a>
+    <a href="?page={{ page_obj.previous_page_number }}&sort={{ sort_by }}&search={{ search }}&category={{ category_id }}&brand={{ brand }}"
+       class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition text-xs">←</a>
     {% endif %}
-
     {% for num in page_obj.paginator.page_range %}
       {% if page_obj.number == num %}
-      <span class="w-9 h-9 flex items-center justify-center rounded-lg bg-black text-white text-xs font-bold shadow-sm">{{ num }}</span>
+      <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-black text-white text-xs font-bold">{{ num }}</span>
       {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-      <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}&sort={{ sort_by }}"
-         class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-black hover:text-black transition text-xs font-semibold">
-        {{ num }}
-      </a>
+      <a href="?page={{ num }}&sort={{ sort_by }}&search={{ search }}&category={{ category_id }}&brand={{ brand }}"
+         class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition text-xs">{{ num }}</a>
       {% endif %}
     {% endfor %}
-
     {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}&sort={{ sort_by }}"
-       class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-black hover:text-black transition">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-      </svg>
-    </a>
+    <a href="?page={{ page_obj.next_page_number }}&sort={{ sort_by }}&search={{ search }}&category={{ category_id }}&brand={{ brand }}"
+       class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition text-xs">→</a>
     {% endif %}
   </div>
 </div>
 
 {% else %}
-<!-- Empty State -->
-<div class="bg-white rounded-3xl border border-gray-100 p-16 text-center shadow-sm">
-  <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-    <svg class="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-    </svg>
+<!-- Empty state -->
+<div class="bg-white rounded-xl border border-gray-100 p-16 text-center">
+  <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+    <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
   </div>
-  <h3 class="text-xl font-bold text-gray-900 mb-2">
-    {% if search %}No matches found{% else %}No products yet{% endif %}
-  </h3>
-  <p class="text-gray-400 text-sm mb-8 max-w-xs mx-auto">
-    {% if search %}
-      No results for "<strong>{{ search }}</strong>". Try a different search.
-    {% else %}
-      Get started by adding your first product.
-    {% endif %}
-  </p>
-  {% if search %}
-  <a href="?sort={{ sort_by }}"
-     class="inline-flex items-center gap-2 bg-black text-white px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition shadow-sm">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
-    </svg>
-    Clear Search
-  </a>
+  {% if search or category_id or brand %}
+  <h3 class="text-gray-700 font-bold mb-1">No products found</h3>
+  <p class="text-gray-400 text-sm mb-4">Try adjusting your filters or search term.</p>
+  <a href="{% url 'admin_product_list' %}" class="text-xs font-bold text-black hover:underline">Clear all filters</a>
   {% else %}
+  <h3 class="text-gray-700 font-bold mb-1">No products yet</h3>
+  <p class="text-gray-400 text-sm mb-4">Add your first product to get started.</p>
   <a href="{% url 'admin_product_add' %}"
-     class="inline-flex items-center gap-2 bg-black text-white px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition shadow-sm">
-    Add First Product
+     class="inline-flex items-center gap-2 bg-black text-white px-4 py-2.5 rounded-lg text-xs font-bold hover:bg-gray-800 transition">
+    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+    Add Product
   </a>
   {% endif %}
 </div>
 {% endif %}
 
-
-<!-- ── Toggle Confirmation Modal ── -->
-<div id="toggleModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
-
-    <div id="modalHeader" class="px-6 pt-6 pb-4 flex items-center gap-4">
-      <div id="modalIconWrap" class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
-        <svg id="modalIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"></svg>
-      </div>
-      <div>
-        <h3 id="modalTitle" class="text-sm font-black text-gray-900"></h3>
-        <p id="modalSubtitle" class="text-xs text-gray-500 mt-0.5"></p>
-      </div>
-    </div>
-
-    <div class="px-6 py-4">
-      <p class="text-xs text-gray-500 leading-relaxed">
-        You're about to <span id="modalAction" class="font-bold text-gray-900"></span> the product
-        "<span id="modalProductName" class="font-bold text-gray-900"></span>".
-      </p>
-    </div>
-
-    <div class="px-6 pb-6 flex gap-3">
+<!-- Activate / Deactivate modal -->
+<div id="toggle-modal" class="fixed inset-0 bg-black/40 z-50 items-center justify-center px-4" style="display:none;">
+  <div class="bg-white rounded-2xl p-6 w-full max-w-sm text-center shadow-2xl">
+    <div id="modal-icon" class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"></div>
+    <h3 id="modal-title" class="text-gray-900 font-bold text-base mb-1"></h3>
+    <p id="modal-msg" class="text-gray-400 text-sm mb-5"></p>
+    <div class="flex gap-3">
       <button onclick="closeModal()"
-              class="flex-1 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-500 hover:border-gray-400 hover:text-gray-900 transition">
+              class="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 transition">
         Cancel
       </button>
-      <form id="toggleForm" method="POST" action="" class="flex-1">
+      <form id="toggle-form" method="POST" action="" class="flex-1">
         {% csrf_token %}
-        <button id="modalConfirmBtn" type="submit"
-                class="w-full py-2.5 rounded-xl text-white text-xs font-bold transition">
+        <button id="modal-btn" type="submit"
+                class="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition">
           Confirm
         </button>
       </form>
     </div>
-
   </div>
 </div>
 
-
 <script>
-  /* ── Sort ── */
-  function applySort(value) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('sort', value);
-    url.searchParams.delete('page');
-    window.location.href = url.toString();
+// Select all checkbox
+document.getElementById('select-all').addEventListener('change', function() {
+  document.querySelectorAll('.row-check').forEach(cb => cb.checked = this.checked);
+});
+
+// Activate / Deactivate modal
+function confirmToggle(pk, name, isActive) {
+  const modal = document.getElementById('toggle-modal');
+  const icon  = document.getElementById('modal-icon');
+  const title = document.getElementById('modal-title');
+  const msg   = document.getElementById('modal-msg');
+  const btn   = document.getElementById('modal-btn');
+
+  if (isActive) {
+    icon.className  = 'w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 bg-red-50';
+    icon.innerHTML  = '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>';
+    title.textContent = 'Deactivate Product?';
+    msg.textContent   = '"' + name + '" will be hidden from the store.';
+    btn.className     = 'w-full py-2.5 rounded-xl text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition';
+  } else {
+    icon.className  = 'w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-50';
+    icon.innerHTML  = '<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+    title.textContent = 'Activate Product?';
+    msg.textContent   = '"' + name + '" will be visible in the store.';
+    btn.className     = 'w-full py-2.5 rounded-xl text-sm font-semibold text-white bg-green-500 hover:bg-green-600 transition';
   }
 
-  /* ── Soft delete / activate modal ── */
-  function confirmToggle(pk, name, action) {
-    const isDeactivate = action === 'deactivate';
+  document.getElementById('toggle-form').action = '/manage/products/delete/' + pk + '/';
+  modal.style.display = 'flex';
+}
 
-    document.getElementById('modalProductName').textContent = name;
-    document.getElementById('modalAction').textContent = isDeactivate ? 'deactivate' : 'activate';
-
-    const header      = document.getElementById('modalHeader');
-    const iconWrap    = document.getElementById('modalIconWrap');
-    const icon        = document.getElementById('modalIcon');
-    const confirmBtn  = document.getElementById('modalConfirmBtn');
-
-    if (isDeactivate) {
-      header.className     = 'bg-red-50 px-6 pt-6 pb-4 flex items-center gap-4';
-      iconWrap.className   = 'w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0';
-      icon.className       = 'w-5 h-5 text-red-500';
-      icon.innerHTML       = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>';
-      document.getElementById('modalTitle').textContent    = 'Deactivate Product?';
-      document.getElementById('modalSubtitle').textContent = 'Product will be hidden from the storefront.';
-      confirmBtn.className = 'w-full py-2.5 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition';
-      confirmBtn.textContent = 'Yes, Deactivate';
-    } else {
-      header.className     = 'bg-green-50 px-6 pt-6 pb-4 flex items-center gap-4';
-      iconWrap.className   = 'w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0';
-      icon.className       = 'w-5 h-5 text-green-500';
-      icon.innerHTML       = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>';
-      document.getElementById('modalTitle').textContent    = 'Activate Product?';
-      document.getElementById('modalSubtitle').textContent = 'Product will be visible on the storefront again.';
-      confirmBtn.className = 'w-full py-2.5 rounded-xl bg-green-500 text-white text-xs font-bold hover:bg-green-600 transition';
-      confirmBtn.textContent = 'Yes, Activate';
-    }
-
-    const url = document.getElementById(`toggleBtn-${pk}`).dataset.url;
-    document.getElementById('toggleForm').action = url;
-
-    const modal = document.getElementById('toggleModal');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-  }
-
-  function closeModal() {
-    const modal = document.getElementById('toggleModal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-  }
-
-  document.getElementById('toggleModal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
-  });
-
-  /* ── Customization toggle (AJAX) ── */
-  function toggleCustomization(pk, btn) {
-    const url = btn.dataset.url;
-    fetch(url, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': '{{ csrf_token }}',
-        'Content-Type': 'application/json',
-      },
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.is_customizable) {
-        btn.classList.remove('bg-gray-200');
-        btn.classList.add('bg-black');
-        btn.querySelector('span').classList.remove('translate-x-0.5');
-        btn.querySelector('span').classList.add('translate-x-4');
-        btn.title = 'Disable customization';
-      } else {
-        btn.classList.remove('bg-black');
-        btn.classList.add('bg-gray-200');
-        btn.querySelector('span').classList.remove('translate-x-4');
-        btn.querySelector('span').classList.add('translate-x-0.5');
-        btn.title = 'Enable customization';
-      }
-    })
-    .catch(() => {
-      alert('Failed to update. Please try again.');
-    });
-  }
+function closeModal() {
+  document.getElementById('toggle-modal').style.display = 'none';
+}
 </script>
 
 {% endblock %}

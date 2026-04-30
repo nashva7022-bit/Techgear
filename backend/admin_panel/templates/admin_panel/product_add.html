@@ -1,539 +1,601 @@
 {% extends 'admin_panel/admin_base.html' %}
 {% block content %}
 
-<!-- Header -->
-<div class="flex items-start justify-between mb-8">
-  <div>
-    <a href="{% url 'admin_product_list' %}"
-       class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-black transition mb-3">
-      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-      </svg>
-      Back to Products
-    </a>
-    <h1 class="text-2xl font-black text-gray-900 tracking-tight">Add New Product</h1>
-    <p class="text-sm text-gray-500 mt-1 font-medium">Fill in the details and upload at least 3 product images.</p>
-  </div>
+<!-- Back + Header -->
+<div class="mb-8">
+  <a href="{% url 'admin_product_list' %}" class="inline-flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-black transition mb-4 uppercase tracking-widest">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    Back to Products
+  </a>
+  <h1 class="text-2xl font-black text-gray-900 tracking-tight">Add New Product</h1>
+  <p class="text-sm text-gray-500 mt-1 font-medium">Fill in the details below. At least one variant with 3 images is required.</p>
 </div>
 
-<!-- Django messages -->
+<!-- Global errors -->
 {% if messages %}
+<div class="mb-6 space-y-2">
   {% for message in messages %}
-    <div class="mb-6 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold
-                {% if message.tags == 'error' %}bg-red-50 text-red-600 border border-red-100
-                {% else %}bg-green-50 text-green-600 border border-green-100{% endif %}">
-      {% if message.tags == 'error' %}
-        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      {% else %}
-        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-      {% endif %}
-      {{ message }}
-    </div>
+  <div class="flex items-start gap-3 px-4 py-3 rounded-xl
+    {% if message.tags == 'error' %}bg-red-50 border border-red-100 text-red-600
+    {% else %}bg-green-50 border border-green-100 text-green-600{% endif %}">
+    <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        {% if message.tags == 'error' %}d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+        {% else %}d="M5 13l4 4L19 7"{% endif %}/>
+    </svg>
+    <p class="text-xs font-semibold">{{ message }}</p>
+  </div>
   {% endfor %}
+</div>
 {% endif %}
 
-<form method="POST" enctype="multipart/form-data" id="productForm">
+<form method="POST" enctype="multipart/form-data" id="productForm" novalidate>
   {% csrf_token %}
-  <!-- Hidden input that holds all final cropped images as base64 -->
-  <div id="croppedImagesContainer"></div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <div class="space-y-6">
 
-    <!-- ── LEFT: Main Details ── -->
-    <div class="lg:col-span-2 space-y-6">
+    <!-- ═══════════════════════════════════════ -->
+    <!-- SECTION 1: BASIC INFORMATION           -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+        <div class="w-7 h-7 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h2 class="text-sm font-black text-gray-900 uppercase tracking-widest">Basic Information</h2>
+      </div>
 
-      <!-- Basic Info Card -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-5">Basic Information</p>
+      <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
 
         <!-- Product Name -->
-        <div class="mb-5">
-          <label class="block text-xs font-bold text-gray-600 mb-2">Product Name <span class="text-red-400">*</span></label>
+        <div class="md:col-span-2">
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Product Name <span class="text-red-500">*</span></label>
           <input type="text" name="name" value="{{ form.name.value|default:'' }}"
-                 placeholder="e.g. iPhone 15 Pro Leather Case"
-                 class="w-full px-4 py-3 rounded-xl border {% if form.name.errors %}border-red-300 bg-red-50{% else %}border-gray-200 bg-gray-50{% endif %} text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition">
+                 placeholder="e.g. Carbon Fibre Phone Case"
+                 class="w-full px-4 py-3 bg-gray-50 border {% if form.name.errors %}border-red-400 bg-red-50{% else %}border-gray-100{% endif %} rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition-all">
           {% if form.name.errors %}
-            <p class="text-red-500 text-xs mt-1.5 font-medium">{{ form.name.errors.0 }}</p>
+          <p class="mt-1.5 text-xs text-red-500 font-semibold flex items-center gap-1">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            {{ form.name.errors.0 }}
+          </p>
           {% endif %}
+        </div>
+
+        <!-- Brand -->
+        <div>
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Brand <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <select name="brand"
+                    class="w-full appearance-none px-4 py-3 bg-gray-50 border {% if form.brand.errors %}border-red-400 bg-red-50{% else %}border-gray-100{% endif %} rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition-all cursor-pointer pr-10">
+              {% for value, label in form.fields.brand.choices %}
+              <option value="{{ value }}" {% if form.brand.value == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            <svg class="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+          {% if form.brand.errors %}<p class="mt-1.5 text-xs text-red-500 font-semibold">{{ form.brand.errors.0 }}</p>{% endif %}
         </div>
 
         <!-- Category -->
-        <div class="mb-5">
-          <label class="block text-xs font-bold text-gray-600 mb-2">Category <span class="text-red-400">*</span></label>
+        <div>
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Category <span class="text-red-500">*</span></label>
           <div class="relative">
             <select name="category"
-                    class="w-full appearance-none px-4 py-3 rounded-xl border {% if form.category.errors %}border-red-300 bg-red-50{% else %}border-gray-200 bg-gray-50{% endif %} text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition cursor-pointer pr-10">
+                    class="w-full appearance-none px-4 py-3 bg-gray-50 border {% if form.category.errors %}border-red-400 bg-red-50{% else %}border-gray-100{% endif %} rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition-all cursor-pointer pr-10">
               <option value="">Select a category</option>
-              {% for cat in categories %}
-                <option value="{{ cat.pk }}" {% if form.category.value == cat.pk|stringformat:"s" %}selected{% endif %}>
-                  {{ cat.name }}
-                </option>
+              {% for cat in form.fields.category.queryset %}
+              <option value="{{ cat.pk }}" {% if form.category.value|stringformat:"s" == cat.pk|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
               {% endfor %}
             </select>
-            <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-            </svg>
+            <svg class="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </div>
-          {% if form.category.errors %}
-            <p class="text-red-500 text-xs mt-1.5 font-medium">{{ form.category.errors.0 }}</p>
-          {% endif %}
+          {% if form.category.errors %}<p class="mt-1.5 text-xs text-red-500 font-semibold">{{ form.category.errors.0 }}</p>{% endif %}
         </div>
 
-        <!-- Description -->
-        <div>
-          <label class="block text-xs font-bold text-gray-600 mb-2">Description</label>
-          <textarea name="description" rows="4"
-                    placeholder="Describe the product — materials, compatibility, features..."
-                    class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition resize-none">{{ form.description.value|default:'' }}</textarea>
-        </div>
-      </div>
+        <!-- Status + Customization -->
+        <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
 
-      <!-- Pricing & SKU Card -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-5">Pricing & SKU</p>
-
-        <div class="grid grid-cols-2 gap-4">
-          <!-- Base Price -->
-          <div>
-            <label class="block text-xs font-bold text-gray-600 mb-2">Base Price (₹) <span class="text-red-400">*</span></label>
-            <div class="relative">
-              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">₹</span>
-              <input type="number" name="base_price" value="{{ form.base_price.value|default:'' }}"
-                     placeholder="0.00" step="0.01" min="0"
-                     class="w-full pl-8 pr-4 py-3 rounded-xl border {% if form.base_price.errors %}border-red-300 bg-red-50{% else %}border-gray-200 bg-gray-50{% endif %} text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition">
+          <!-- Status Toggle -->
+          <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-black text-gray-900">Product Status</p>
+              <p class="text-[10px] text-gray-400 font-medium mt-0.5">Active products are visible in the store</p>
             </div>
-            {% if form.base_price.errors %}
-              <p class="text-red-500 text-xs mt-1.5 font-medium">{{ form.base_price.errors.0 }}</p>
-            {% endif %}
-          </div>
-
-          <!-- SKU -->
-          <div>
-            <label class="block text-xs font-bold text-gray-600 mb-2">
-              SKU
-              <span class="text-gray-400 font-normal normal-case tracking-normal ml-1">(auto-generated if empty)</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" name="is_active" id="is_active" class="sr-only peer"
+                     {% if form.is_active.value != False %}checked{% endif %}>
+              <div class="w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black"></div>
             </label>
-            <input type="text" name="sku" value="{{ form.sku.value|default:'' }}"
-                   placeholder="e.g. TG-IPHONE-001"
-                   class="w-full px-4 py-3 rounded-xl border {% if form.sku.errors %}border-red-300 bg-red-50{% else %}border-gray-200 bg-gray-50{% endif %} text-sm font-mono focus:outline-none focus:ring-2 focus:ring-black transition">
-            {% if form.sku.errors %}
-              <p class="text-red-500 text-xs mt-1.5 font-medium">{{ form.sku.errors.0 }}</p>
-            {% endif %}
           </div>
+
+          <!-- Customization Toggle -->
+          <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-black text-gray-900">Customization</p>
+              <p class="text-[10px] text-gray-400 font-medium mt-0.5">Allow customers to personalise this product</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" name="is_customizable" id="is_customizable" class="sr-only peer"
+                     {% if form.is_customizable.value %}checked{% endif %}>
+              <div class="w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black"></div>
+            </label>
+          </div>
+
         </div>
       </div>
-
-      <!-- Image Upload Card -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <div class="flex items-center justify-between mb-5">
-          <div>
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Product Images</p>
-            <p class="text-xs text-gray-400 mt-1">Minimum 3 images required. Each will be cropped to 1:1 ratio.</p>
-          </div>
-          <span id="imageCount" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">0 / 3 min</span>
-        </div>
-
-        <!-- Drop zone -->
-        <div id="dropZone"
-             class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center cursor-pointer hover:border-black hover:bg-gray-50 transition-all duration-200 mb-5"
-             onclick="document.getElementById('imageInput').click()"
-             ondragover="event.preventDefault(); this.classList.add('border-black','bg-gray-50')"
-             ondragleave="this.classList.remove('border-black','bg-gray-50')"
-             ondrop="handleDrop(event)">
-          <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-          </div>
-          <p class="text-sm font-bold text-gray-700 mb-1">Click to upload or drag & drop</p>
-          <p class="text-xs text-gray-400">JPG, PNG, WEBP — max 5MB each</p>
-          <input type="file" id="imageInput" multiple accept="image/jpeg,image/png,image/webp" class="hidden" onchange="handleFiles(this.files)">
-        </div>
-
-        <!-- Image preview grid -->
-        <div id="imageGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-3"></div>
-      </div>
-
     </div>
 
-    <!-- ── RIGHT: Settings ── -->
-    <div class="space-y-6">
-
-      <!-- Status Card -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-5">Status</p>
-        <label class="flex items-center justify-between cursor-pointer">
-          <div>
-            <p class="text-sm font-bold text-gray-900">Active</p>
-            <p class="text-xs text-gray-400 mt-0.5">Visible on storefront</p>
-          </div>
-          <div class="relative">
-            <input type="checkbox" name="is_active" id="isActive" class="sr-only"
-                   {% if form.is_active.value %}checked{% endif %}>
-            <div id="activeTrack" onclick="toggleSwitch('isActive','activeTrack')"
-                 class="w-11 h-6 rounded-full cursor-pointer transition-colors duration-200
-                        {% if form.is_active.value %}bg-black{% else %}bg-gray-200{% endif %}">
-              <div id="activeThumb"
-                   class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200
-                          {% if form.is_active.value %}translate-x-5{% else %}translate-x-0{% endif %}">
-              </div>
-            </div>
-          </div>
-        </label>
-      </div>
-
-      <!-- Customization Card -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-5">Customization</p>
-
-        <!-- Is Customizable -->
-        <label class="flex items-center justify-between cursor-pointer mb-4">
-          <div>
-            <p class="text-sm font-bold text-gray-900">Allow Customization</p>
-            <p class="text-xs text-gray-400 mt-0.5">Enable custom options</p>
-          </div>
-          <div class="relative">
-            <input type="checkbox" name="is_customizable" id="isCustomizable" class="sr-only"
-                   {% if form.is_customizable.value %}checked{% endif %}
-                   onchange="toggleCustomizationOptions()">
-            <div id="customizableTrack" onclick="toggleSwitch('isCustomizable','customizableTrack'); toggleCustomizationOptions()"
-                 class="w-11 h-6 rounded-full cursor-pointer transition-colors duration-200
-                        {% if form.is_customizable.value %}bg-black{% else %}bg-gray-200{% endif %}">
-              <div id="customizableThumb"
-                   class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200
-                          {% if form.is_customizable.value %}translate-x-5{% else %}translate-x-0{% endif %}">
-              </div>
-            </div>
-          </div>
-        </label>
-
-        <!-- Sub-options (shown only when customizable is on) -->
-        <div id="customizationOptions"
-             class="space-y-3 pl-3 border-l-2 border-gray-100 {% if not form.is_customizable.value %}hidden{% endif %}">
-
-          <!-- Allow Custom Text -->
-          <label class="flex items-center justify-between cursor-pointer">
-            <div>
-              <p class="text-xs font-bold text-gray-700">Custom Text</p>
-              <p class="text-[10px] text-gray-400">Name, message engraving</p>
-            </div>
-            <div class="relative">
-              <input type="checkbox" name="allow_custom_text" id="allowText" class="sr-only"
-                     {% if form.allow_custom_text.value %}checked{% endif %}>
-              <div id="textTrack" onclick="toggleSwitch('allowText','textTrack')"
-                   class="w-9 h-5 rounded-full cursor-pointer transition-colors duration-200
-                          {% if form.allow_custom_text.value %}bg-black{% else %}bg-gray-200{% endif %}">
-                <div id="textThumb"
-                     class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200
-                            {% if form.allow_custom_text.value %}translate-x-4{% else %}translate-x-0{% endif %}">
-                </div>
-              </div>
-            </div>
-          </label>
-
-          <!-- Allow Custom Image -->
-          <label class="flex items-center justify-between cursor-pointer">
-            <div>
-              <p class="text-xs font-bold text-gray-700">Custom Image</p>
-              <p class="text-[10px] text-gray-400">Upload personal photo</p>
-            </div>
-            <div class="relative">
-              <input type="checkbox" name="allow_custom_image" id="allowImage" class="sr-only"
-                     {% if form.allow_custom_image.value %}checked{% endif %}>
-              <div id="imageTrack" onclick="toggleSwitch('allowImage','imageTrack')"
-                   class="w-9 h-5 rounded-full cursor-pointer transition-colors duration-200
-                          {% if form.allow_custom_image.value %}bg-black{% else %}bg-gray-200{% endif %}">
-                <div id="imageThumb"
-                     class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200
-                            {% if form.allow_custom_image.value %}translate-x-4{% else %}translate-x-0{% endif %}">
-                </div>
-              </div>
-            </div>
-          </label>
+    <!-- ═══════════════════════════════════════ -->
+    <!-- SECTION 2: DESCRIPTION                 -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+        <div class="w-7 h-7 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
         </div>
+        <h2 class="text-sm font-black text-gray-900 uppercase tracking-widest">Description</h2>
+      </div>
+      <div class="p-6">
+        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Product Description</label>
+        <textarea name="description" rows="5"
+                  placeholder="Describe the product — materials, features, compatibility..."
+                  class="w-full px-4 py-3 bg-gray-50 border {% if form.description.errors %}border-red-400 bg-red-50{% else %}border-gray-100{% endif %} rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition-all resize-none">{{ form.description.value|default:'' }}</textarea>
+        {% if form.description.errors %}<p class="mt-1.5 text-xs text-red-500 font-semibold">{{ form.description.errors.0 }}</p>{% endif %}
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- SECTION 3: SPECIFICATIONS              -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          </div>
+          <div>
+            <h2 class="text-sm font-black text-gray-900 uppercase tracking-widest">Product Specifications</h2>
+            <p class="text-[10px] text-gray-400 font-medium">e.g. Material → Polycarbonate</p>
+          </div>
+        </div>
+        <button type="button" onclick="addSpec()"
+                class="inline-flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          Add
+        </button>
       </div>
 
-      <!-- Submit -->
-      <button type="button" onclick="submitProduct()"
-              class="w-full py-4 bg-black text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-gray-800 transition shadow-sm">
-        Save Product
-      </button>
+      <div class="p-6">
+        <div id="specsContainer" class="space-y-3">
+          <!-- Spec rows injected here -->
+        </div>
+        <p id="noSpecsMsg" class="text-xs text-gray-300 font-medium text-center py-4">No specifications added yet. Click "Add" to start.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- SECTION 4: VARIANTS                    -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          </div>
+          <div>
+            <h2 class="text-sm font-black text-gray-900 uppercase tracking-widest">Product Variants</h2>
+            <p class="text-[10px] text-gray-400 font-medium">At least 1 variant required · Min 3 images per variant · First variant is default</p>
+          </div>
+        </div>
+        <button type="button" onclick="addVariant()"
+                class="inline-flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          Add Variant
+        </button>
+      </div>
+
+      <div class="p-6">
+        <div id="variantsContainer" class="space-y-4"></div>
+        <p id="noVariantsMsg" class="text-xs text-red-400 font-semibold text-center py-4">⚠ At least one variant is required before saving.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- FORM ACTIONS                           -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="flex items-center justify-between pt-2 pb-8">
       <a href="{% url 'admin_product_list' %}"
-         class="block text-center text-xs font-bold text-gray-400 hover:text-black transition mt-2">
+         class="px-6 py-3 rounded-xl border border-gray-200 text-xs font-bold text-gray-500 hover:border-gray-400 hover:text-gray-900 transition uppercase tracking-widest">
         Cancel
       </a>
-
+      <button type="submit"
+              class="inline-flex items-center gap-2 bg-black text-white px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+        Save Product
+      </button>
     </div>
+
   </div>
 </form>
 
-
-<!-- ── Cropper Modal ── -->
-<div id="cropModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-      <div>
-        <h3 class="text-sm font-black text-gray-900">Crop Image</h3>
-        <p class="text-xs text-gray-400 mt-0.5">Drag to reposition · scroll to zoom</p>
-      </div>
-      <span id="cropCounter" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500"></span>
-    </div>
-    <div class="p-4 bg-gray-50">
-      <div style="max-height: 380px; overflow: hidden;">
-        <img id="cropperImage" src="" alt="Crop" style="max-width:100%; display:block;">
-      </div>
-    </div>
-    <div class="px-6 py-4 flex gap-3">
-      <button type="button" onclick="skipCrop()"
-              class="flex-1 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-500 hover:border-gray-400 transition">
-        Skip Crop
-      </button>
-      <button type="button" onclick="applyCrop()"
-              class="flex-1 py-2.5 rounded-xl bg-black text-white text-xs font-bold hover:bg-gray-800 transition">
-        Apply Crop
-      </button>
-    </div>
-  </div>
-</div>
-
-
-<!-- Cropper.js CDN -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
+<!-- ═══════════════════════════════════════════ -->
+<!-- JAVASCRIPT                                 -->
+<!-- ═══════════════════════════════════════════ -->
 <script>
-  /* ─────────────────────────────────────────
-     STATE
-  ───────────────────────────────────────── */
-  let pendingFiles   = [];   // raw File objects waiting to be cropped
-  let croppedImages  = [];   // { dataURL, fileName } already cropped/skipped
-  let cropperInstance = null;
-  let currentCropIndex = 0;
+  // ── COLOR CHOICES from Django model ──
+  const COLOR_CHOICES = [
+    ['black','Black'],['white','White'],['red','Red'],['blue','Blue'],
+    ['green','Green'],['yellow','Yellow'],['orange','Orange'],['purple','Purple'],
+    ['pink','Pink'],['grey','Grey'],['navy','Navy'],['gold','Gold'],
+    ['silver','Silver'],['transparent','Transparent'],['other','Other'],
+  ];
 
-  /* ─────────────────────────────────────────
-     FILE INPUT HANDLERS
-  ───────────────────────────────────────── */
-  function handleFiles(files) {
-    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-    const maxSize = 5 * 1024 * 1024;
-    const valid   = [];
+  let variantCount = 0;
+  let specCount    = 0;
 
-    Array.from(files).forEach(file => {
-      if (!allowed.includes(file.type)) {
-        alert(`"${file.name}" is not a valid image type.`);
-        return;
-      }
-      if (file.size > maxSize) {
-        alert(`"${file.name}" exceeds the 5MB limit.`);
-        return;
-      }
-      valid.push(file);
-    });
+  // ── SPECS ──────────────────────────────────
+  function addSpec() {
+    const container = document.getElementById('specsContainer');
+    const noMsg     = document.getElementById('noSpecsMsg');
+    noMsg.classList.add('hidden');
 
-    if (!valid.length) return;
-
-    pendingFiles = valid;
-    currentCropIndex = 0;
-    openCropModal(pendingFiles[currentCropIndex]);
+    const idx = specCount++;
+    const row = document.createElement('div');
+    row.className = 'flex items-center gap-3 group';
+    row.id = `spec_row_${idx}`;
+    row.innerHTML = `
+      <div class="flex-1">
+        <input type="text" name="spec_name" placeholder="Specification name (e.g. Material)"
+               class="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition-all">
+      </div>
+      <div class="flex-1">
+        <input type="text" name="spec_value" placeholder="Value (e.g. Polycarbonate)"
+               class="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition-all">
+      </div>
+      <button type="button" onclick="removeSpec(${idx})"
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition flex-shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    `;
+    container.appendChild(row);
   }
 
-  function handleDrop(e) {
-    e.preventDefault();
-    document.getElementById('dropZone').classList.remove('border-black', 'bg-gray-50');
-    handleFiles(e.dataTransfer.files);
-  }
-
-  /* ─────────────────────────────────────────
-     CROPPER MODAL
-  ───────────────────────────────────────── */
-  function openCropModal(file) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = document.getElementById('cropperImage');
-      img.src = e.target.result;
-
-      // destroy previous instance
-      if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
-
-      // show modal
-      const modal = document.getElementById('cropModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-
-      document.getElementById('cropCounter').textContent =
-        `${currentCropIndex + 1} of ${pendingFiles.length}`;
-
-      // init Cropper after image loads
-      img.onload = () => {
-        cropperInstance = new Cropper(img, {
-          aspectRatio: 1,
-          viewMode: 1,
-          autoCropArea: 0.9,
-          movable: true,
-          zoomable: true,
-          rotatable: false,
-          scalable: false,
-        });
-      };
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function applyCrop() {
-    if (!cropperInstance) return;
-    const canvas = cropperInstance.getCroppedCanvas({ width: 800, height: 800 });
-    const dataURL = canvas.toDataURL('image/jpeg', 0.9);
-    croppedImages.push({ dataURL, fileName: pendingFiles[currentCropIndex].name });
-    nextOrClose();
-  }
-
-  function skipCrop() {
-    const reader = new FileReader();
-    reader.onload = e => {
-      croppedImages.push({
-        dataURL: e.target.result,
-        fileName: pendingFiles[currentCropIndex].name
-      });
-      nextOrClose();
-    };
-    reader.readAsDataURL(pendingFiles[currentCropIndex]);
-  }
-
-  function nextOrClose() {
-    currentCropIndex++;
-    if (currentCropIndex < pendingFiles.length) {
-      // crop next file
-      if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
-      openCropModal(pendingFiles[currentCropIndex]);
-    } else {
-      closeCropModal();
-      renderPreviews();
+  function removeSpec(idx) {
+    const row = document.getElementById(`spec_row_${idx}`);
+    if (row) row.remove();
+    if (document.getElementById('specsContainer').children.length === 0) {
+      document.getElementById('noSpecsMsg').classList.remove('hidden');
     }
   }
 
-  function closeCropModal() {
-    const modal = document.getElementById('cropModal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-    if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
-  }
+  // ── VARIANTS ────────────────────────────────
+  function addVariant() {
+    const container   = document.getElementById('variantsContainer');
+    const noMsg       = document.getElementById('noVariantsMsg');
+    noMsg.classList.add('hidden');
 
-  /* ─────────────────────────────────────────
-     PREVIEW GRID
-  ───────────────────────────────────────── */
-  function renderPreviews() {
-    const grid = document.getElementById('imageGrid');
-    grid.innerHTML = '';
+    const idx       = variantCount++;
+    const isDefault = idx === 0;
 
-    croppedImages.forEach((img, idx) => {
-      const div = document.createElement('div');
-      div.className = 'relative group aspect-square rounded-xl overflow-hidden border border-gray-100';
+    // Build color options
+    const colorOptions = COLOR_CHOICES.map(([val, label]) =>
+      `<option value="${val}">${label}</option>`
+    ).join('');
 
-      // primary badge on first image
-      const primaryBadge = idx === 0
-        ? `<span class="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-black text-white uppercase tracking-widest">Primary</span>`
-        : '';
-
-      div.innerHTML = `
-        <img src="${img.dataURL}" class="w-full h-full object-cover">
-        ${primaryBadge}
-        <button type="button" onclick="removeImage(${idx})"
-                class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
+    const card = document.createElement('div');
+    card.className = 'border border-gray-100 rounded-2xl overflow-hidden';
+    card.id = `variant_card_${idx}`;
+    card.innerHTML = `
+      <!-- Variant Header -->
+      <div class="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-100">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-black text-gray-900">Variant ${idx + 1}</span>
+          ${isDefault ? '<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-black text-white uppercase tracking-widest">Default</span>' : ''}
+        </div>
+        <button type="button" onclick="removeVariant(${idx})"
+                class="text-[10px] font-bold text-gray-300 hover:text-red-500 transition uppercase tracking-widest">
+          Remove
         </button>
-      `;
-      grid.appendChild(div);
+      </div>
+
+      <!-- Variant Fields -->
+      <div class="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+        <!-- Device Model -->
+        <div class="lg:col-span-3">
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Device Model <span class="text-red-500">*</span></label>
+          <input type="text" name="variant_device_model" placeholder="e.g. iPhone 15 Pro, Samsung Galaxy S24"
+                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition-all">
+          <p class="variant-error text-xs text-red-500 font-semibold mt-1 hidden"></p>
+        </div>
+
+        <!-- Color Dropdown -->
+        <div>
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Colour <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <select name="variant_color" onchange="syncColorCode(this, ${idx})"
+                    class="w-full appearance-none px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition-all cursor-pointer pr-10">
+              ${colorOptions}
+            </select>
+            <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+        </div>
+
+        <!-- Color Code Picker -->
+        <div>
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Colour Code <span class="text-red-500">*</span></label>
+          <div class="flex items-center gap-2">
+            <input type="color" id="colorPicker_${idx}" value="#000000"
+                   onchange="updateColorCode(this, ${idx})"
+                   class="w-10 h-10 rounded-lg border border-gray-100 cursor-pointer p-0.5 bg-gray-50">
+            <input type="text" name="variant_color_code" id="colorCodeText_${idx}" value="#000000"
+                   placeholder="#000000" maxlength="7"
+                   onchange="updateColorPicker(this, ${idx})"
+                   oninput="validateHex(this)"
+                   class="flex-1 px-3 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-mono font-medium focus:outline-none focus:ring-2 focus:ring-black transition-all">
+          </div>
+          <p class="text-[10px] text-gray-400 font-medium mt-1">Click the colour box or type a hex code</p>
+        </div>
+
+        <!-- Case Type -->
+        <div>
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Case Type</label>
+          <input type="text" name="variant_case_type" placeholder="e.g. Slim, Rugged, Leather"
+                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition-all">
+        </div>
+
+        <!-- SKU -->
+        <div>
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">SKU <span class="text-[9px] text-gray-300 normal-case font-medium">(auto-generated if blank)</span></label>
+          <input type="text" name="variant_sku" placeholder="Leave blank to auto-generate"
+                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition-all">
+        </div>
+
+        <!-- Price -->
+        <div>
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Price (₹) <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">₹</span>
+            <input type="number" name="variant_price" min="0" step="0.01" placeholder="0.00"
+                   class="w-full pl-8 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition-all">
+          </div>
+        </div>
+
+        <!-- Stock -->
+        <div>
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Stock Quantity <span class="text-red-500">*</span></label>
+          <input type="number" name="variant_stock" min="0" placeholder="0"
+                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition-all">
+        </div>
+
+      </div>
+
+      <!-- Variant Images -->
+      <div class="px-5 pb-5">
+        <div class="border-t border-gray-100 pt-4">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Variant Images <span class="text-red-500">*</span></p>
+              <p class="text-[10px] text-gray-400 font-medium mt-0.5">Minimum 3 images · JPEG, PNG, WebP · Max 5MB each · First image is primary</p>
+            </div>
+            <span id="imgCount_${idx}" class="text-[10px] font-bold text-gray-400">0 / 3 min</span>
+          </div>
+
+          <!-- Image Preview Grid -->
+          <div id="imagePreview_${idx}" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 mb-3"></div>
+
+          <!-- Upload Button -->
+          <label for="variantImages_${idx}"
+                 class="flex items-center justify-center gap-2 w-full py-8 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-black hover:bg-gray-50 transition-all group">
+            <svg class="w-5 h-5 text-gray-300 group-hover:text-black transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span class="text-xs font-bold text-gray-400 group-hover:text-black transition uppercase tracking-widest">Upload Images</span>
+          </label>
+          <input type="file" id="variantImages_${idx}" name="variant_images_${idx}"
+                 multiple accept="image/jpeg,image/png,image/webp"
+                 class="hidden" onchange="handleImages(this, ${idx})">
+
+          <!-- Image error -->
+          <p id="imgError_${idx}" class="text-xs text-red-500 font-semibold mt-2 hidden"></p>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(card);
+  }
+
+  function removeVariant(idx) {
+    const card = document.getElementById(`variant_card_${idx}`);
+    if (card) card.remove();
+    if (document.getElementById('variantsContainer').children.length === 0) {
+      document.getElementById('noVariantsMsg').classList.remove('hidden');
+    }
+  }
+
+  // ── COLOR SYNC ──────────────────────────────
+  const colorHexMap = {
+    black:'#000000', white:'#FFFFFF', red:'#EF4444', blue:'#3B82F6',
+    green:'#22C55E', yellow:'#EAB308', orange:'#F97316', purple:'#A855F7',
+    pink:'#EC4899', grey:'#6B7280', navy:'#1E3A5F', gold:'#F59E0B',
+    silver:'#9CA3AF', transparent:'#FFFFFF', other:'#000000',
+  };
+
+  function syncColorCode(select, idx) {
+    const hex = colorHexMap[select.value] || '#000000';
+    document.getElementById(`colorPicker_${idx}`).value = hex;
+    document.getElementById(`colorCodeText_${idx}`).value = hex;
+  }
+
+  function updateColorCode(picker, idx) {
+    document.getElementById(`colorCodeText_${idx}`).value = picker.value;
+  }
+
+  function updateColorPicker(input, idx) {
+    const val = input.value.trim();
+    if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+      document.getElementById(`colorPicker_${idx}`).value = val;
+    }
+  }
+
+  function validateHex(input) {
+    const val = input.value;
+    if (!val.startsWith('#')) input.value = '#' + val.replace('#', '');
+  }
+
+  // ── IMAGE HANDLING ──────────────────────────
+  const variantFiles = {}; // store File objects per variant
+
+  function handleImages(input, idx) {
+    const files   = Array.from(input.files);
+    const preview = document.getElementById(`imagePreview_${idx}`);
+    const counter = document.getElementById(`imgCount_${idx}`);
+    const errEl   = document.getElementById(`imgError_${idx}`);
+
+    if (!variantFiles[idx]) variantFiles[idx] = [];
+
+    const errors = [];
+    files.forEach(file => {
+      if (!['image/jpeg','image/png','image/webp'].includes(file.type)) {
+        errors.push(`"${file.name}" is not a valid type.`);
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        errors.push(`"${file.name}" exceeds 5MB.`);
+        return;
+      }
+      variantFiles[idx].push(file);
     });
 
-    updateImageCount();
-    buildHiddenInputs();
-  }
-
-  function removeImage(idx) {
-    croppedImages.splice(idx, 1);
-    renderPreviews();
-  }
-
-  function updateImageCount() {
-    const count = croppedImages.length;
-    const el    = document.getElementById('imageCount');
-    el.textContent = `${count} / 3 min`;
-    el.className = `text-[10px] font-bold px-2.5 py-1 rounded-full ${
-      count >= 3 ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'
-    }`;
-  }
-
-  /* ─────────────────────────────────────────
-     BUILD HIDDEN INPUTS FOR FORM SUBMIT
-     We convert each base64 dataURL → Blob → File
-     and append as hidden <input type="file"> via
-     a DataTransfer object so Django receives them
-     as request.FILES.getlist('images')
-  ───────────────────────────────────────── */
-  function buildHiddenInputs() {
-    document.getElementById('croppedImagesContainer').innerHTML = '';
-  }
-
-  /* ─────────────────────────────────────────
-     FORM SUBMIT — convert base64 → File objects
-  ───────────────────────────────────────── */
-  async function submitProduct() {
-    if (croppedImages.length < 3) {
-      alert('Please upload and crop at least 3 product images.');
-      return;
+    if (errors.length) {
+      errEl.textContent = errors.join(' ');
+      errEl.classList.remove('hidden');
+    } else {
+      errEl.classList.add('hidden');
     }
 
-    // Build a real FileList via DataTransfer
-    const dt = new DataTransfer();
-    for (const img of croppedImages) {
-      const blob = await (await fetch(img.dataURL)).blob();
-      const file = new File([blob], img.fileName, { type: 'image/jpeg' });
-      dt.items.add(file);
+    // Rebuild preview
+    preview.innerHTML = '';
+    variantFiles[idx].forEach((file, fileIdx) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const wrap = document.createElement('div');
+        wrap.className = 'relative group aspect-square';
+        wrap.innerHTML = `
+          <img src="${e.target.result}" class="w-full h-full object-cover rounded-xl border border-gray-100">
+          ${fileIdx === 0 ? '<span class="absolute top-1 left-1 text-[8px] font-bold bg-black text-white px-1.5 py-0.5 rounded-full">Primary</span>' : ''}
+          <button type="button" onclick="removeImage(${idx}, ${fileIdx})"
+                  class="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full hidden group-hover:flex items-center justify-center text-xs font-bold">✕</button>
+        `;
+        preview.appendChild(wrap);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    counter.textContent = `${variantFiles[idx].length} / 3 min`;
+    counter.className = `text-[10px] font-bold ${variantFiles[idx].length >= 3 ? 'text-green-500' : 'text-red-400'}`;
+
+    // Sync files back to input using DataTransfer
+    syncFilesToInput(idx);
+  }
+
+  function removeImage(variantIdx, fileIdx) {
+    variantFiles[variantIdx].splice(fileIdx, 1);
+    // Re-trigger preview rebuild
+    const fakeInput = { files: variantFiles[variantIdx], idx: variantIdx };
+    rebuildPreview(variantIdx);
+    syncFilesToInput(variantIdx);
+    const counter = document.getElementById(`imgCount_${variantIdx}`);
+    counter.textContent = `${variantFiles[variantIdx].length} / 3 min`;
+    counter.className = `text-[10px] font-bold ${variantFiles[variantIdx].length >= 3 ? 'text-green-500' : 'text-red-400'}`;
+  }
+
+  function rebuildPreview(idx) {
+    const preview = document.getElementById(`imagePreview_${idx}`);
+    preview.innerHTML = '';
+    variantFiles[idx].forEach((file, fileIdx) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const wrap = document.createElement('div');
+        wrap.className = 'relative group aspect-square';
+        wrap.innerHTML = `
+          <img src="${e.target.result}" class="w-full h-full object-cover rounded-xl border border-gray-100">
+          ${fileIdx === 0 ? '<span class="absolute top-1 left-1 text-[8px] font-bold bg-black text-white px-1.5 py-0.5 rounded-full">Primary</span>' : ''}
+          <button type="button" onclick="removeImage(${idx}, ${fileIdx})"
+                  class="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full hidden group-hover:flex items-center justify-center text-xs font-bold">✕</button>
+        `;
+        preview.appendChild(wrap);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function syncFilesToInput(idx) {
+    const input = document.getElementById(`variantImages_${idx}`);
+    const dt    = new DataTransfer();
+    (variantFiles[idx] || []).forEach(f => dt.items.add(f));
+    input.files = dt.files;
+  }
+
+  // ── CLIENT-SIDE VALIDATION ──────────────────
+  document.getElementById('productForm').addEventListener('submit', function(e) {
+    let valid = true;
+    const errors = [];
+
+    // Check at least one variant
+    const variantCards = document.getElementById('variantsContainer').children;
+    if (variantCards.length === 0) {
+      errors.push('Please add at least one variant.');
+      valid = false;
     }
 
-    // Create a hidden file input and attach the files
-    const fileInput = document.createElement('input');
-    fileInput.type  = 'file';
-    fileInput.name  = 'images';
-    fileInput.multiple = true;
-    fileInput.style.display = 'none';
-    Object.defineProperty(fileInput, 'files', { value: dt.files });
-    document.getElementById('productForm').appendChild(fileInput);
+    // Check each variant has device model, price, stock, and 3+ images
+    Array.from(variantCards).forEach((card, i) => {
+      const dm    = card.querySelector('input[name="variant_device_model"]');
+      const price = card.querySelector('input[name="variant_price"]');
+      const stock = card.querySelector('input[name="variant_stock"]');
+      const varIdx = card.id.replace('variant_card_', '');
+      const imgCount = (variantFiles[varIdx] || []).length;
 
-    document.getElementById('productForm').submit();
-  }
+      if (!dm || !dm.value.trim()) {
+        errors.push(`Variant ${i + 1}: Device model is required.`);
+        dm && dm.classList.add('border-red-400', 'bg-red-50');
+        valid = false;
+      }
+      if (!price || !price.value || parseFloat(price.value) <= 0) {
+        errors.push(`Variant ${i + 1}: A valid price is required.`);
+        price && price.classList.add('border-red-400', 'bg-red-50');
+        valid = false;
+      }
+      if (!stock || stock.value === '' || parseInt(stock.value) < 0) {
+        errors.push(`Variant ${i + 1}: Stock quantity is required.`);
+        stock && stock.classList.add('border-red-400', 'bg-red-50');
+        valid = false;
+      }
+      if (imgCount < 3) {
+        errors.push(`Variant ${i + 1}: Please upload at least 3 images.`);
+        const errEl = document.getElementById(`imgError_${varIdx}`);
+        if (errEl) { errEl.textContent = 'At least 3 images required.'; errEl.classList.remove('hidden'); }
+        valid = false;
+      }
+    });
 
-  /* ─────────────────────────────────────────
-     TOGGLE SWITCHES (visual only — checkbox handles value)
-  ───────────────────────────────────────── */
-  function toggleSwitch(checkboxId, trackId) {
-    const checkbox = document.getElementById(checkboxId);
-    const track    = document.getElementById(trackId);
-    const thumbId  = trackId.replace('Track', 'Thumb');
-    const thumb    = document.getElementById(thumbId);
-
-    // checkbox state is toggled by the onclick on the track div BEFORE this runs
-    // so we read the NEW state
-    const isOn = checkbox.checked;
-    track.className = track.className.replace(
-      isOn ? 'bg-gray-200' : 'bg-black',
-      isOn ? 'bg-black'    : 'bg-gray-200'
-    );
-    if (thumb) {
-      thumb.className = thumb.className.replace(
-        isOn ? 'translate-x-0' : 'translate-x-5',
-        isOn ? 'translate-x-5' : 'translate-x-0'
-      );
+    if (!valid) {
+      e.preventDefault();
+      // Show errors at top
+      const errBox = document.createElement('div');
+      errBox.className = 'mb-6 space-y-1';
+      errBox.id = 'jsErrors';
+      errors.forEach(err => {
+        const p = document.createElement('p');
+        p.className = 'text-xs text-red-500 font-semibold flex items-center gap-1';
+        p.innerHTML = `<svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>${err}`;
+        errBox.appendChild(p);
+      });
+      const existing = document.getElementById('jsErrors');
+      if (existing) existing.remove();
+      document.getElementById('productForm').prepend(errBox);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }
-
-  function toggleCustomizationOptions() {
-    const isOn  = document.getElementById('isCustomizable').checked;
-    const opts  = document.getElementById('customizationOptions');
-    opts.classList.toggle('hidden', !isOn);
-  }
+  });
 </script>
 
 {% endblock %}

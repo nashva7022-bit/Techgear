@@ -38,8 +38,7 @@ class ProductForm(forms.ModelForm):
             'is_active',
             'description',
             'is_customizable',
-            'allow_custom_text',
-            'allow_custom_image',
+            
         ]
 
     def __init__(self, *args, **kwargs):

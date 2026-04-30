@@ -142,29 +142,40 @@ def category_detail(request, pk):
 @staff_member_required(login_url='admin_login')
 @never_cache
 def product_list(request):
-    search  = request.GET.get('search', '').strip()
-    sort_by = request.GET.get('sort', 'newest')
+    search      = request.GET.get('search', '').strip()
+    sort_by     = request.GET.get('sort', 'newest')
+    category_id = request.GET.get('category', '').strip()
+    brand       = request.GET.get('brand', '').strip()
 
     sort_options = {
-        'newest':     '-created_at',
-        'oldest':     'created_at',
-        'name_asc':   'name',
-        'name_desc':  '-name',
-        
+        'newest':    '-created_at',
+        'oldest':    'created_at',
+        'name_asc':  'name',
+        'name_desc': '-name',
     }
     order_field = sort_options.get(sort_by, '-created_at')
 
-    products = Product.objects.select_related('category').prefetch_related('variants__image').order_by(order_field)
+    products = Product.objects.select_related('category').prefetch_related(
+        'variants__images'
+    ).order_by(order_field)
 
+    # Filter by category
+    if category_id:
+        products = products.filter(category__id=category_id)
+
+    # Filter by brand
+    if brand:
+        products = products.filter(brand=brand)
+
+    # Filter by search
     if search:
         products = products.filter(
             Q(name__icontains=search) |
             Q(description__icontains=search) |
-            Q(category__name__icontains=search) 
-           
+            Q(category__name__icontains=search)
         )
 
-    paginator   = Paginator(products, 10)
+    paginator   = Paginator(products, 6)
     page_number = request.GET.get('page')
     page_obj    = paginator.get_page(page_number)
 
@@ -173,15 +184,19 @@ def product_list(request):
     inactive = Product.objects.filter(is_active=False).count()
 
     context = {
-        'page_obj': page_obj,
-        'search':   search,
-        'sort_by':  sort_by,
-        'total':    total,
-        'active':   active,
-        'inactive': inactive,
+        'page_obj':    page_obj,
+        'search':      search,
+        'sort_by':     sort_by,
+        'category_id': category_id,
+        'brand':       brand,
+        'total':       total,
+        'active':      active,
+        'inactive':    inactive,
+        # For dropdowns
+        'categories':  Category.objects.filter(is_active=True).order_by('name'),
+        'brand_choices': Product._meta.get_field('brand').choices,
     }
     return render(request, 'admin_panel/product_management.html', context)
-
 
 @staff_member_required(login_url='admin_login')
 @require_POST
@@ -262,7 +277,8 @@ def _save_variants(product, post_data, files):
     for i, device_model in enumerate(device_models):
         device_model = device_model.strip()
         if not device_model:
-            continue  # skip blank rows
+            errors.append(f'Variant {i + 1}: Device model is required.')
+            continue
  
         # Collect images for this variant index
         image_key  = f'variant_images_{i}'
@@ -396,7 +412,7 @@ def product_edit(request, pk):
     })
  
  
-def _handle_existing_variants(post_data, files, existing_variants):
+def _handle_existing_variants(post_data,request, files, existing_variants):
     """Update price/stock/color etc. for variants that already exist."""
     for variant in existing_variants:
         prefix = f'existing_variant_{variant.pk}'
@@ -420,54 +436,64 @@ def _handle_existing_variants(post_data, files, existing_variants):
             variant.save()
         except (ValueError, TypeError):
             pass
- 
-        # New images for existing variant
+
+       
+        # Delete selected images
+        delete_ids = post_data.getlist(f'{prefix}_delete_images')
+        
+        # New images
         new_imgs = files.getlist(f'{prefix}_images')
+        
+        # Calculate resulting count
         current_count = variant.images.count()
-        for j, img in enumerate(new_imgs):
+        total_after_change = (current_count - len(delete_ids)) + len(new_imgs)
+        
+        if total_after_change < 3:
+            
+            messages.error(request, f'Variant {variant.device_model}: You must keep at least 3 images.')
+            continue 
+            
+        # If valid, proceed with delete and create
+        if delete_ids:
+            variant.images.filter(pk__in=delete_ids).delete()
+            
+        for img in new_imgs:
             err = _validate_image(img)
             if not err:
                 VariantImage.objects.create(
-                    variant    = variant,
-                    image      = img,
-                    is_primary = False,
-                    order      = current_count + j,
+                    variant=variant,
+                    image=img,
+                    is_primary=False,
+                    order=variant.images.count() + 1,
                 )
- 
-        # Delete selected images
-        delete_ids = post_data.getlist(f'{prefix}_delete_images')
-        if delete_ids:
-            variant.images.filter(pk__in=delete_ids).delete()
+        
  
  
 def _save_new_variants(product, post_data, files):
-    """
-    Same as _save_variants but reads from new_variant_* keys
-    so it doesn't conflict with existing variant fields on the edit page.
-    """
     errors = []
- 
-    device_models = post_data.getlist('new_variant_device_model')
+
+    device_models = post_data.getlist('new_variant_device_model')  # ← was missing!
     if not device_models:
         return errors
- 
+
     case_types  = post_data.getlist('new_variant_case_type')
     colors      = post_data.getlist('new_variant_color')
     color_codes = post_data.getlist('new_variant_color_code')
     skus        = post_data.getlist('new_variant_sku')
     prices      = post_data.getlist('new_variant_price')
     stocks      = post_data.getlist('new_variant_stock')
- 
+
     for i, device_model in enumerate(device_models):
         device_model = device_model.strip()
         if not device_model:
+            errors.append(f'New variant {i + 1}: Device model is required.')  # ← fixed
             continue
- 
+
         images = files.getlist(f'new_variant_images_{i}')
         if len(images) < 3:
             errors.append(f'New variant {i + 1}: Please upload at least 3 images.')
             continue
- 
+
         img_error = False
         for img in images:
             err = _validate_image(img)
@@ -476,7 +502,7 @@ def _save_new_variants(product, post_data, files):
                 img_error = True
         if img_error:
             continue
- 
+
         sku = skus[i].strip() if i < len(skus) else ''
         try:
             price = float(prices[i]) if i < len(prices) else 0
@@ -484,19 +510,19 @@ def _save_new_variants(product, post_data, files):
         except (ValueError, TypeError):
             errors.append(f'New variant {i + 1}: Invalid price or stock.')
             continue
- 
+
         variant = ProductVariant(
             product      = product,
             device_model = device_model,
             case_type    = case_types[i].strip() if i < len(case_types) else '',
             color        = colors[i]             if i < len(colors)     else 'other',
             color_code   = color_codes[i].strip() if i < len(color_codes) else '#000000',
-            sku = sku or '' ,
+            sku          = sku or '',
             price        = price,
             stock        = stock,
         )
         variant.save()
- 
+
         for j, img in enumerate(images):
             VariantImage.objects.create(
                 variant    = variant,
@@ -504,9 +530,8 @@ def _save_new_variants(product, post_data, files):
                 is_primary = (j == 0),
                 order      = j,
             )
- 
+
     return errors
- 
  
 # ══════════════════════════════════════════
 # VARIANT AJAX VIEWS
