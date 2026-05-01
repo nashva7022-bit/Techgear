@@ -35,7 +35,6 @@
 <!-- Search + Sort Bar -->
 <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-8 flex flex-wrap items-center justify-between gap-4">
 
-  <!-- Search Form -->
   <form method="GET" action="{% url 'admin_category_list' %}" class="flex-1 max-w-md flex gap-2" id="searchForm">
     <div class="relative flex-1">
       <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -44,8 +43,6 @@
       <input type="text" name="search" id="searchInput" value="{{ search }}"
              placeholder="Search by name, description or ID..."
              class="w-full pl-11 pr-10 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black transition-all">
-
-      <!-- Clear (X) button — only shows when there's a search value -->
       {% if search %}
       <a href="?sort={{ sort_by }}"
          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition"
@@ -56,17 +53,13 @@
       </a>
       {% endif %}
     </div>
-
-    <!-- Preserve sort when searching -->
     <input type="hidden" name="sort" value="{{ sort_by }}">
-
     <button type="submit"
             class="px-5 py-2.5 bg-black text-white text-xs font-bold rounded-xl hover:bg-gray-800 transition">
       Search
     </button>
   </form>
 
-  <!-- Sort Dropdown -->
   <div class="flex items-center gap-3">
     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">Sort By:</p>
     <div class="relative">
@@ -77,7 +70,6 @@
         <option value="name_asc"  {% if sort_by == 'name_asc'  %}selected{% endif %}>Name (A → Z)</option>
         <option value="name_desc" {% if sort_by == 'name_desc' %}selected{% endif %}>Name (Z → A)</option>
       </select>
-      <!-- Dropdown arrow icon -->
       <svg class="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
       </svg>
@@ -90,24 +82,41 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
   {% for category in page_obj %}
   <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
-    <div class="p-5 flex-1">
-      <div class="flex items-start justify-between mb-3">
-        <div class="p-2 bg-gray-50 rounded-xl text-gray-400">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-          </svg>
-        </div>
+
+    <!-- ── Category Image ── -->
+    {% if category.image %}
+    <div class="w-full h-36 overflow-hidden bg-gray-50">
+      <img src="{{ category.image.url }}"
+           alt="{{ category.name }}"
+           class="w-full h-full object-cover">
+    </div>
+    {% else %}
+    <!-- Fallback placeholder when no image is uploaded -->
+    <div class="w-full h-36 bg-gray-50 flex items-center justify-center">
+      <svg class="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+      </svg>
+    </div>
+    {% endif %}
+
+    <div class="p-5 flex-1 flex flex-col">
+
+      <!-- ── Status + Customizable badges ── -->
+      <div class="flex items-center gap-2 flex-wrap mb-3">
         {% if category.is_active %}
         <span class="text-[9px] font-bold px-2 py-1 rounded-full bg-green-50 text-green-600 border border-green-100 uppercase tracking-widest">Active</span>
         {% else %}
         <span class="text-[9px] font-bold px-2 py-1 rounded-full bg-red-50 text-red-500 border border-red-100 uppercase tracking-widest">Inactive</span>
+        {% endif %}
+
+        {% if category.is_customizable %}
+        <span class="text-[9px] font-bold px-2 py-1 rounded-full bg-purple-50 text-purple-600 border border-purple-100 uppercase tracking-widest">Customizable</span>
         {% endif %}
       </div>
 
       <h3 class="text-base font-bold text-gray-900 leading-tight mb-1">{{ category.name }}</h3>
       <p class="text-xs text-gray-400 mb-4 line-clamp-2">{{ category.description|default:"No description provided." }}</p>
 
-      <!-- Created date -->
       <p class="text-[10px] text-gray-300 font-medium mb-2">
         Added {{ category.created_at|date:"M d, Y" }}
       </p>
@@ -119,29 +128,30 @@
       </div>
     </div>
 
+    <!-- ── Card Actions ── -->
     <div class="flex items-center gap-px bg-gray-50 border-t border-gray-100">
       <a href="{% url 'admin_category_detail' category.pk %}"
          class="flex-1 py-3 text-center text-[10px] font-bold uppercase tracking-tighter text-gray-400 hover:text-black hover:bg-white transition">View</a>
       <a href="{% url 'admin_category_edit' category.pk %}"
          class="flex-1 py-3 text-center text-[10px] font-bold uppercase tracking-tighter text-gray-400 hover:text-black hover:bg-white transition border-x border-gray-100">Edit</a>
-      <!-- In your category card, replace the delete button with: -->
-{% if category.is_active %}
-<button
-  onclick="confirmToggle('{{ category.pk }}', '{{ category.name|escapejs }}', 'deactivate')"
-  data-url="{% url 'admin_category_delete' category.pk %}"
-  id="toggleBtn-{{ category.pk }}"
-  class="flex-1 py-3 text-center text-[10px] font-bold uppercase tracking-tighter text-gray-300 hover:text-red-500 hover:bg-white transition">
-  Deactivate
-</button>
-{% else %}
-<button
-  onclick="confirmToggle('{{ category.pk }}', '{{ category.name|escapejs }}', 'activate')"
-  data-url="{% url 'admin_category_delete' category.pk %}"
-  id="toggleBtn-{{ category.pk }}"
-  class="flex-1 py-3 text-center text-[10px] font-bold uppercase tracking-tighter text-gray-300 hover:text-green-500 hover:bg-white transition">
-  Activate
-</button>
-{% endif %}
+
+      {% if category.is_active %}
+      <button
+        onclick="confirmToggle('{{ category.pk }}', '{{ category.name|escapejs }}', 'deactivate')"
+        data-url="{% url 'admin_category_toggle_status' category.pk %}"
+        id="toggleBtn-{{ category.pk }}"
+        class="flex-1 py-3 text-center text-[10px] font-bold uppercase tracking-tighter text-gray-300 hover:text-red-500 hover:bg-white transition">
+        Deactivate
+      </button>
+      {% else %}
+      <button
+        onclick="confirmToggle('{{ category.pk }}', '{{ category.name|escapejs }}', 'activate')"
+        data-url="{% url 'admin_category_toggle_status' category.pk %}"
+        id="toggleBtn-{{ category.pk }}"
+        class="flex-1 py-3 text-center text-[10px] font-bold uppercase tracking-tighter text-gray-300 hover:text-green-500 hover:bg-white transition">
+        Activate
+      </button>
+      {% endif %}
     </div>
   </div>
   {% endfor %}
@@ -222,7 +232,6 @@
 </div>
 {% endif %}
 
-<!-- Sort JS: preserves search param when changing sort -->
 <script>
   function applySort(value) {
     const url = new URL(window.location.href);
@@ -237,28 +246,28 @@
     document.getElementById('modalCategoryName').textContent = name;
     document.getElementById('modalAction').textContent = isDeactivate ? 'deactivate' : 'activate';
 
-    const header = document.getElementById('modalHeader');
-    const iconWrap = document.getElementById('modalIconWrap');
-    const icon = document.getElementById('modalIcon');
+    const header     = document.getElementById('modalHeader');
+    const iconWrap   = document.getElementById('modalIconWrap');
+    const icon       = document.getElementById('modalIcon');
     const confirmBtn = document.getElementById('modalConfirmBtn');
 
     if (isDeactivate) {
-      header.className = 'bg-red-50 px-6 pt-6 pb-4 flex items-center gap-4';
-      iconWrap.className = 'w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0';
-      icon.className = 'w-5 h-5 text-red-500';
-      icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>';
-      document.getElementById('modalTitle').textContent = 'Deactivate Category?';
-      document.getElementById('modalSubtitle').textContent = 'This will mark the category as inactive.';
-      confirmBtn.className = 'w-full py-2.5 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition';
+      header.className    = 'bg-red-50 px-6 pt-6 pb-4 flex items-center gap-4';
+      iconWrap.className  = 'w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0';
+      icon.className      = 'w-5 h-5 text-red-500';
+      icon.innerHTML      = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>';
+      document.getElementById('modalTitle').textContent    = 'Deactivate Category?';
+      document.getElementById('modalSubtitle').textContent = 'All products in this category will also be deactivated.';
+      confirmBtn.className  = 'w-full py-2.5 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition';
       confirmBtn.textContent = 'Yes, Deactivate';
     } else {
-      header.className = 'bg-green-50 px-6 pt-6 pb-4 flex items-center gap-4';
-      iconWrap.className = 'w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0';
-      icon.className = 'w-5 h-5 text-green-500';
-      icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>';
-      document.getElementById('modalTitle').textContent = 'Activate Category?';
-      document.getElementById('modalSubtitle').textContent = 'This will mark the category as active again.';
-      confirmBtn.className = 'w-full py-2.5 rounded-xl bg-green-500 text-white text-xs font-bold hover:bg-green-600 transition';
+      header.className    = 'bg-green-50 px-6 pt-6 pb-4 flex items-center gap-4';
+      iconWrap.className  = 'w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0';
+      icon.className      = 'w-5 h-5 text-green-500';
+      icon.innerHTML      = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>';
+      document.getElementById('modalTitle').textContent    = 'Activate Category?';
+      document.getElementById('modalSubtitle').textContent = 'Products deactivated with this category will be restored.';
+      confirmBtn.className  = 'w-full py-2.5 rounded-xl bg-green-500 text-white text-xs font-bold hover:bg-green-600 transition';
       confirmBtn.textContent = 'Yes, Activate';
     }
 
@@ -280,6 +289,7 @@
     if (e.target === this) closeDeleteModal();
   });
 </script>
+
 <!-- Toggle Confirmation Modal -->
 <div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
@@ -297,7 +307,7 @@
     <div class="px-6 py-4">
       <p class="text-xs text-gray-500 leading-relaxed">
         You're about to <span id="modalAction" class="font-bold text-gray-900"></span> the category
-        <span id="modalCategoryName" class="font-bold text-gray-900"></span>.
+        "<span id="modalCategoryName" class="font-bold text-gray-900"></span>".
       </p>
     </div>
 

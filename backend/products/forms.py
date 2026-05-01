@@ -10,7 +10,7 @@ from .models import Category, Product, ProductVariant, VariantImage, ProductSpec
 class CategoryForm(forms.ModelForm):
     class Meta:
         model  = Category
-        fields = ['name', 'description', 'is_active']
+        fields = ['name', 'description', 'image', 'is_customizable', 'is_active']
 
     def clean_name(self):
         name = self.cleaned_data.get('name', '').strip()
@@ -37,8 +37,7 @@ class ProductForm(forms.ModelForm):
             'category',
             'is_active',
             'description',
-            'is_customizable',
-            
+            # is_customizable is NOT a product field anymore — it's on Category.
         ]
 
     def __init__(self, *args, **kwargs):

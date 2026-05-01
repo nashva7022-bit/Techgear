@@ -1,90 +1,392 @@
 {% extends 'admin_panel/admin_base.html' %}
 {% block content %}
 
-<!-- Breadcrumb -->
-<nav class="flex items-center gap-2 text-xs text-gray-400 font-semibold mb-6">
-  <a href="{% url 'admin_category_list' %}" class="hover:text-black transition">Categories</a>
-  <span class="text-gray-300">/</span>
-  <span class="text-gray-700">Edit — {{ category.name }}</span>
-</nav>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap');
 
-<div class="max-w-2xl">
-  <div class="mb-6">
-    <h1 class="text-xl font-bold text-gray-900">Edit Category</h1>
-    <p class="text-sm text-gray-400 mt-0.5">Update the details for "{{ category.name }}".</p>
+  .edit-wrap * { font-family: 'DM Sans', sans-serif; }
+
+  .field-card {
+    background: #fff;
+    border: 1px solid #f0f0f0;
+    border-radius: 16px;
+    padding: 24px;
+    transition: box-shadow 0.2s;
+  }
+  .field-card:focus-within { box-shadow: 0 0 0 3px rgba(0,0,0,0.06); }
+
+  .side-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    display: block;
+  }
+  .side-hint {
+    font-size: 11px;
+    color: #9ca3af;
+    line-height: 1.5;
+  }
+
+  .field-input {
+    width: 100%;
+    padding: 11px 16px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #111;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    background: #fafafa;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .field-input:focus {
+    border-color: #111;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+  }
+  .field-input.error { border-color: #ef4444; background: #fff5f5; }
+  .field-textarea { resize: none; line-height: 1.6; }
+
+  .upload-zone {
+    border: 2px dashed #e5e7eb;
+    border-radius: 12px;
+    padding: 24px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .upload-zone:hover { border-color: #111; background: #fafafa; }
+  .upload-zone.has-file { border-style: solid; border-color: #111; }
+
+  .toggle-track {
+    width: 48px; height: 26px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .toggle-track.on { background: #111; }
+  .toggle-knob {
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 20px; height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    transition: transform 0.2s;
+  }
+  .toggle-track.on .toggle-knob { transform: translateX(22px); }
+
+  .radio-pill input { display: none; }
+  .radio-pill label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: 99px;
+    border: 1.5px solid #e5e7eb;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .radio-pill input:checked + label { border-color: #111; background: #111; color: #fff; }
+
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+  .btn-save {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #111; color: #fff;
+    padding: 12px 28px; border-radius: 10px;
+    font-size: 13px; font-weight: 600;
+    border: none; cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn-save:hover { background: #333; }
+  .btn-save:active { transform: scale(0.98); }
+
+  .btn-cancel {
+    display: inline-flex; align-items: center;
+    padding: 12px 24px; border-radius: 10px;
+    font-size: 13px; font-weight: 500;
+    color: #6b7280; border: 1.5px solid #e5e7eb;
+    text-decoration: none; transition: all 0.15s;
+  }
+  .btn-cancel:hover { border-color: #9ca3af; color: #111; }
+
+  .divider { height: 1px; background: #f3f4f6; }
+  .img-thumb { width: 72px; height: 72px; border-radius: 10px; object-fit: cover; border: 1.5px solid #e5e7eb; flex-shrink: 0; }
+  .error-msg { display: flex; align-items: center; gap: 5px; color: #ef4444; font-size: 11.5px; margin-top: 6px; font-weight: 500; }
+</style>
+
+<div class="edit-wrap">
+
+  <!-- Top bar -->
+  <div class="flex items-center justify-between mb-8">
+    <div class="flex items-center gap-3">
+      <a href="{% url 'admin_category_list' %}"
+         class="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:text-black hover:border-gray-400 transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </a>
+      <div>
+        <div class="flex items-center gap-2 text-[10px] text-gray-400 font-semibold uppercase tracking-widest mb-0.5">
+          <span>Categories</span><span>/</span><span class="text-gray-600">Edit</span>
+        </div>
+        <h1 class="text-xl font-semibold text-gray-900" style="font-family:'DM Serif Display',serif;">{{ category.name }}</h1>
+      </div>
+    </div>
+
+    <!-- ✅ IDs added here so JS can find and update this badge -->
+    <span id="statusBadge" class="flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-semibold
+      {% if category.is_active %}border-green-200 bg-green-50 text-green-700{% else %}border-red-200 bg-red-50 text-red-600{% endif %}">
+      <span id="statusDot" class="status-dot {% if category.is_active %}bg-green-500{% else %}bg-red-400{% endif %}"></span>
+      <span id="statusText">{% if category.is_active %}Active{% else %}Inactive{% endif %}</span>
+    </span>
   </div>
 
-  <form method="POST" enctype="multipart/form-data" action="{% url 'admin_category_edit' category.pk %}" class="space-y-5">
+  <form method="POST" enctype="multipart/form-data" action="{% url 'admin_category_edit' category.pk %}">
     {% csrf_token %}
 
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-5">
+    <div class="flex gap-6 items-start">
 
-      <!-- Name -->
-      <div>
-        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-          Category Name <span class="text-red-500">*</span>
-        </label>
-        <input type="text" name="name"
-               value="{{ form.name.value|default:'' }}"
-               placeholder="e.g. Phone Cases"
-               class="w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition
-               {% if form.name.errors %}border-red-400 bg-red-50{% else %}border-gray-200 focus:border-black{% endif %}">
-        {% if form.name.errors %}
-        <p class="flex items-center gap-1 text-red-500 text-xs mt-1.5 font-medium">
-          <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          {{ form.name.errors.0 }}
-        </p>
-        {% endif %}
-      </div>
+      <!-- ── Left column: main fields ── -->
+      <div class="flex-1 space-y-4">
 
-      <!-- Description -->
-      <div>
-        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-          Description
-        </label>
-        <textarea name="description" rows="3"
-                  placeholder="Short description..."
-                  class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm outline-none focus:border-black transition resize-none">{{ form.description.value|default:'' }}</textarea>
-      </div>
-
-      
-
-      <!-- Status -->
-      <div>
-        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-          Status
-        </label>
-        <div class="flex gap-4">
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="radio" name="is_active" value="True"
-                   class="accent-black"
-                   {% if form.is_active.value %}checked{% endif %}>
-            <span class="text-sm font-medium text-gray-700">Active</span>
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="radio" name="is_active" value="False"
-                   class="accent-black"
-                   {% if not form.is_active.value %}checked{% endif %}>
-            <span class="text-sm font-medium text-gray-700">Inactive</span>
-          </label>
+        <!-- Name -->
+        <div class="field-card">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <span class="side-label mb-1">Category Name</span>
+              <p class="side-hint">Appears on storefront and admin listings</p>
+            </div>
+            <span class="text-red-400 text-[10px] font-bold uppercase tracking-wider">Required</span>
+          </div>
+          <input type="text" name="name"
+                 value="{{ form.name.value|default:'' }}"
+                 placeholder="e.g. Phone Cases"
+                 class="field-input {% if form.name.errors %}error{% endif %}">
+          {% if form.name.errors %}
+          <p class="error-msg">
+            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {{ form.name.errors.0 }}
+          </p>
+          {% endif %}
         </div>
+
+        <!-- Description -->
+        <div class="field-card">
+          <span class="side-label mb-1">Description</span>
+          <p class="side-hint mb-4">A short summary shown on category pages</p>
+          <textarea name="description" rows="4"
+                    placeholder="Describe what products belong in this category..."
+                    class="field-input field-textarea">{{ form.description.value|default:'' }}</textarea>
+        </div>
+
+        <!-- Category Image -->
+        <div class="field-card">
+          <span class="side-label mb-1">Category Image</span>
+          <p class="side-hint mb-4">Displayed on storefront category listing. Optional but recommended.</p>
+
+          {% if category.image %}
+          <div class="flex items-center gap-4 p-3 rounded-xl bg-gray-50 border border-gray-100 mb-4">
+            <img src="{{ category.image.url }}" alt="{{ category.name }}" class="img-thumb">
+            <div>
+              <p class="text-xs font-semibold text-gray-700 mb-0.5">Current image</p>
+              <p class="text-[11px] text-gray-400">Upload a new one below to replace it</p>
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('imageInput').click()">
+            <input type="file" name="image" id="imageInput" accept="image/jpeg,image/png,image/webp"
+                   class="hidden" onchange="handleImageSelect(event)">
+
+            <div id="previewWrap" class="hidden mb-3">
+              <img id="previewImg" src="" alt="Preview"
+                   class="w-24 h-24 object-cover rounded-xl mx-auto border border-gray-200 shadow-sm">
+            </div>
+
+            <div id="uploadPlaceholder">
+              <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <p class="text-xs font-semibold text-gray-600">{% if category.image %}Click to replace image{% else %}Click to upload image{% endif %}</p>
+              <p class="text-[10px] text-gray-400 mt-1">JPEG, PNG or WebP — max 5 MB</p>
+            </div>
+
+            <p id="selectedFileName" class="hidden text-xs font-semibold text-gray-700 mt-2"></p>
+          </div>
+        </div>
+
       </div>
 
+      <!-- ── Right column: settings ── -->
+      <div class="w-72 space-y-4 flex-shrink-0">
+
+        <!-- Customization -->
+        <div class="field-card">
+          <span class="side-label mb-1">Customization</span>
+          <p class="side-hint mb-5">Let customers personalise products with their own text or image</p>
+
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-semibold text-gray-800">Allow customization</p>
+              <p class="text-[11px] text-gray-400 mt-0.5" id="toggleHint">
+                {% if form.is_customizable.value %}Enabled{% else %}Disabled{% endif %}
+              </p>
+            </div>
+            <div class="toggle-track {% if form.is_customizable.value %}on{% endif %}"
+                 id="customToggle" onclick="toggleCustomizable()">
+              <div class="toggle-knob"></div>
+            </div>
+            <input type="checkbox" name="is_customizable" id="customizableInput"
+                   class="hidden" {% if form.is_customizable.value %}checked{% endif %}>
+          </div>
+
+          <div class="mt-4 p-3 rounded-lg bg-gray-50 border border-gray-100" id="customNote"
+               {% if not form.is_customizable.value %}style="display:none"{% endif %}>
+            <p class="text-[11px] text-gray-500 font-semibold mb-2">Customers can:</p>
+            <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+              <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+              </svg>
+              Add custom text
+            </div>
+            <div class="flex items-center gap-2 text-[11px] text-gray-500">
+              <svg class="w-3 h-3 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+              </svg>
+              Upload a custom image
+            </div>
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="field-card">
+          <span class="side-label mb-1">Visibility Status</span>
+          <p class="side-hint mb-4">Controls whether this category appears on the storefront</p>
+          <div class="flex flex-col gap-2">
+            <div class="radio-pill">
+              <input type="radio" name="is_active" id="statusActive" value="True"
+                     {% if form.is_active.value %}checked{% endif %}>
+              <label for="statusActive">
+                <span class="status-dot bg-green-500"></span> Active
+              </label>
+            </div>
+            <div class="radio-pill">
+              <input type="radio" name="is_active" id="statusInactive" value="False"
+                     {% if not form.is_active.value %}checked{% endif %}>
+              <label for="statusInactive">
+                <span class="status-dot bg-gray-300"></span> Inactive
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Meta info -->
+        <div class="field-card">
+          <span class="side-label mb-3">Details</span>
+          <div class="space-y-2.5">
+            <div class="flex justify-between items-center">
+              <span class="text-[11px] text-gray-400">ID</span>
+              <span class="text-[11px] font-semibold text-gray-700">#{{ category.pk }}</span>
+            </div>
+            <div class="divider"></div>
+            <div class="flex justify-between items-center">
+              <span class="text-[11px] text-gray-400">Products</span>
+              <span class="text-[11px] font-semibold text-gray-700">{{ category.product_count }}</span>
+            </div>
+            <div class="divider"></div>
+            <div class="flex justify-between items-center">
+              <span class="text-[11px] text-gray-400">Created</span>
+              <span class="text-[11px] font-semibold text-gray-700">{{ category.created_at|date:"M d, Y" }}</span>
+            </div>
+            <div class="divider"></div>
+            <div class="flex justify-between items-center">
+              <span class="text-[11px] text-gray-400">Last updated</span>
+              <span class="text-[11px] font-semibold text-gray-700">{{ category.updated_at|date:"M d, Y" }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
 
-    <!-- Actions -->
-    <div class="flex items-center gap-3">
-      <button type="submit"
-              class="px-6 py-2.5 bg-black text-white rounded-lg text-sm font-bold hover:bg-gray-800 transition">
-        Update Category
+    <!-- Action bar -->
+    <div class="flex items-center gap-3 mt-6 pt-6 border-t border-gray-100">
+      <button type="submit" class="btn-save">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        Save Changes
       </button>
-      <a href="{% url 'admin_category_list' %}"
-         class="px-6 py-2.5 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500 hover:bg-gray-50 transition">
-        Cancel
-      </a>
+      <a href="{% url 'admin_category_list' %}" class="btn-cancel">Cancel</a>
     </div>
+
   </form>
 </div>
 
+<script>
+  function handleImageSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const zone        = document.getElementById('uploadZone');
+    const previewWrap = document.getElementById('previewWrap');
+    const previewImg  = document.getElementById('previewImg');
+    const placeholder = document.getElementById('uploadPlaceholder');
+    const fileName    = document.getElementById('selectedFileName');
+    const reader = new FileReader();
+    reader.onload = e => {
+      previewImg.src = e.target.result;
+      previewWrap.classList.remove('hidden');
+      placeholder.classList.add('hidden');
+      fileName.textContent = file.name;
+      fileName.classList.remove('hidden');
+      zone.classList.add('has-file');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function toggleCustomizable() {
+    const track = document.getElementById('customToggle');
+    const input = document.getElementById('customizableInput');
+    const hint  = document.getElementById('toggleHint');
+    const note  = document.getElementById('customNote');
+    const isOn  = track.classList.toggle('on');
+    input.checked      = isOn;
+    hint.textContent   = isOn ? 'Enabled' : 'Disabled';
+    note.style.display = isOn ? 'block' : 'none';
+  }
+
+  // ✅ Updates the top bar badge when status radio changes
+  document.querySelectorAll('input[name="is_active"]').forEach(radio => {
+    radio.addEventListener('change', function () {
+      const badge    = document.getElementById('statusBadge');
+      const dot      = document.getElementById('statusDot');
+      const text     = document.getElementById('statusText');
+      const isActive = this.value === 'True';
+
+      badge.className = `flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-semibold ${
+        isActive
+          ? 'border-green-200 bg-green-50 text-green-700'
+          : 'border-red-200 bg-red-50 text-red-600'
+      }`;
+      dot.className    = `status-dot ${isActive ? 'bg-green-500' : 'bg-red-400'}`;
+      text.textContent = isActive ? 'Active' : 'Inactive';
+    });
+  });
+</script>
 
 {% endblock %}

@@ -6,24 +6,21 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
-import json
- 
+
 from .forms import CategoryForm, ProductForm, ProductVariantForm, ProductSpecificationForm
 from .models import Category, Product, ProductVariant, VariantImage, ProductSpecification
 
-# CATEGORY VIEWS
 
+# ══════════════════════════════════════════
+# CATEGORY VIEWS
+# ══════════════════════════════════════════
 
 @staff_member_required(login_url='admin_login')
 @never_cache
 def category_list(request):
+    search   = request.GET.get('search', '').strip()
+    sort_by  = request.GET.get('sort', 'newest')
 
-    # Search
-    search = request.GET.get('search', '').strip()
-    # Sort
-    sort_by = request.GET.get('sort', 'newest')  # default: newest first
-
-    # Sort mapping
     sort_options = {
         'newest':    '-created_at',
         'oldest':    'created_at',
@@ -32,10 +29,8 @@ def category_list(request):
     }
     order_field = sort_options.get(sort_by, '-created_at')
 
-    # Base queryset
     categories = Category.objects.all().order_by(order_field)
 
-    # Apply search filter
     if search:
         categories = categories.filter(
             Q(name__icontains=search) |
@@ -43,12 +38,10 @@ def category_list(request):
             Q(id__icontains=search)
         )
 
-    # Pagination — 8 per page
-    paginator = Paginator(categories, 4)
+    paginator   = Paginator(categories, 4)
     page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    page_obj    = paginator.get_page(page_number)
 
-    # Stats
     total    = Category.objects.count()
     active   = Category.objects.filter(is_active=True).count()
     inactive = Category.objects.filter(is_active=False).count()
@@ -61,7 +54,6 @@ def category_list(request):
         'active':   active,
         'inactive': inactive,
     }
-
     return render(request, 'admin_panel/category_management.html', context)
 
 
@@ -69,7 +61,7 @@ def category_list(request):
 @never_cache
 def category_add(request):
     if request.method == 'POST':
-        form = CategoryForm(request.POST, )
+        form = CategoryForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             messages.success(request, 'Category added successfully.')
@@ -78,20 +70,15 @@ def category_add(request):
             messages.error(request, 'Please fix the errors below.')
     else:
         form = CategoryForm()
-
     return render(request, 'admin_panel/category_add.html', {'form': form})
 
 
 @staff_member_required(login_url='admin_login')
 @never_cache
 def category_edit(request, pk):
-    
-    # Get the category or show 404 if not found
     category = get_object_or_404(Category, pk=pk)
-
     if request.method == 'POST':
-        # Pass instance=category to UPDATE existing, not create new
-        form = CategoryForm(request.POST, instance=category)
+        form = CategoryForm(request.POST, request.FILES, instance=category)
         if form.is_valid():
             form.save()
             messages.success(request, 'Category updated successfully.')
@@ -100,27 +87,43 @@ def category_edit(request, pk):
             messages.error(request, 'Please fix the errors below.')
     else:
         form = CategoryForm(instance=category)
-
     return render(request, 'admin_panel/category_edit.html', {
         'form': form,
-        'category': category
+        'category': category,
     })
 
 
 @staff_member_required(login_url='admin_login')
 @require_POST
-def category_delete(request, pk):
+def category_toggle_status(request, pk):
+    """Soft activate/deactivate a category and cascade to its products."""
     category = get_object_or_404(Category, pk=pk)
     if category.is_active:
         category.is_active = False
         category.save()
-        category.products.update(is_active=False)
-        messages.success(request, f'"{category.name}" and its products have been deactivated.')
+        # Only cascade-deactivate products that are currently active.
+        # Flag them so we know exactly which ones to restore later.
+        category.products.filter(is_active=True).update(
+            is_active=False,
+            deactivated_by_category=True,
+        )
+        messages.success(
+            request,
+            f'"{category.name}" and its products have been deactivated.'
+        )
     else:
         category.is_active = True
         category.save()
-        category.products.update(is_active=True)
-        messages.success(request, f'"{category.name}" and its products have been activated.')
+        # Only restore products that were deactivated by this cascade —
+        # not ones the admin manually deactivated before the category was deactivated.
+        category.products.filter(deactivated_by_category=True).update(
+            is_active=True,
+            deactivated_by_category=False,
+        )
+        messages.success(
+            request,
+            f'"{category.name}" and its products have been activated.'
+        )
     return redirect('admin_category_list')
 
 
@@ -128,7 +131,6 @@ def category_delete(request, pk):
 @never_cache
 def category_detail(request, pk):
     category = get_object_or_404(Category, pk=pk)
-    # Get all active products in this category
     products = category.products.filter(is_active=True)
     return render(request, 'admin_panel/category_detail.html', {
         'category': category,
@@ -136,8 +138,9 @@ def category_detail(request, pk):
     })
 
 
-
-# PRODUCT VIEWS 
+# ══════════════════════════════════════════
+# PRODUCT VIEWS
+# ══════════════════════════════════════════
 
 @staff_member_required(login_url='admin_login')
 @never_cache
@@ -159,15 +162,10 @@ def product_list(request):
         'variants__images'
     ).order_by(order_field)
 
-    # Filter by category
     if category_id:
         products = products.filter(category__id=category_id)
-
-    # Filter by brand
     if brand:
         products = products.filter(brand=brand)
-
-    # Filter by search
     if search:
         products = products.filter(
             Q(name__icontains=search) |
@@ -184,23 +182,24 @@ def product_list(request):
     inactive = Product.objects.filter(is_active=False).count()
 
     context = {
-        'page_obj':    page_obj,
-        'search':      search,
-        'sort_by':     sort_by,
-        'category_id': category_id,
-        'brand':       brand,
-        'total':       total,
-        'active':      active,
-        'inactive':    inactive,
-        # For dropdowns
-        'categories':  Category.objects.filter(is_active=True).order_by('name'),
+        'page_obj':      page_obj,
+        'search':        search,
+        'sort_by':       sort_by,
+        'category_id':   category_id,
+        'brand':         brand,
+        'total':         total,
+        'active':        active,
+        'inactive':      inactive,
+        'categories':    Category.objects.filter(is_active=True).order_by('name'),
         'brand_choices': Product._meta.get_field('brand').choices,
     }
     return render(request, 'admin_panel/product_management.html', context)
 
+
 @staff_member_required(login_url='admin_login')
 @require_POST
-def product_delete(request, pk):
+def product_toggle_status(request, pk):
+    """Soft activate/deactivate a product."""
     product = get_object_or_404(Product, pk=pk)
     if product.is_active:
         product.is_active = False
@@ -212,33 +211,25 @@ def product_delete(request, pk):
     return redirect('admin_product_list')
 
 
-@staff_member_required(login_url='admin_login')
-@require_POST
-def product_toggle_customization(request, pk):
-    
-    product = get_object_or_404(Product, pk=pk)
-    product.is_customizable = not product.is_customizable
-    product.save()
-    return JsonResponse({'is_customizable': product.is_customizable})
+# ──────────────────────────────────────────
+# Image / variant helpers
+# ──────────────────────────────────────────
 
 ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 MAX_IMAGE_SIZE      = 5 * 1024 * 1024  # 5 MB
- 
- 
+
+
 def _validate_image(img):
-    """Returns error string or None."""
+    """Returns an error string or None."""
     if img.content_type not in ALLOWED_IMAGE_TYPES:
         return f'"{img.name}" is not a valid image type (JPEG, PNG, WebP only).'
     if img.size > MAX_IMAGE_SIZE:
         return f'"{img.name}" exceeds the 5 MB size limit.'
     return None
- 
- 
+
+
 def _save_specs(product, post_data):
-    """
-    Reads spec_name[] and spec_value[] from POST and saves them.
-    Deletes existing specs first (full replace on edit).
-    """
+    """Full-replace specifications from POST data."""
     product.specifications.all().delete()
     names  = post_data.getlist('spec_name')
     values = post_data.getlist('spec_value')
@@ -252,43 +243,38 @@ def _save_specs(product, post_data):
             ))
     if specs:
         ProductSpecification.objects.bulk_create(specs)
- 
- 
+
+
 def _save_variants(product, post_data, files):
     """
-    Reads variant fields from POST (variant_device_model[], etc.)
-    and saves each variant + its images.
-    Returns a list of error strings (empty = all good).
+    Reads new variant fields from POST and saves each variant + images.
+    Returns a list of error strings (empty list = success).
     """
     errors = []
- 
+
     device_models = post_data.getlist('variant_device_model')
-    case_types    = post_data.getlist('variant_case_type')
-    colors        = post_data.getlist('variant_color')
-    color_codes   = post_data.getlist('variant_color_code')
-    skus          = post_data.getlist('variant_sku')
-    prices        = post_data.getlist('variant_price')
-    stocks        = post_data.getlist('variant_stock')
- 
     if not device_models:
         errors.append('At least one variant is required.')
         return errors
- 
+
+    case_types  = post_data.getlist('variant_case_type')
+    colors      = post_data.getlist('variant_color')
+    color_codes = post_data.getlist('variant_color_code')
+    skus        = post_data.getlist('variant_sku')
+    prices      = post_data.getlist('variant_price')
+    stocks      = post_data.getlist('variant_stock')
+
     for i, device_model in enumerate(device_models):
         device_model = device_model.strip()
         if not device_model:
             errors.append(f'Variant {i + 1}: Device model is required.')
             continue
- 
-        # Collect images for this variant index
-        image_key  = f'variant_images_{i}'
-        images     = files.getlist(image_key)
- 
+
+        images = files.getlist(f'variant_images_{i}')
         if len(images) < 3:
             errors.append(f'Variant {i + 1}: Please upload at least 3 images.')
             continue
- 
-        # Validate images
+
         img_error = False
         for img in images:
             err = _validate_image(img)
@@ -297,30 +283,27 @@ def _save_variants(product, post_data, files):
                 img_error = True
         if img_error:
             continue
- 
-        # Build + save variant
+
         sku = skus[i].strip() if i < len(skus) else ''
- 
         try:
             price = float(prices[i]) if i < len(prices) else 0
             stock = int(stocks[i])   if i < len(stocks) else 0
         except (ValueError, TypeError):
             errors.append(f'Variant {i + 1}: Invalid price or stock value.')
             continue
- 
+
         variant = ProductVariant(
             product      = product,
             device_model = device_model,
-            case_type    = case_types[i].strip() if i < len(case_types) else '',
-            color        = colors[i]             if i < len(colors)     else 'other',
+            case_type    = case_types[i].strip()  if i < len(case_types)  else '',
+            color        = colors[i]              if i < len(colors)      else 'other',
             color_code   = color_codes[i].strip() if i < len(color_codes) else '#000000',
-            sku = sku or '' , # auto-generated in model.save() if blank
+            sku          = sku or None,   # None so model.save() auto-generates
             price        = price,
             stock        = stock,
         )
         variant.save()
- 
-        # Save images
+
         for j, img in enumerate(images):
             VariantImage.objects.create(
                 variant    = variant,
@@ -328,102 +311,26 @@ def _save_variants(product, post_data, files):
                 is_primary = (j == 0),
                 order      = j,
             )
- 
+
     return errors
- 
-@staff_member_required(login_url='admin_login')
-@never_cache
-def product_add(request):
-    form = ProductForm()
- 
-    if request.method == 'POST':
-        form = ProductForm(request.POST)
- 
-        if form.is_valid():
-            product = form.save()
- 
-            # Save specifications
-            _save_specs(product, request.POST)
- 
-            # Save variants
-            variant_errors = _save_variants(product, request.POST, request.FILES)
-            if variant_errors:
-                # Roll back product if variants failed
-                product.delete()
-                for err in variant_errors:
-                    messages.error(request, err)
-                return render(request, 'admin_panel/product_add.html', {
-                    'form':       form,
-                    'categories': Category.objects.filter(is_active=True),
-                })
- 
-            messages.success(request, f'"{product.name}" added successfully.')
-            return redirect('admin_product_list')
-        else:
-            messages.error(request, 'Please fix the errors below.')
- 
-    return render(request, 'admin_panel/product_add.html', {
-        'form':       form,
-        'categories': Category.objects.filter(is_active=True),
-    })
- 
- 
-# ──────────────────────────────────────────
-# PRODUCT EDIT
-# ──────────────────────────────────────────
- 
-@staff_member_required(login_url='admin_login')
-@never_cache
-def product_edit(request, pk):
-    product          = get_object_or_404(Product, pk=pk)
-    existing_variants = product.variants.prefetch_related('images').all()
- 
-    if request.method == 'POST':
-        form = ProductForm(request.POST, instance=product)
- 
-        if form.is_valid():
-            product = form.save()
- 
-            # Replace specifications
-            _save_specs(product, request.POST)
- 
-            # Handle existing variant updates
-            _handle_existing_variants(request.POST, request.FILES, existing_variants)
- 
-            # Add brand-new variants
-            new_errors = _save_new_variants(product, request.POST, request.FILES)
-            if new_errors:
-                for err in new_errors:
-                    messages.error(request, err)
- 
-            messages.success(request, f'"{product.name}" updated successfully.')
-            return redirect('admin_product_list')
-        else:
-            messages.error(request, 'Please fix the errors below.')
-    else:
-        form = ProductForm(instance=product)
- 
-    return render(request, 'admin_panel/product_edit.html', {
-        'form':              form,
-        'product':           product,
-        'existing_variants': existing_variants,
-        'specifications':    product.specifications.all(),
-        'categories':        Category.objects.filter(is_active=True),
-    })
- 
- 
-def _handle_existing_variants(post_data,request, files, existing_variants):
-    """Update price/stock/color etc. for variants that already exist."""
+
+
+def _handle_existing_variants(request, post_data, files, existing_variants):
+    """
+    Update price/stock/color/etc. for variants that already exist.
+    Also handles adding new images and deleting selected images.
+    Errors are added directly to messages (request is available here).
+    """
     for variant in existing_variants:
         prefix = f'existing_variant_{variant.pk}'
- 
-        price_val = post_data.get(f'{prefix}_price')
-        stock_val = post_data.get(f'{prefix}_stock')
-        color     = post_data.get(f'{prefix}_color',      variant.color)
+
+        price_val  = post_data.get(f'{prefix}_price')
+        stock_val  = post_data.get(f'{prefix}_stock')
+        color      = post_data.get(f'{prefix}_color',      variant.color)
         color_code = post_data.get(f'{prefix}_color_code', variant.color_code)
         case_type  = post_data.get(f'{prefix}_case_type',  variant.case_type)
-        is_active = f'{prefix}_is_active' in post_data
- 
+        is_active  = f'{prefix}_is_active' in post_data
+
         try:
             if price_val:
                 variant.price = float(price_val)
@@ -435,44 +342,52 @@ def _handle_existing_variants(post_data,request, files, existing_variants):
             variant.is_active  = is_active
             variant.save()
         except (ValueError, TypeError):
-            pass
+            messages.error(
+                request,
+                f'Variant "{variant.device_model}": Invalid price or stock value.'
+            )
+            continue
 
-       
-        # Delete selected images
         delete_ids = post_data.getlist(f'{prefix}_delete_images')
-        
-        # New images
-        new_imgs = files.getlist(f'{prefix}_images')
-        
-        # Calculate resulting count
-        current_count = variant.images.count()
-        total_after_change = (current_count - len(delete_ids)) + len(new_imgs)
-        
-        if total_after_change < 3:
-            
-            messages.error(request, f'Variant {variant.device_model}: You must keep at least 3 images.')
-            continue 
-            
-        # If valid, proceed with delete and create
+        new_imgs   = files.getlist(f'{prefix}_images')
+
+        current_count   = variant.images.count()
+        count_after     = (current_count - len(delete_ids)) + len(new_imgs)
+
+        if count_after < 3:
+            messages.error(
+                request,
+                f'Variant "{variant.device_model}": Must keep at least 3 images '
+                f'(would have {count_after}).'
+            )
+            # Do NOT proceed with delete/upload for this variant.
+            continue
+
+        # Safe to apply changes.
         if delete_ids:
             variant.images.filter(pk__in=delete_ids).delete()
-            
+
         for img in new_imgs:
             err = _validate_image(img)
-            if not err:
-                VariantImage.objects.create(
-                    variant=variant,
-                    image=img,
-                    is_primary=False,
-                    order=variant.images.count() + 1,
-                )
-        
- 
- 
+            if err:
+                messages.error(request, f'Variant "{variant.device_model}": {err}')
+                continue
+            VariantImage.objects.create(
+                variant    = variant,
+                image      = img,
+                is_primary = False,
+                order      = variant.images.count() + 1,
+            )
+
+
 def _save_new_variants(product, post_data, files):
+    """
+    Save brand-new variants added during a product edit.
+    Returns a list of error strings.
+    """
     errors = []
 
-    device_models = post_data.getlist('new_variant_device_model')  # ← was missing!
+    device_models = post_data.getlist('new_variant_device_model')
     if not device_models:
         return errors
 
@@ -486,7 +401,7 @@ def _save_new_variants(product, post_data, files):
     for i, device_model in enumerate(device_models):
         device_model = device_model.strip()
         if not device_model:
-            errors.append(f'New variant {i + 1}: Device model is required.')  # ← fixed
+            errors.append(f'New variant {i + 1}: Device model is required.')
             continue
 
         images = files.getlist(f'new_variant_images_{i}')
@@ -514,10 +429,10 @@ def _save_new_variants(product, post_data, files):
         variant = ProductVariant(
             product      = product,
             device_model = device_model,
-            case_type    = case_types[i].strip() if i < len(case_types) else '',
-            color        = colors[i]             if i < len(colors)     else 'other',
+            case_type    = case_types[i].strip()  if i < len(case_types)  else '',
+            color        = colors[i]              if i < len(colors)      else 'other',
             color_code   = color_codes[i].strip() if i < len(color_codes) else '#000000',
-            sku          = sku or '',
+            sku          = sku or None,
             price        = price,
             stock        = stock,
         )
@@ -532,28 +447,103 @@ def _save_new_variants(product, post_data, files):
             )
 
     return errors
- 
+
+
+# ──────────────────────────────────────────
+# PRODUCT ADD
+# ──────────────────────────────────────────
+
+@staff_member_required(login_url='admin_login')
+@never_cache
+def product_add(request):
+    form = ProductForm()
+
+    if request.method == 'POST':
+        form = ProductForm(request.POST)
+
+        if form.is_valid():
+            product = form.save()
+            _save_specs(product, request.POST)
+
+            variant_errors = _save_variants(product, request.POST, request.FILES)
+            if variant_errors:
+                # Roll back — product and its cascade-deleted specs are removed.
+                product.delete()
+                for err in variant_errors:
+                    messages.error(request, err)
+                # Re-render with the submitted POST data so the user doesn't lose input.
+                return render(request, 'admin_panel/product_add.html', {
+                    'form':       form,
+                    'categories': Category.objects.filter(is_active=True),
+                    'post_data':  request.POST,  # template can use this to repopulate variant fields
+                })
+
+            messages.success(request, f'"{product.name}" added successfully.')
+            return redirect('admin_product_list')
+        else:
+            messages.error(request, 'Please fix the errors below.')
+
+    return render(request, 'admin_panel/product_add.html', {
+        'form':       form,
+        'categories': Category.objects.filter(is_active=True),
+    })
+
+
+# ──────────────────────────────────────────
+# PRODUCT EDIT
+# ──────────────────────────────────────────
+
+@staff_member_required(login_url='admin_login')
+@never_cache
+def product_edit(request, pk):
+    product           = get_object_or_404(Product, pk=pk)
+    existing_variants = product.variants.prefetch_related('images').all()
+
+    if request.method == 'POST':
+        form = ProductForm(request.POST, instance=product)
+
+        if form.is_valid():
+            product = form.save()
+            _save_specs(product, request.POST)
+
+            # Update existing variants (request is passed so messages work correctly).
+            _handle_existing_variants(request, request.POST, request.FILES, existing_variants)
+
+            # Add any brand-new variants submitted in the same form.
+            new_errors = _save_new_variants(product, request.POST, request.FILES)
+            for err in new_errors:
+                messages.error(request, err)
+
+            messages.success(request, f'"{product.name}" updated successfully.')
+            return redirect('admin_product_list')
+        else:
+            messages.error(request, 'Please fix the errors below.')
+    else:
+        form = ProductForm(instance=product)
+
+    return render(request, 'admin_panel/product_edit.html', {
+        'form':              form,
+        'product':           product,
+        'existing_variants': existing_variants,
+        'specifications':    product.specifications.all(),
+        'categories':        Category.objects.filter(is_active=True),
+    })
+
+
 # ══════════════════════════════════════════
 # VARIANT AJAX VIEWS
 # ══════════════════════════════════════════
- 
+
 @staff_member_required(login_url='admin_login')
 @require_POST
-def variant_delete(request, pk):
-    """Soft-delete a variant."""
+def variant_toggle_status(request, pk):
+    """Soft activate/deactivate a variant via AJAX."""
     variant = get_object_or_404(ProductVariant, pk=pk)
-    if variant.is_active:
-        variant.is_active = False
-        variant.save()
-        msg = 'Variant deactivated.'
-    else:
-        variant.is_active = True
-        variant.save()
-        msg = 'Variant activated.'
-    return JsonResponse({'success': True, 'message': msg, 'is_active': variant.is_active})
- 
- 
-@staff_member_required(login_url='admin_login')
-@never_cache
-def variant_list(request):
-    return render(request, 'admin_panel/variant_management.html')
+    variant.is_active = not variant.is_active
+    variant.save()
+    msg = 'Variant activated.' if variant.is_active else 'Variant deactivated.'
+    return JsonResponse({
+        'success':   True,
+        'message':   msg,
+        'is_active': variant.is_active,
+    })
