@@ -1,187 +1,1370 @@
 {% extends 'admin_panel/admin_base.html' %}
 {% block content %}
 
-<!-- Back + Header -->
-<div class="mb-8">
-  <a href="{% url 'admin_product_list' %}" class="inline-flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-black transition mb-4 uppercase tracking-widest">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-    Back to Products
-  </a>
-  <h1 class="text-2xl font-black text-gray-900 tracking-tight">Edit Product</h1>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+
+<style>
+  /* ── BASE ── */
+  .section-card { background:#fff; border:1px solid #e8e8e8; border-radius:16px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.03); }
+  .section-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid #f0f0f0; background:#fafafa; }
+  .section-num { width:26px; height:26px; background:#111; color:#fff; border-radius:8px; font-size:10px; font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .section-title { font-size:11px; font-weight:900; color:#111; letter-spacing:0.1em; text-transform:uppercase; }
+
+  /* ── FIELDS ── */
+  .field-label { display:block; font-size:10px; font-weight:700; color:#9ca3af; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:6px; }
+  .field-input { width:100%; padding:10px 14px; background:#f9fafb; border:1.5px solid #efefef; border-radius:10px; font-size:13px; font-weight:500; color:#111; outline:none; transition:border-color 0.15s, box-shadow 0.15s, background 0.15s; appearance:none; box-sizing:border-box; }
+  .field-input:focus { border-color:#111; background:#fff; box-shadow:0 0 0 3px rgba(0,0,0,0.06); }
+  .field-input.error { border-color:#ef4444 !important; background:#fef2f2 !important; }
+  .field-input::placeholder { color:#c4c9d4; font-weight:400; }
+  .field-error { font-size:11px; color:#ef4444; font-weight:600; margin-top:5px; display:flex; align-items:center; gap:4px; }
+  .field-select-wrap { position:relative; }
+  .field-select-wrap::after { content:''; position:absolute; right:14px; top:50%; transform:translateY(-50%); width:0; height:0; border-left:4px solid transparent; border-right:4px solid transparent; border-top:5px solid #9ca3af; pointer-events:none; }
+
+  /* ── TOGGLE ── */
+  .toggle-wrap { position:relative; display:inline-flex; cursor:pointer; }
+  .toggle-wrap input { position:absolute; opacity:0; width:0; height:0; }
+  .toggle-track { width:44px; height:24px; background:#d1d5db; border-radius:99px; transition:background 0.2s; position:relative; }
+  .toggle-track::after { content:''; position:absolute; top:2px; left:2px; width:20px; height:20px; background:#fff; border-radius:50%; transition:transform 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.18); }
+  .toggle-wrap input:checked ~ .toggle-track { background:#111; }
+  .toggle-wrap input:checked ~ .toggle-track::after { transform:translateX(20px); }
+
+  /* ── BUTTONS ── */
+  .btn-primary { display:inline-flex; align-items:center; gap:6px; background:#111; color:#fff; padding:9px 20px; border-radius:10px; font-size:11px; font-weight:900; letter-spacing:0.08em; text-transform:uppercase; border:none; cursor:pointer; transition:background 0.15s, transform 0.1s; }
+  .btn-primary:hover { background:#2a2a2a; }
+  .btn-primary:active { transform:scale(0.98); }
+  .btn-secondary { display:inline-flex; align-items:center; gap:6px; background:#f3f4f6; color:#374151; padding:9px 16px; border-radius:10px; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; border:1.5px solid #e5e7eb; cursor:pointer; transition:background 0.15s, border-color 0.15s; }
+  .btn-secondary:hover { background:#e9ebee; border-color:#d1d5db; }
+  .btn-danger-ghost { display:inline-flex; align-items:center; gap:5px; background:transparent; color:#d1d5db; padding:6px 12px; border-radius:8px; font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; border:1.5px solid #f0f0f0; cursor:pointer; transition:all 0.15s; }
+  .btn-danger-ghost:hover { background:#fef2f2; color:#ef4444; border-color:#fecaca; }
+  .btn-icon { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1.5px solid #f0f0f0; background:#f9fafb; border-radius:8px; cursor:pointer; color:#9ca3af; transition:all 0.15s; flex-shrink:0; }
+  .btn-icon:hover { background:#fef2f2; color:#ef4444; border-color:#fecaca; }
+
+  /* ── BADGES ── */
+  .badge { display:inline-flex; align-items:center; font-size:9px; font-weight:900; padding:3px 9px; border-radius:99px; letter-spacing:0.08em; text-transform:uppercase; }
+  .badge-dark { background:#111; color:#fff; }
+  .badge-active { background:#dcfce7; color:#166534; }
+  .badge-inactive { background:#fef2f2; color:#991b1b; }
+  .badge-existing { background:#eff6ff; color:#1d4ed8; }
+  .badge-new { background:#fefce8; color:#854d0e; }
+
+  /* ── VARIANTS ── */
+  .variant-card { border:1.5px solid #f0f0f0; border-radius:14px; overflow:hidden; transition:border-color 0.2s, box-shadow 0.2s; }
+  .variant-card.new-variant { animation:slideUp 0.22s ease; border-color:#fef08a; }
+  .variant-card:hover { border-color:#e0e0e0; box-shadow:0 2px 12px rgba(0,0,0,0.05); }
+  @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  .variant-header { display:flex; align-items:center; justify-content:space-between; padding:13px 20px; background:#f9fafb; border-bottom:1px solid #f0f0f0; }
+
+  /* ── SPECS ── */
+  .spec-row { display:flex; align-items:center; gap:10px; animation:fadeIn 0.15s ease; }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+  /* ── IMAGES ── */
+  .upload-zone { border:2px dashed #e5e7eb; border-radius:12px; padding:26px 20px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; cursor:pointer; transition:border-color 0.2s, background 0.2s; }
+  .upload-zone:hover, .upload-zone.drag-over { border-color:#111; background:#f5f5f5; }
+  .img-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(82px,1fr)); gap:10px; }
+  .img-thumb-wrap { position:relative; aspect-ratio:1; border-radius:10px; overflow:hidden; border:1.5px solid #f0f0f0; background:#fafafa; transition:border-color 0.15s; }
+  .img-thumb-wrap:hover { border-color:#d1d5db; }
+  .img-thumb-wrap img { width:100%; height:100%; object-fit:cover; display:block; }
+  .img-thumb-wrap .remove-btn { position:absolute; top:5px; right:5px; width:22px; height:22px; background:rgba(239,68,68,0.9); color:#fff; border-radius:50%; border:none; font-size:9px; font-weight:900; cursor:pointer; display:none; align-items:center; justify-content:center; }
+  .img-thumb-wrap:hover .remove-btn { display:flex; }
+  .primary-badge { position:absolute; bottom:5px; left:5px; background:rgba(0,0,0,0.75); color:#fff; font-size:8px; font-weight:900; padding:3px 7px; border-radius:20px; letter-spacing:0.05em; text-transform:uppercase; }
+  .delete-overlay { position:absolute; inset:0; background:rgba(239,68,68,0.6); display:flex; align-items:center; justify-content:center; pointer-events:none; }
+  .delete-overlay span { font-size:9px; font-weight:900; color:#fff; text-transform:uppercase; letter-spacing:0.08em; }
+
+  /* ── CROP MODAL ── */
+  #cropModal { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.8); align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+  #cropModal.active { display:flex; }
+  .crop-modal-box { background:#fff; border-radius:20px; width:min(90vw,700px); overflow:hidden; box-shadow:0 32px 80px rgba(0,0,0,0.35); }
+  .crop-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid #f0f0f0; }
+  .crop-body { padding:20px; background:#f5f5f5; }
+  .crop-img-wrap { max-height:400px; overflow:hidden; border-radius:10px; background:#000; }
+  .crop-img-wrap img { display:block; max-width:100%; }
+  .crop-controls { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-top:1px solid #f0f0f0; gap:12px; }
+  .crop-tools { display:flex; gap:6px; }
+  .crop-tool-btn { width:36px; height:36px; border:1.5px solid #e5e7eb; background:#f9fafb; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.15s, border-color 0.15s; color:#374151; }
+  .crop-tool-btn:hover { background:#f0f0f0; border-color:#d1d5db; }
+
+  /* ── MISC ── */
+  .status-row { display:flex; align-items:center; justify-content:space-between; background:#f9fafb; border:1.5px solid #efefef; border-radius:12px; padding:14px 18px; transition:border-color 0.15s; }
+  .status-row:hover { border-color:#e0e0e0; }
+  .notice-info { display:flex; align-items:flex-start; gap:12px; background:#eff6ff; border:1.5px solid #bfdbfe; border-radius:12px; padding:14px 18px; }
+  .divider { border:none; border-top:1px solid #f0f0f0; margin:0; }
+  .empty-state { display:flex; flex-direction:column; align-items:center; padding:40px 0; text-align:center; border:2px dashed #e5e7eb; border-radius:14px; }
+  .hidden { display:none !important; }
+  .req { color:#ef4444; }
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+
+  /* ── EXISTING IMAGE MARK-FOR-DELETE ── */
+  .img-thumb-wrap.marked-delete { opacity:0.45; }
+  .img-thumb-wrap.marked-delete .remove-btn { display:flex !important; background:rgba(100,100,100,0.8); }
+
+  /* ── INFO STRIP ── */
+  .info-strip { display:flex; align-items:center; gap:6px; padding:8px 14px; background:#f9fafb; border:1.5px solid #f0f0f0; border-radius:10px; font-size:11px; color:#6b7280; font-weight:500; }
+</style>
+
+<!-- ══════ CROP MODAL ══════ -->
+<div id="cropModal">
+  <div class="crop-modal-box">
+    <div class="crop-header">
+      <div>
+        <p class="section-title">Crop &amp; Resize Image</p>
+        <p style="font-size:11px;color:#9ca3af;margin-top:2px;">Drag to reposition · Scroll to zoom</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span id="cropFileName" style="font-size:11px;color:#9ca3af;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+        <button onclick="closeCropper()" style="width:28px;height:28px;border:1.5px solid #e5e7eb;background:#f9fafb;border-radius:6px;cursor:pointer;font-size:14px;color:#6b7280;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>
+    </div>
+    <div class="crop-body">
+      <div class="crop-img-wrap"><img id="cropImage" src="" alt="Crop preview"></div>
+    </div>
+    <div class="crop-controls">
+      <div class="crop-tools">
+        <button type="button" class="crop-tool-btn" onclick="cropperInstance.zoom(0.1)" title="Zoom In">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/></svg>
+        </button>
+        <button type="button" class="crop-tool-btn" onclick="cropperInstance.zoom(-0.1)" title="Zoom Out">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM7 10h6"/></svg>
+        </button>
+        <button type="button" class="crop-tool-btn" onclick="cropperInstance.rotate(-90)" title="Rotate Left">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l4-4M3 10l4 4"/></svg>
+        </button>
+        <button type="button" class="crop-tool-btn" onclick="cropperInstance.rotate(90)" title="Rotate Right">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10H11a8 8 0 00-8 8v2M21 10l-4-4M21 10l-4 4"/></svg>
+        </button>
+        <button type="button" class="crop-tool-btn" onclick="cropperInstance.scaleX(cropperInstance.getData().scaleX===-1?1:-1)" title="Flip Horizontal">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3H5a2 2 0 00-2 2v14a2 2 0 002 2h3M16 3h3a2 2 0 012 2v14a2 2 0 01-2 2h-3M12 3v18"/></svg>
+        </button>
+        <button type="button" class="crop-tool-btn" onclick="cropperInstance.reset()" title="Reset">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </button>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn-secondary" onclick="skipCrop()">Skip Crop</button>
+        <button type="button" class="btn-primary" onclick="confirmCrop()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          Use This Crop
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<form method="POST" enctype="multipart/form-data" id="editForm" novalidate>
-  {% csrf_token %}
+<!-- ══════ PAGE HEADER ══════ -->
+<div style="margin-bottom:28px;">
+  <a href="{% url 'admin_product_list' %}" style="display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:#9ca3af;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;margin-bottom:16px;transition:color 0.15s;" onmouseover="this.style.color='#111'" onmouseout="this.style.color='#9ca3af'">
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+    Back to Products
+  </a>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+    <div>
+      <h1 style="font-size:26px;font-weight:900;color:#111;line-height:1.1;letter-spacing:-0.02em;">Edit Product</h1>
+      <p style="font-size:13px;color:#9ca3af;font-weight:500;margin-top:6px;">
+        Editing <strong style="color:#374151;">{{ product.name }}</strong>
+        <span style="margin:0 6px;color:#e5e7eb;">·</span>
+        <span style="font-size:11px;color:#d1d5db;font-family:monospace;">ID #{{ product.pk }}</span>
+      </p>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;">Product status</span>
+      <span class="badge {% if product.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+        {% if product.is_active %}Active{% else %}Inactive{% endif %}
+      </span>
+    </div>
+  </div>
+</div>
 
-  <div class="space-y-6">
-    <!-- BASIC INFORMATION -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-100"><h2 class="text-sm font-black text-gray-900 uppercase tracking-widest">Basic Information</h2></div>
-      <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="md:col-span-2">
-          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Product Name *</label>
-          <input type="text" name="name" value="{{ product.name }}" class="w-full px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium">
+<!-- Flash messages -->
+{% if messages %}
+<div style="margin-bottom:20px;display:flex;flex-direction:column;gap:8px;">
+  {% for message in messages %}
+  <div style="padding:12px 16px;border-radius:10px;{% if message.tags == 'error' %}background:#fef2f2;border:1.5px solid #fecaca;color:#dc2626;{% else %}background:#f0fdf4;border:1.5px solid #bbf7d0;color:#16a34a;{% endif %}">
+    <p style="font-size:12px;font-weight:600;">{{ message }}</p>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- JS Validation error box -->
+<div id="jsErrors" class="hidden" style="margin-bottom:20px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:12px;padding:16px 20px;">
+  <p style="font-size:10px;font-weight:900;color:#dc2626;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Please fix the following errors</p>
+  <div id="jsErrorList"></div>
+</div>
+
+<!-- ══════ FORM ══════ -->
+<form method="POST" enctype="multipart/form-data" id="productForm" novalidate>
+  {% csrf_token %}
+  <div style="display:flex;flex-direction:column;gap:20px;">
+
+    <!-- ══ SECTION 1: BASIC INFO ══ -->
+    <div class="section-card">
+      <div class="section-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="section-num">1</span>
+          <span class="section-title">Basic Information</span>
         </div>
+      </div>
+      <div style="padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+        <!-- Product Name -->
+        <div style="grid-column:1/-1;">
+          <label class="field-label">Product Name <span class="req">*</span></label>
+          <input type="text" name="name"
+                 value="{{ form.name.value|default:product.name }}"
+                 placeholder="e.g. Carbon Fibre Phone Case"
+                 class="field-input {% if form.name.errors %}error{% endif %}">
+          {% if form.name.errors %}
+          <p class="field-error">
+            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+            {{ form.name.errors.0 }}
+          </p>
+          {% endif %}
+        </div>
+
+        <!-- Brand -->
         <div>
-          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Brand *</label>
-          <select name="brand" class="w-full px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium">
-            {% for value, label in form.fields.brand.choices %}
-            <option value="{{ value }}" {% if product.brand == value %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
+          <label class="field-label">Brand <span class="req">*</span></label>
+          <div class="field-select-wrap">
+            <select name="brand" id="brandSelect" onchange="onBrandChange()" class="field-input">
+              {% for value, label in form.fields.brand.choices %}
+              <option value="{{ value }}" {% if form.brand.value == value %}selected{% elif not form.is_bound and product.brand == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
+
+        <!-- Category -->
         <div>
-          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Category *</label>
-          <select name="category" class="w-full px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium">
-            {% for cat in form.fields.category.queryset %}
-            <option value="{{ cat.pk }}" {% if product.category.pk == cat.pk %}selected{% endif %}>{{ cat.name }}</option>
-            {% endfor %}
-          </select>
+          <label class="field-label">Category <span class="req">*</span></label>
+          <div class="field-select-wrap">
+            <select name="category" id="categorySelect" onchange="onCategoryChange()" class="field-input {% if form.category.errors %}error{% endif %}">
+              <option value="">— Select category —</option>
+              {% for cat in form.fields.category.queryset %}
+              <option value="{{ cat.pk }}"
+                      data-meta-url="{% url 'admin_category_meta' cat.pk %}"
+                      {% if form.category.value|stringformat:"s" == cat.pk|stringformat:"s" %}selected
+                      {% elif not form.is_bound and product.category.pk == cat.pk %}selected{% endif %}>
+                {{ cat.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          {% if form.category.errors %}
+          <p class="field-error">
+            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+            {{ form.category.errors.0 }}
+          </p>
+          {% endif %}
         </div>
-        <div class="flex items-center gap-6 p-4 bg-gray-50 rounded-xl">
-           <label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" name="is_active" {% if product.is_active %}checked{% endif %}> Active</label>
-           <label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" name="is_customizable" {% if product.is_customizable %}checked{% endif %}> Customizable</label>
+
+        <!-- Description -->
+        <div style="grid-column:1/-1;">
+          <label class="field-label">Description</label>
+          <textarea name="description" rows="4"
+                    placeholder="Describe the product — materials, features, compatibility…"
+                    class="field-input" style="resize:vertical;line-height:1.6;">{{ form.description.value|default:product.description }}</textarea>
+        </div>
+
+        <!-- Product Status -->
+        <div style="grid-column:1/-1;">
+          <div class="status-row">
+            <div>
+              <p style="font-size:12px;font-weight:800;color:#111;">Product Status</p>
+              <p style="font-size:11px;color:#9ca3af;font-weight:500;margin-top:2px;">Active products are visible on the storefront</p>
+            </div>
+            <label class="toggle-wrap">
+              <input type="checkbox" name="is_active"
+                     {% if form.is_bound %}{% if form.is_active.value %}checked{% endif %}{% else %}{% if product.is_active %}checked{% endif %}{% endif %}>
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Customization Notice (shown when category is_customizable) -->
+        <div id="customizationNotice" style="grid-column:1/-1;display:none;">
+          <div class="notice-info">
+            <svg width="18" height="18" fill="none" stroke="#3b82f6" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div>
+              <p style="font-size:12px;font-weight:800;color:#1d4ed8;">Customization Enabled</p>
+              <p style="font-size:11px;color:#3b82f6;font-weight:500;margin-top:2px;">This category supports customer customization. Case type selection is required for each variant.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ SECTION 2: SPECIFICATIONS ══ -->
+    <div class="section-card">
+      <div class="section-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="section-num">2</span>
+          <div>
+            <span class="section-title">Specifications</span>
+            <p style="font-size:10px;color:#9ca3af;font-weight:500;margin-top:1px;">Existing specs are pre-loaded · Add or remove as needed</p>
+          </div>
+        </div>
+        <button type="button" onclick="addCustomSpec()"
+                style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:8px;font-size:10px;font-weight:800;color:#374151;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:background 0.15s;"
+                onmouseover="this.style.background='#e9ebee'" onmouseout="this.style.background='#f3f4f6'">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          Add Custom
+        </button>
+      </div>
+      <div style="padding:24px;">
+        <div id="specPlaceholder" style="display:{% if specifications %}none{% else %}flex{% endif %};flex-direction:column;align-items:center;padding:36px 0;text-align:center;">
+          <div style="width:44px;height:44px;background:#f3f4f6;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+            <svg width="20" height="20" fill="none" stroke="#d1d5db" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          </div>
+          <p style="font-size:12px;font-weight:600;color:#d1d5db;">No specs yet — select a category or add custom specs</p>
+        </div>
+        <div id="specsContainer" style="display:{% if specifications %}flex{% else %}none{% endif %};flex-direction:column;gap:10px;">
+          {% for spec in specifications %}
+          <div class="spec-row">
+            <div style="flex:1;display:flex;align-items:center;gap:5px;padding:10px 14px;background:#f3f4f6;border:1.5px solid #e9ebee;border-radius:10px;">
+              <span style="font-size:13px;font-weight:700;color:#374151;">{{ spec.name }}</span>
+              <input type="hidden" name="spec_name" value="{{ spec.name }}">
+            </div>
+            <input type="text" name="spec_value" value="{{ spec.value }}" placeholder="Enter value" class="field-input" style="flex:1;">
+            <button type="button" onclick="this.closest('.spec-row').remove()"
+                    style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1.5px solid #f0f0f0;background:#f9fafb;cursor:pointer;color:#d1d5db;border-radius:8px;flex-shrink:0;transition:all 0.15s;"
+                    onmouseover="this.style.background='#fef2f2';this.style.color='#ef4444';this.style.borderColor='#fecaca'" onmouseout="this.style.background='#f9fafb';this.style.color='#d1d5db';this.style.borderColor='#f0f0f0'">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          {% endfor %}
         </div>
       </div>
     </div>
 
-    <!-- DESCRIPTION -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100"><h2 class="text-sm font-black text-gray-900 uppercase tracking-widest">Description</h2></div>
-        <div class="p-6"><textarea name="description" rows="3" class="w-full px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium">{{ product.description }}</textarea></div>
-    </div>
-
-    <!-- SPECIFICATIONS -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100 flex justify-between">
-            <h2 class="text-sm font-black text-gray-900 uppercase tracking-widest">Specifications</h2>
-            <button type="button" onclick="addSpec()" class="bg-black text-white px-3 py-1 rounded-lg text-xs font-bold">Add</button>
+    <!-- ══ SECTION 3: EXISTING VARIANTS ══ -->
+    <div class="section-card">
+      <div class="section-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="section-num">3</span>
+          <div>
+            <span class="section-title">Existing Variants</span>
+            <p style="font-size:10px;color:#9ca3af;font-weight:500;margin-top:1px;">
+              {{ existing_variants|length }} variant{{ existing_variants|length|pluralize }} · Edit price, stock, images and status
+            </p>
+          </div>
         </div>
-        <div class="p-6" id="specsContainer">
-            {% for spec in specifications %}
-            <div class="flex items-center gap-3 mb-2 spec-row">
-                <input type="text" name="spec_name" value="{{ spec.name }}" class="flex-1 px-4 py-2 bg-gray-50 border rounded-xl text-sm">
-                <input type="text" name="spec_value" value="{{ spec.value }}" class="flex-1 px-4 py-2 bg-gray-50 border rounded-xl text-sm">
-                <button type="button" onclick="this.closest('.spec-row').remove()" class="text-red-500">✕</button>
+      </div>
+      <div style="padding:24px;display:flex;flex-direction:column;gap:20px;">
+
+        {% for variant in existing_variants %}
+        {% with prefix="existing_variant_"|add:variant.pk|stringformat:"s" %}
+        <div class="variant-card" id="evc_{{ variant.pk }}">
+
+          <!-- Existing Variant Header -->
+          <div class="variant-header">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:12px;font-weight:900;color:#111;">
+                {{ variant.device_model.name|default:"No Device" }}
+              </span>
+              {% if forloop.first %}<span class="badge badge-dark">Default</span>{% endif %}
+              <span class="badge badge-existing">Existing</span>
+              <span class="badge {% if variant.is_active %}badge-active{% else %}badge-inactive{% endif %}"
+                    id="eStatusBadge_{{ variant.pk }}">
+                {% if variant.is_active %}Active{% else %}Inactive{% endif %}
+              </span>
+              {% if variant.case_type %}
+              <span style="font-size:10px;color:#9ca3af;font-weight:600;">{{ variant.get_case_type_display }}</span>
+              {% endif %}
+              <span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#9ca3af;font-weight:500;">
+                <span style="width:10px;height:10px;border-radius:50%;background:{{ variant.color_code }};border:1px solid #e5e7eb;display:inline-block;"></span>
+                {{ variant.get_color_display }}
+              </span>
             </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- EXISTING VARIANTS -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100"><h2 class="text-sm font-black text-gray-900 uppercase tracking-widest">Variants</h2></div>
-        <div class="p-6 space-y-6">
-            {% for variant in existing_variants %}
-            <div class="border border-gray-100 rounded-2xl p-5" id="existingVariant_{{ variant.pk }}">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-bold text-sm flex items-center gap-2">
-                        <div class="w-4 h-4 rounded-full" style="background-color: {{ variant.color_code }};"></div>
-                        {{ variant.device_model }} ({{ variant.color }})
-                    </h3>
-                    <input type="checkbox" name="existing_variant_{{ variant.pk }}_is_active" {% if variant.is_active %}checked{% endif %}>
-                </div>
-                
-                <div class="grid grid-cols-3 gap-4 mb-6">
-                    <div><label class="text-[10px] font-bold text-gray-500 uppercase">Device</label>
-                    <input type="text" value="{{ variant.device_model }}" disabled class="w-full px-4 py-2 bg-gray-100 border rounded-xl text-sm"></div>
-                    <div><label class="text-[10px] font-bold text-gray-500 uppercase">Color</label>
-                    <select name="existing_variant_{{ variant.pk }}_color" class="w-full px-4 py-2 bg-gray-50 border rounded-xl text-sm">
-                        {% for val, lbl in color_choices %}<option value="{{ val }}" {% if variant.color == val %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
-                    </select></div>
-                    <div><label class="text-[10px] font-bold text-gray-500 uppercase">Code</label>
-                    <input type="text" name="existing_variant_{{ variant.pk }}_color_code" value="{{ variant.color_code }}" class="w-full px-4 py-2 bg-gray-50 border rounded-xl text-sm"></div>
-                    <div><label class="text-[10px] font-bold text-gray-500 uppercase">Case Type</label>
-                    <input type="text" name="existing_variant_{{ variant.pk }}_case_type" value="{{ variant.case_type }}" class="w-full px-4 py-2 bg-gray-50 border rounded-xl text-sm"></div>
-                    <div><label class="text-[10px] font-bold text-gray-500 uppercase">Price</label>
-                    <input type="number" name="existing_variant_{{ variant.pk }}_price" value="{{ variant.price }}" class="w-full px-4 py-2 bg-gray-50 border rounded-xl text-sm"></div>
-                    <div><label class="text-[10px] font-bold text-gray-500 uppercase">Stock</label>
-                    <input type="number" name="existing_variant_{{ variant.pk }}_stock" value="{{ variant.stock }}" class="w-full px-4 py-2 bg-gray-50 border rounded-xl text-sm"></div>
-                </div>
-
-                <!-- IMAGE MANAGEMENT -->
-                <div class="border-t pt-4">
-                    <p class="text-[10px] font-bold text-gray-500 uppercase mb-3">Images</p>
-                    <div class="grid grid-cols-6 gap-3" id="imgGrid_{{ variant.pk }}">
-                        {% for img in variant.images.all %}
-                        <div class="relative aspect-square" id="imgCard_{{ img.pk }}">
-                            <img src="{{ img.image.url }}" class="w-full h-full object-cover rounded-xl border">
-                            <button type="button" onclick="toggleImageDelete({{ img.pk }}, {{ variant.pk }}, {{ variant.images.count }})" class="absolute top-1 right-1 bg-white text-red-500 rounded-full w-6 h-6 flex items-center justify-center font-bold">✕</button>
-                            <input type="checkbox" name="existing_variant_{{ variant.pk }}_delete_images" value="{{ img.pk }}" id="check_{{ img.pk }}" class="hidden">
-                        </div>
-                        {% endfor %}
-                        <label for="file_{{ variant.pk }}" class="flex flex-col items-center justify-center aspect-square border-2 border-dashed rounded-xl cursor-pointer hover:bg-gray-50">
-                            <span class="text-[9px] font-bold uppercase">Add</span>
-                        </label>
-                        <input type="file" id="file_{{ variant.pk }}" name="existing_variant_{{ variant.pk }}_images" multiple accept="image/*" class="hidden" onchange="previewNewImages(this, {{ variant.pk }})">
-                    </div>
-                    <p id="err_{{ variant.pk }}" class="text-xs text-red-500 mt-2 hidden">Min 3 images required.</p>
-                    <div id="preview_{{ variant.pk }}" class="grid grid-cols-6 gap-3 mt-3"></div>
-                </div>
+            <!-- Status toggle -->
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;">Status</span>
+                <label class="toggle-wrap">
+                  <input type="checkbox"
+                         name="{{ prefix }}_is_active"
+                         id="eVarStatus_{{ variant.pk }}"
+                         {% if variant.is_active %}checked{% endif %}
+                         onchange="onExistingVariantStatusChange({{ variant.pk }}, this.checked)">
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
             </div>
-            {% endfor %}
+          </div>
+
+          <!-- Existing Variant Fields -->
+          <div style="padding:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+
+           <!-- Device Model — editable dropdown -->
+<div style="grid-column:1/-1;">
+  <label class="field-label">Device Model <span class="req">*</span></label>
+  <div class="field-select-wrap">
+    <select name="{{ prefix }}_device_model"
+            id="eDm_select_{{ variant.pk }}"
+            class="field-input"
+            data-current-id="{{ variant.device_model.pk|default:'' }}">
+      <option value="">Loading…</option>
+    </select>
+  </div>
+  <p style="font-size:10px;color:#d1d5db;font-weight:500;margin-top:4px;">
+    SKU: {{ variant.sku|default:"auto-generated" }}
+  </p>
+</div>
+            <!-- Case Type — only when category is_customizable -->
+            <div id="eCt_field_{{ variant.pk }}"
+                 style="grid-column:1/-1;{% if not product.category.is_customizable %}display:none;{% endif %}">
+              <label class="field-label">Case Type <span class="req">*</span></label>
+              <div class="field-select-wrap">
+                <select name="{{ prefix }}_case_type"
+                        id="eCt_select_{{ variant.pk }}"
+                        class="field-input">
+                  <option value="">— Select case type —</option>
+                  {% for value, label in case_type_choices %}
+                  <option value="{{ value }}" {% if variant.case_type == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <!-- Colour -->
+            <div>
+              <label class="field-label">Colour <span class="req">*</span></label>
+              <div class="field-select-wrap">
+                <select name="{{ prefix }}_color"
+                        id="eColorSelect_{{ variant.pk }}"
+                        onchange="syncExistingColor(this, {{ variant.pk }})"
+                        class="field-input">
+                  {% for value, label in form.fields.brand.choices %}{% endfor %}
+                  <option value="black" {% if variant.color == "black" %}selected{% endif %}>Black</option>
+                  <option value="white" {% if variant.color == "white" %}selected{% endif %}>White</option>
+                  <option value="red" {% if variant.color == "red" %}selected{% endif %}>Red</option>
+                  <option value="blue" {% if variant.color == "blue" %}selected{% endif %}>Blue</option>
+                  <option value="green" {% if variant.color == "green" %}selected{% endif %}>Green</option>
+                  <option value="yellow" {% if variant.color == "yellow" %}selected{% endif %}>Yellow</option>
+                  <option value="orange" {% if variant.color == "orange" %}selected{% endif %}>Orange</option>
+                  <option value="purple" {% if variant.color == "purple" %}selected{% endif %}>Purple</option>
+                  <option value="pink" {% if variant.color == "pink" %}selected{% endif %}>Pink</option>
+                  <option value="grey" {% if variant.color == "grey" %}selected{% endif %}>Grey</option>
+                  <option value="navy" {% if variant.color == "navy" %}selected{% endif %}>Navy</option>
+                  <option value="gold" {% if variant.color == "gold" %}selected{% endif %}>Gold</option>
+                  <option value="silver" {% if variant.color == "silver" %}selected{% endif %}>Silver</option>
+                  <option value="transparent" {% if variant.color == "transparent" %}selected{% endif %}>Transparent</option>
+                  <option value="other" {% if variant.color == "other" %}selected{% endif %}>Other</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Colour Code -->
+            <div>
+              <label class="field-label">Colour Code <span class="req">*</span></label>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="color"
+                       id="eColorPicker_{{ variant.pk }}"
+                       value="{{ variant.color_code }}"
+                       onchange="document.getElementById('eColorCode_{{ variant.pk }}').value=this.value"
+                       style="width:42px;height:42px;border:1.5px solid #efefef;border-radius:10px;cursor:pointer;padding:3px;background:#f9fafb;flex-shrink:0;">
+                <input type="text"
+                       name="{{ prefix }}_color_code"
+                       id="eColorCode_{{ variant.pk }}"
+                       value="{{ variant.color_code }}"
+                       maxlength="7"
+                       oninput="onExistingHexInput(this, {{ variant.pk }})"
+                       class="field-input" style="font-family:monospace;letter-spacing:0.05em;flex:1;">
+              </div>
+            </div>
+
+            <!-- Price -->
+            <div>
+              <label class="field-label">Price (₹) <span class="req">*</span></label>
+              <div style="position:relative;">
+                <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:800;color:#9ca3af;pointer-events:none;">₹</span>
+                <input type="number"
+                       name="{{ prefix }}_price"
+                       value="{{ variant.price }}"
+                       min="0.01" step="0.01"
+                       class="field-input" style="padding-left:30px;">
+              </div>
+            </div>
+
+            <!-- Stock -->
+            <div>
+              <label class="field-label">Stock <span class="req">*</span></label>
+              <input type="number"
+                     name="{{ prefix }}_stock"
+                     value="{{ variant.stock }}"
+                     min="0"
+                     class="field-input">
+            </div>
+
+          </div>
+
+          <hr class="divider">
+
+          <!-- Existing Images -->
+          <div style="padding:20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+              <div>
+                <p style="font-size:10px;font-weight:900;color:#111;text-transform:uppercase;letter-spacing:0.1em;">
+                  Current Images <span class="req">*</span>
+                </p>
+                <p style="font-size:10px;color:#9ca3af;font-weight:500;margin-top:3px;">
+                  Click image to mark for deletion · Must keep at least 3 images
+                </p>
+              </div>
+              <span id="eImgCount_{{ variant.pk }}"
+                    style="font-size:11px;font-weight:900;white-space:nowrap;color:{% if variant.images.count >= 3 %}#16a34a{% else %}#f87171{% endif %};">
+                {{ variant.images.count }} image{{ variant.images.count|pluralize }}
+              </span>
+            </div>
+
+            <!-- Existing image grid -->
+            <div class="img-grid" style="margin-bottom:14px;" id="eImgGrid_{{ variant.pk }}">
+              {% for img in variant.images.all %}
+              <div class="img-thumb-wrap" id="eImg_{{ img.pk }}" onclick="toggleDeleteImage({{ variant.pk }}, {{ img.pk }}, this)">
+                <img src="{{ img.image.url }}" alt="Variant image">
+                {% if img.is_primary %}<span class="primary-badge">Primary</span>{% endif %}
+                <div class="delete-overlay" id="eDelOverlay_{{ img.pk }}" style="display:none;">
+                  <span>Remove</span>
+                </div>
+                <!-- Hidden checkbox — checked = mark for deletion -->
+                <input type="checkbox"
+                       name="{{ prefix }}_delete_images"
+                       value="{{ img.pk }}"
+                       id="eDelChk_{{ img.pk }}"
+                       style="display:none;">
+              </div>
+              {% endfor %}
+            </div>
+
+            <!-- New images for this existing variant -->
+            <div style="margin-bottom:12px;">
+              <p style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Add More Images</p>
+              <div id="eNewImgPreview_{{ variant.pk }}" class="img-grid" style="margin-bottom:10px;"></div>
+              <label for="eNewImgInput_{{ variant.pk }}" class="upload-zone"
+                     ondragover="event.preventDefault();this.classList.add('drag-over')"
+                     ondragleave="this.classList.remove('drag-over')"
+                     ondrop="handleExistingDrop(event,{{ variant.pk }});this.classList.remove('drag-over')">
+                <svg width="24" height="24" fill="none" stroke="#d1d5db" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span style="font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;">Click or drag &amp; drop to add images</span>
+                <span style="font-size:10px;color:#d1d5db;font-weight:500;">JPEG · PNG · WebP · Max 5 MB</span>
+              </label>
+              <input type="file"
+                     id="eNewImgInput_{{ variant.pk }}"
+                     name="{{ prefix }}_images"
+                     multiple accept="image/jpeg,image/png,image/webp"
+                     style="display:none;"
+                     onchange="handleExistingFileSelect(this, {{ variant.pk }})">
+            </div>
+
+            <p id="eImgError_{{ variant.pk }}" style="font-size:11px;color:#ef4444;font-weight:600;margin-top:4px;display:none;"></p>
+          </div>
+
+        </div><!-- /existing variant card -->
+        {% endwith %}
+        {% empty %}
+        <div class="empty-state">
+          <p style="font-size:12px;font-weight:600;color:#d1d5db;">No existing variants found.</p>
         </div>
+        {% endfor %}
+
+      </div>
     </div>
 
-    <button type="submit" class="bg-black text-white px-8 py-3 rounded-xl text-xs font-bold uppercase">Save Changes</button>
+    <!-- ══ SECTION 4: NEW VARIANTS ══ -->
+    <div class="section-card">
+      <div class="section-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="section-num">4</span>
+          <div>
+            <span class="section-title">Add New Variants</span>
+            <p style="font-size:10px;color:#9ca3af;font-weight:500;margin-top:1px;">Optional · Min 3 images each if added</p>
+          </div>
+        </div>
+        <button type="button" onclick="addNewVariant()" class="btn-primary">
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          Add Variant
+        </button>
+      </div>
+      <div style="padding:24px;">
+        <div id="newVariantsContainer" style="display:flex;flex-direction:column;gap:20px;"></div>
+        <div id="noNewVariantsMsg" class="empty-state">
+          <div style="width:44px;height:44px;background:#f9fafb;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+            <svg width="20" height="20" fill="none" stroke="#d1d5db" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
+          </div>
+          <p style="font-size:12px;font-weight:600;color:#d1d5db;">No new variants added</p>
+          <p style="font-size:11px;color:#e5e7eb;font-weight:500;margin-top:4px;">Click "Add Variant" above to add a new variant to this product</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ACTIONS ══ -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0 24px;">
+      <a href="{% url 'admin_product_list' %}"
+         style="padding:10px 22px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:10px;font-weight:800;color:#9ca3af;letter-spacing:0.08em;text-transform:uppercase;text-decoration:none;transition:all 0.15s;"
+         onmouseover="this.style.borderColor='#9ca3af';this.style.color='#374151'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">
+        Cancel
+      </a>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span style="font-size:11px;color:#d1d5db;font-weight:500;">Last updated {{ product.updated_at|date:"M d, Y · H:i" }}</span>
+        <button type="submit" class="btn-primary" style="padding:12px 36px;font-size:11px;">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          Save Changes
+        </button>
+      </div>
+    </div>
+
   </div>
 </form>
 
+<!-- ══════ JAVASCRIPT ══════ -->
 <script>
-    const existingVariantFiles = {};
-    const pendingDeletes = {};
+  
+  const DEVICE_MODELS_URL = "{% url 'admin_api_device_models' %}";
 
-    function addSpec() {
-        const row = document.createElement('div');
-        row.className = 'flex items-center gap-3 mb-2 spec-row';
-        row.innerHTML = `<input type="text" name="spec_name" class="flex-1 px-4 py-2 bg-gray-50 border rounded-xl text-sm"><input type="text" name="spec_value" class="flex-1 px-4 py-2 bg-gray-50 border rounded-xl text-sm"><button type="button" onclick="this.closest('.spec-row').remove()" class="text-red-500">✕</button>`;
-        document.getElementById('specsContainer').appendChild(row);
-    }
+// ── CONSTANTS ──
+const PHONE_CASE_TYPES  = ['Slim Fit','Rugged Armor','Wallet Folio','Crystal Clear','Leather Finish','MagSafe Compatible','Bumper Case','Military Grade','Ultra Thin','Matte Finish'];
+const LAPTOP_CASE_TYPES = ['Full Cover','Top Cover Only','Bottom Cover Only','Palm Rest Cover','Full Body Wrap'];
 
-    function toggleImageDelete(imgPk, variantPk, totalSaved) {
-        if (!pendingDeletes[variantPk]) pendingDeletes[variantPk] = new Set();
-        const cb = document.getElementById(`check_${imgPk}`);
-        const errEl = document.getElementById(`err_${variantPk}`);
-        const queued = (existingVariantFiles[variantPk] || []).length;
-        
-        if (pendingDeletes[variantPk].has(imgPk)) {
-            pendingDeletes[variantPk].delete(imgPk);
-            cb.checked = false;
-            document.getElementById(`imgCard_${imgPk}`).style.opacity = '1';
-        } else {
-            if ((totalSaved - pendingDeletes[variantPk].size - 1 + queued) < 3) {
-                errEl.classList.remove('hidden');
-                return;
-            }
-            pendingDeletes[variantPk].add(imgPk);
-            cb.checked = true;
-            document.getElementById(`imgCard_${imgPk}`).style.opacity = '0.3';
-            errEl.classList.add('hidden');
-        }
-    }
+const COLOR_HEX = {
+  black:'#000000', white:'#FFFFFF', red:'#EF4444', blue:'#3B82F6',
+  green:'#22C55E', yellow:'#EAB308', orange:'#F97316', purple:'#A855F7',
+  pink:'#EC4899', grey:'#6B7280', navy:'#1E3A5F', gold:'#F59E0B',
+  silver:'#9CA3AF', transparent:'#F3F4F6', other:'#6B7280'
+};
+const COLOR_CHOICES = [
+  ['black','Black'],['white','White'],['red','Red'],['blue','Blue'],
+  ['green','Green'],['yellow','Yellow'],['orange','Orange'],['purple','Purple'],
+  ['pink','Pink'],['grey','Grey'],['navy','Navy'],['gold','Gold'],
+  ['silver','Silver'],['transparent','Transparent'],['other','Other']
+];
 
-    function previewNewImages(input, pk) {
-        if (!existingVariantFiles[pk]) existingVariantFiles[pk] = [];
-        const previewDiv = document.getElementById(`preview_${pk}`);
-        Array.from(input.files).forEach(f => {
-            existingVariantFiles[pk].push(f);
-            const reader = new FileReader();
-            reader.onload = e => {
-                const div = document.createElement('div');
-                div.className = 'aspect-square';
-                div.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover rounded-xl border-2 border-blue-400">`;
-                previewDiv.appendChild(div);
-            };
-            reader.readAsDataURL(f);
-        });
-        syncInputs(pk);
-    }
+// ── STATE ──
+let newVariantCount = 0;
+const newVariantFiles    = {};    // { idx: [File, ...] }
+const existingNewFiles   = {};    // { variantPk: [File, ...] }
+const existingDeletedIds = {};    // { variantPk: Set of image pks }
 
-    function syncInputs(pk) {
-        const dt = new DataTransfer();
-        (existingVariantFiles[pk] || []).forEach(f => dt.items.add(f));
-        document.getElementById(`file_${pk}`).files = dt.files;
+let catFlags = {
+  is_customizable: {{ product.category.is_customizable|yesno:"true,false" }},
+  is_laptop: false,
+};
+
+// ── DEVICE MODEL CACHE ──
+let deviceModelCache = {};
+
+async function fetchDeviceModels(brand) {
+  const key = brand || '__all__';
+  if (deviceModelCache[key]) return deviceModelCache[key];
+  try {
+    const url  = brand
+      ? `${DEVICE_MODELS_URL}?brand=${encodeURIComponent(brand)}`
+      : DEVICE_MODELS_URL;
+    const res  = await fetch(url);
+    const data = await res.json();
+    deviceModelCache[key] = data.devices || [];
+    return deviceModelCache[key];
+  } catch(e) {
+    console.error('Device model fetch failed:', e);
+    return [];
+  }
+}
+async function buildDeviceOptions(selectedId) {
+  const brand  = document.getElementById('brandSelect')?.value || '';
+  const models = catFlags.is_laptop ? await fetchDeviceModels('') : await fetchDeviceModels(brand);
+  let html = '<option value="">— Select device model —</option>';
+  for (const m of models) {
+    html += `<option value="${m.id}" ${m.id == selectedId ? 'selected' : ''}>${m.name}</option>`;
+  }
+  return html;
+}
+
+async function refreshNewVariantDevice(idx) {
+  const sel = document.getElementById(`dm_select_${idx}`);
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Loading…</option>';
+  sel.innerHTML = await buildDeviceOptions(cur);
+}
+
+// ── CATEGORY CHANGE ──
+async function onCategoryChange() {
+  const sel     = document.getElementById('categorySelect');
+  const pk      = sel.value;
+  if (!pk) { showSpecPlaceholder(); return; }
+
+  const opt     = sel.selectedOptions[0];
+  const metaUrl = opt.dataset.metaUrl;
+  const catName = opt.text.toLowerCase();
+  catFlags.is_laptop = catName.includes('laptop');
+
+  try {
+    const res  = await fetch(metaUrl);
+    const data = await res.json();
+    catFlags.is_customizable = data.is_customizable;
+    buildSpecFields(data.spec_templates);
+  } catch (e) {
+    catFlags.is_customizable = false;
+    buildSpecFields([]);
+  }
+
+  document.getElementById('customizationNotice').style.display =
+    catFlags.is_customizable ? 'block' : 'none';
+
+  // Refresh existing variant case type fields
+  document.querySelectorAll('[id^="eCt_field_"]').forEach(el => {
+    el.style.display = catFlags.is_customizable ? '' : 'none';
+  });
+
+  // Refresh new variant fields
+  document.querySelectorAll('[data-new-variant-idx]').forEach(card =>
+    refreshNewVariantFields(card.dataset.newVariantIdx)
+  );
+}
+
+function onBrandChange() {
+  const brand = document.getElementById('brandSelect')?.value || '';
+  delete deviceModelCache[brand];
+
+  // Refresh new variant dropdowns
+  document.querySelectorAll('[data-new-variant-idx]').forEach(card =>
+    refreshNewVariantDevice(card.dataset.newVariantIdx)
+  );
+
+  // Refresh existing variant dropdowns
+  fetchDeviceModels(brand).then(devices => {
+    {% for variant in existing_variants %}
+    (function() {
+      const sel = document.getElementById('eDm_select_{{ variant.pk }}');
+      if (!sel) return;
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">— Select device model —</option>' +
+        devices.map(d =>
+          `<option value="${d.id}" ${String(d.id) === String(cur) ? 'selected' : ''}>${d.name}</option>`
+        ).join('');
+    })();
+    {% endfor %}
+  });
+}
+
+// ── SPECS ──
+function showSpecPlaceholder() {
+  document.getElementById('specPlaceholder').style.display = 'flex';
+  document.getElementById('specsContainer').style.display  = 'none';
+}
+function buildSpecFields(templates) {
+  const ph   = document.getElementById('specPlaceholder');
+  const cont = document.getElementById('specsContainer');
+  ph.style.display   = 'none';
+  cont.style.display = 'flex';
+  cont.innerHTML     = '';
+  if (!templates.length) {
+    cont.innerHTML = `<p style="font-size:12px;color:#d1d5db;font-weight:600;text-align:center;padding:16px 0;">No predefined specs for this category. Use "Add Custom" to add your own.</p>`;
+    return;
+  }
+  templates.forEach(s => cont.appendChild(makeSpecRow(s.name, '', s.placeholder, s.is_required, false)));
+}
+function addCustomSpec() {
+  const cont = document.getElementById('specsContainer');
+  document.getElementById('specPlaceholder').style.display = 'none';
+  cont.style.display = 'flex';
+  cont.appendChild(makeSpecRow('', '', '', false, true));
+}
+function makeSpecRow(name, value, placeholder, required, editable) {
+  const row = document.createElement('div');
+  row.className = 'spec-row';
+  const namePart = editable
+    ? `<input type="text" name="spec_name" value="${name}" placeholder="Field name (e.g. Material)" class="field-input" style="flex:1;">`
+    : `<div style="flex:1;display:flex;align-items:center;gap:5px;padding:10px 14px;background:#f3f4f6;border:1.5px solid #e9ebee;border-radius:10px;">
+         <span style="font-size:13px;font-weight:700;color:#374151;">${name}</span>
+         ${required ? '<span style="color:#ef4444;">*</span>' : ''}
+         <input type="hidden" name="spec_name" value="${name}">
+       </div>`;
+  row.innerHTML = `
+    ${namePart}
+    <input type="text" name="spec_value" value="${value}" placeholder="${placeholder || 'Enter value'}" class="field-input" style="flex:1;">
+    <button type="button" onclick="this.closest('.spec-row').remove()"
+            style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1.5px solid #f0f0f0;background:#f9fafb;cursor:pointer;color:#d1d5db;border-radius:8px;flex-shrink:0;transition:all 0.15s;"
+            onmouseover="this.style.background='#fef2f2';this.style.color='#ef4444';this.style.borderColor='#fecaca'" onmouseout="this.style.background='#f9fafb';this.style.color='#d1d5db';this.style.borderColor='#f0f0f0'">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  `;
+  return row;
+}
+
+// ── EXISTING VARIANT STATUS ──
+function onExistingVariantStatusChange(pk, isActive) {
+  const badge = document.getElementById(`eStatusBadge_${pk}`);
+  if (!badge) return;
+  badge.className   = 'badge ' + (isActive ? 'badge-active' : 'badge-inactive');
+  badge.textContent = isActive ? 'Active' : 'Inactive';
+}
+
+// ── EXISTING VARIANT COLOUR ──
+function syncExistingColor(select, pk) {
+  const hex = COLOR_HEX[select.value] || '#000000';
+  document.getElementById(`eColorPicker_${pk}`).value = hex;
+  document.getElementById(`eColorCode_${pk}`).value   = hex;
+}
+function onExistingHexInput(input, pk) {
+  let v = input.value;
+  if (!v.startsWith('#')) { input.value = '#' + v.replace(/#/g,''); v = input.value; }
+  if (/^#[0-9A-Fa-f]{6}$/.test(v))
+    document.getElementById(`eColorPicker_${pk}`).value = v;
+}
+
+// ── MARK EXISTING IMAGE FOR DELETION ──
+function toggleDeleteImage(variantPk, imgPk, wrap) {
+  if (!existingDeletedIds[variantPk]) existingDeletedIds[variantPk] = new Set();
+  const set     = existingDeletedIds[variantPk];
+  const overlay = document.getElementById(`eDelOverlay_${imgPk}`);
+  const chk     = document.getElementById(`eDelChk_${imgPk}`);
+
+  if (set.has(imgPk)) {
+    set.delete(imgPk);
+    wrap.classList.remove('marked-delete');
+    if (overlay) overlay.style.display = 'none';
+    if (chk)     chk.checked = false;
+  } else {
+    set.add(imgPk);
+    wrap.classList.add('marked-delete');
+    if (overlay) overlay.style.display = 'flex';
+    if (chk)     chk.checked = true;
+  }
+  updateExistingImgCount(variantPk);
+}
+
+function updateExistingImgCount(variantPk) {
+  const counter    = document.getElementById(`eImgCount_${variantPk}`);
+  if (!counter) return;
+  const grid       = document.getElementById(`eImgGrid_${variantPk}`);
+  const totalExist = grid ? grid.querySelectorAll('.img-thumb-wrap').length : 0;
+  const deleted    = existingDeletedIds[variantPk] ? existingDeletedIds[variantPk].size : 0;
+  const newAdded   = (existingNewFiles[variantPk] || []).length;
+  const net        = totalExist - deleted + newAdded;
+  counter.textContent = `${net} image${net === 1 ? '' : 's'}`;
+  counter.style.color = net >= 3 ? '#16a34a' : '#f87171';
+}
+
+// ── EXISTING VARIANT — NEW IMAGE UPLOAD ──
+const ALLOWED_TYPES = ['image/jpeg','image/png','image/webp'];
+const MAX_SIZE      = 5 * 1024 * 1024;
+
+function handleExistingFileSelect(input, variantPk) {
+  startExistingCropQueue(Array.from(input.files), variantPk);
+  input.value = '';
+}
+function handleExistingDrop(event, variantPk) {
+  event.preventDefault();
+  startExistingCropQueue(Array.from(event.dataTransfer.files), variantPk);
+}
+function startExistingCropQueue(files, variantPk) {
+  const errEl  = document.getElementById(`eImgError_${variantPk}`);
+  const errors = [];
+  const valid  = [];
+  files.forEach(f => {
+    if (!ALLOWED_TYPES.includes(f.type)) { errors.push(`"${f.name}": invalid type.`); return; }
+    if (f.size > MAX_SIZE)               { errors.push(`"${f.name}": exceeds 5 MB.`); return; }
+    valid.push(f);
+  });
+  if (errEl) { errEl.textContent = errors.join('  '); errEl.style.display = errors.length ? 'block' : 'none'; }
+  if (!valid.length) return;
+
+  cropQueue        = valid;
+  cropCurrentIndex = 0;
+  cropTargetPk     = variantPk;
+  cropMode         = 'existing';
+  openCropperFor(valid[0]);
+}
+function pushExistingFile(variantPk, file) {
+  if (!existingNewFiles[variantPk]) existingNewFiles[variantPk] = [];
+  existingNewFiles[variantPk].push(file);
+  rebuildExistingNewPreview(variantPk);
+  updateExistingImgCount(variantPk);
+  syncExistingFilesToInput(variantPk);
+}
+function rebuildExistingNewPreview(variantPk) {
+  const grid = document.getElementById(`eNewImgPreview_${variantPk}`);
+  if (!grid) return;
+  grid.innerHTML = '';
+  (existingNewFiles[variantPk] || []).forEach((file, fi) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'img-thumb-wrap';
+    wrap.innerHTML = `
+      <img src="${URL.createObjectURL(file)}" alt="">
+      <button type="button" class="remove-btn" style="display:flex;" onclick="removeExistingNewImage(${variantPk},${fi})">✕</button>
+    `;
+    grid.appendChild(wrap);
+  });
+}
+function removeExistingNewImage(variantPk, fileIdx) {
+  existingNewFiles[variantPk].splice(fileIdx, 1);
+  rebuildExistingNewPreview(variantPk);
+  updateExistingImgCount(variantPk);
+  syncExistingFilesToInput(variantPk);
+}
+function syncExistingFilesToInput(variantPk) {
+  const input = document.getElementById(`eNewImgInput_${variantPk}`);
+  if (!input) return;
+  const dt = new DataTransfer();
+  (existingNewFiles[variantPk] || []).forEach(f => dt.items.add(f));
+  input.files = dt.files;
+}
+
+// ── NEW VARIANT ADD ──
+function getCaseTypeOptions(selected) {
+  const types = catFlags.is_laptop ? LAPTOP_CASE_TYPES : PHONE_CASE_TYPES;
+  let html = '<option value="">— Select case type —</option>';
+  types.forEach(c => { html += `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`; });
+  return html;
+}
+function getColorOptions(selected) {
+  return COLOR_CHOICES.map(([v,l]) =>
+    `<option value="${v}" ${v === selected ? 'selected' : ''}>${l}</option>`
+  ).join('');
+}
+
+async function addNewVariant() {
+  document.getElementById('noNewVariantsMsg').style.display = 'none';
+  const idx = newVariantCount++;
+  newVariantFiles[idx] = [];
+
+  const card = document.createElement('div');
+  card.className              = 'variant-card new-variant';
+  card.dataset.newVariantIdx  = idx;
+  card.id                     = `nvc_${idx}`;
+
+  const deviceOptionsHTML = await buildDeviceOptions('');
+
+  card.innerHTML = `
+    <div class="variant-header">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;font-weight:900;color:#111;">New Variant ${idx + 1}</span>
+        <span class="badge badge-new">New</span>
+        <span id="nStatusBadge_${idx}" class="badge badge-active">Active</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;">Status</span>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="nVarStatus_${idx}" name="new_variant_is_active_${idx}" checked
+                   onchange="onNewVariantStatusChange(${idx}, this.checked)">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <button type="button" class="btn-danger-ghost" onclick="removeNewVariant(${idx})">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          Remove
+        </button>
+      </div>
+    </div>
+
+    <div style="padding:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+
+      <div style="grid-column:1/-1;">
+        <label class="field-label">Device Model <span class="req">*</span></label>
+        <div class="field-select-wrap">
+          <select name="new_variant_device_model" id="dm_select_${idx}" class="field-input">
+            ${deviceOptionsHTML}
+          </select>
+        </div>
+        <p id="nDmError_${idx}" class="field-error" style="display:none;">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          Device model is required.
+        </p>
+      </div>
+
+      <div id="nCt_field_${idx}" style="grid-column:1/-1;${catFlags.is_customizable ? '' : 'display:none;'}">
+        <label class="field-label">Case Type <span class="req">*</span></label>
+        <div class="field-select-wrap">
+          <select name="new_variant_case_type" id="nCt_select_${idx}" class="field-input">
+            ${getCaseTypeOptions('')}
+          </select>
+        </div>
+        <p id="nCtError_${idx}" class="field-error" style="display:none;">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          Case type is required for customizable products.
+        </p>
+      </div>
+
+      <div>
+        <label class="field-label">Colour <span class="req">*</span></label>
+        <div class="field-select-wrap">
+          <select name="new_variant_color" id="nColorSelect_${idx}" onchange="syncNewColor(this,${idx})" class="field-input">
+            ${getColorOptions('black')}
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">Colour Code <span class="req">*</span></label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="color" id="nColorPicker_${idx}" value="#000000"
+                 onchange="document.getElementById('nColorCode_${idx}').value=this.value"
+                 style="width:42px;height:42px;border:1.5px solid #efefef;border-radius:10px;cursor:pointer;padding:3px;background:#f9fafb;flex-shrink:0;">
+          <input type="text" name="new_variant_color_code" id="nColorCode_${idx}" value="#000000"
+                 maxlength="7" oninput="onNewHexInput(this,${idx})"
+                 class="field-input" style="font-family:monospace;letter-spacing:0.05em;flex:1;">
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">SKU <span style="font-size:9px;color:#d1d5db;font-weight:500;text-transform:none;letter-spacing:0;margin-left:4px;">auto if blank</span></label>
+        <input type="text" name="new_variant_sku" placeholder="Leave blank to auto-generate" class="field-input">
+      </div>
+
+      <div>
+        <label class="field-label">Price (₹) <span class="req">*</span></label>
+        <div style="position:relative;">
+          <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:800;color:#9ca3af;pointer-events:none;">₹</span>
+          <input type="number" name="new_variant_price" min="0.01" step="0.01"
+                 placeholder="0.00" class="field-input" style="padding-left:30px;" id="nPrice_${idx}">
+        </div>
+        <p id="nPriceError_${idx}" class="field-error" style="display:none;">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          A valid price is required.
+        </p>
+      </div>
+
+      <div>
+        <label class="field-label">Stock <span class="req">*</span></label>
+        <input type="number" name="new_variant_stock" min="0" placeholder="0"
+               class="field-input" id="nStock_${idx}">
+        <p id="nStockError_${idx}" class="field-error" style="display:none;">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          Stock quantity is required.
+        </p>
+      </div>
+
+    </div>
+
+    <hr class="divider">
+
+    <div style="padding:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <p style="font-size:10px;font-weight:900;color:#111;text-transform:uppercase;letter-spacing:0.1em;">
+            Variant Images <span class="req">*</span>
+          </p>
+          <p style="font-size:10px;color:#9ca3af;font-weight:500;margin-top:3px;">Min 3 · JPEG / PNG / WebP · Max 5 MB · First = primary</p>
+        </div>
+        <span id="nImgCount_${idx}" style="font-size:11px;font-weight:900;color:#f87171;white-space:nowrap;">0 / 3 min</span>
+      </div>
+      <div id="nImgPreview_${idx}" class="img-grid" style="margin-bottom:14px;"></div>
+      <label for="nImgInput_${idx}" class="upload-zone"
+             ondragover="event.preventDefault();this.classList.add('drag-over')"
+             ondragleave="this.classList.remove('drag-over')"
+             ondrop="handleNewDrop(event,${idx});this.classList.remove('drag-over')">
+        <svg width="28" height="28" fill="none" stroke="#d1d5db" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <span style="font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;">Click or drag &amp; drop images</span>
+        <span style="font-size:10px;color:#d1d5db;font-weight:500;">JPEG · PNG · WebP · Max 5 MB per file</span>
+      </label>
+      <input type="file" id="nImgInput_${idx}" name="new_variant_images_${idx}"
+             multiple accept="image/jpeg,image/png,image/webp" style="display:none;"
+             onchange="handleNewFileSelect(this,${idx})">
+      <p id="nImgError_${idx}" class="field-error" style="display:none;margin-top:8px;">
+        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        Minimum 3 images required.
+      </p>
+    </div>
+  `;
+
+  document.getElementById('newVariantsContainer').appendChild(card);
+}
+
+function removeNewVariant(idx) {
+  const card = document.getElementById(`nvc_${idx}`);
+  if (card) {
+    card.style.opacity   = '0';
+    card.style.transform = 'translateY(-8px)';
+    card.style.transition = 'opacity 0.2s, transform 0.2s';
+    setTimeout(() => {
+      card.remove();
+      delete newVariantFiles[idx];
+      if (!document.getElementById('newVariantsContainer').children.length)
+        document.getElementById('noNewVariantsMsg').style.display = 'flex';
+    }, 200);
+  }
+}
+
+function refreshNewVariantFields(idx) {
+  const ct = document.getElementById(`nCt_field_${idx}`);
+  if (ct) ct.style.display = catFlags.is_customizable ? '' : 'none';
+  if (catFlags.is_customizable) {
+    const ctSel = document.getElementById(`nCt_select_${idx}`);
+    if (ctSel) ctSel.innerHTML = getCaseTypeOptions(ctSel.value);
+  }
+  refreshNewVariantDevice(idx);
+}
+
+function onNewVariantStatusChange(idx, isActive) {
+  const badge = document.getElementById(`nStatusBadge_${idx}`);
+  if (!badge) return;
+  badge.className   = 'badge ' + (isActive ? 'badge-active' : 'badge-inactive');
+  badge.textContent = isActive ? 'Active' : 'Inactive';
+}
+
+// ── NEW VARIANT COLOUR ──
+function syncNewColor(select, idx) {
+  const hex = COLOR_HEX[select.value] || '#000000';
+  document.getElementById(`nColorPicker_${idx}`).value = hex;
+  document.getElementById(`nColorCode_${idx}`).value   = hex;
+}
+function onNewHexInput(input, idx) {
+  let v = input.value;
+  if (!v.startsWith('#')) { input.value = '#' + v.replace(/#/g,''); v = input.value; }
+  if (/^#[0-9A-Fa-f]{6}$/.test(v))
+    document.getElementById(`nColorPicker_${idx}`).value = v;
+}
+
+// ── NEW VARIANT IMAGES ──
+function handleNewFileSelect(input, idx) {
+  startNewCropQueue(Array.from(input.files), idx);
+  input.value = '';
+}
+function handleNewDrop(event, idx) {
+  event.preventDefault();
+  startNewCropQueue(Array.from(event.dataTransfer.files), idx);
+}
+function startNewCropQueue(files, idx) {
+  const errEl  = document.getElementById(`nImgError_${idx}`);
+  const errors = [];
+  const valid  = [];
+  files.forEach(f => {
+    if (!ALLOWED_TYPES.includes(f.type)) { errors.push(`"${f.name}": invalid type.`); return; }
+    if (f.size > MAX_SIZE)               { errors.push(`"${f.name}": exceeds 5 MB.`); return; }
+    valid.push(f);
+  });
+  if (errEl) {
+    if (errors.length) {
+      errEl.style.display = 'flex';
+      errEl.childNodes[errEl.childNodes.length - 1].textContent = ' ' + errors.join(' ');
+    } else {
+      errEl.style.display = 'none';
     }
+  }
+  if (!valid.length) return;
+  cropQueue        = valid;
+  cropCurrentIndex = 0;
+  cropTargetIdx    = idx;
+  cropMode         = 'new';
+  openCropperFor(valid[0]);
+}
+function pushNewFile(idx, file) {
+  if (!newVariantFiles[idx]) newVariantFiles[idx] = [];
+  newVariantFiles[idx].push(file);
+  rebuildNewPreview(idx);
+}
+function rebuildNewPreview(idx) {
+  const grid    = document.getElementById(`nImgPreview_${idx}`);
+  const counter = document.getElementById(`nImgCount_${idx}`);
+  if (!grid) return;
+  grid.innerHTML = '';
+  (newVariantFiles[idx] || []).forEach((file, fi) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'img-thumb-wrap';
+    wrap.innerHTML = `
+      <img src="${URL.createObjectURL(file)}" alt="">
+      ${fi === 0 ? '<span class="primary-badge">Primary</span>' : ''}
+      <button type="button" class="remove-btn" onclick="removeNewImage(${idx},${fi})">✕</button>
+    `;
+    grid.appendChild(wrap);
+  });
+  const count = (newVariantFiles[idx] || []).length;
+  if (counter) {
+    counter.textContent = `${count} / 3 min`;
+    counter.style.color = count >= 3 ? '#16a34a' : '#f87171';
+  }
+}
+function removeNewImage(idx, fileIdx) {
+  newVariantFiles[idx].splice(fileIdx, 1);
+  rebuildNewPreview(idx);
+  syncNewFilesToInput(idx);
+}
+function syncNewFilesToInput(idx) {
+  const input = document.getElementById(`nImgInput_${idx}`);
+  if (!input) return;
+  const dt = new DataTransfer();
+  (newVariantFiles[idx] || []).forEach(f => dt.items.add(f));
+  input.files = dt.files;
+}
+
+// ── CROPPER (shared, mode-aware) ──
+let cropperInstance  = null;
+let cropQueue        = [];
+let cropCurrentIndex = 0;
+let cropTargetIdx    = null;
+let cropTargetPk     = null;
+let cropCurrentFile  = null;
+let cropMode         = 'new'; // 'new' | 'existing'
+
+function openCropperFor(file) {
+  cropCurrentFile = file;
+  document.getElementById('cropFileName').textContent = file.name;
+  const img = document.getElementById('cropImage');
+  img.src   = URL.createObjectURL(file);
+  document.getElementById('cropModal').classList.add('active');
+  if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+  img.onload = () => {
+    cropperInstance = new Cropper(img, {
+      aspectRatio: 1, viewMode: 2, dragMode: 'move',
+      autoCropArea: 0.85, restore: false, guides: true,
+      center: true, highlight: true, toggleDragModeOnDblclick: false,
+    });
+  };
+}
+function closeCropper() {
+  document.getElementById('cropModal').classList.remove('active');
+  if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+}
+function confirmCrop() {
+  if (!cropperInstance) return;
+  cropperInstance.getCroppedCanvas({ width:800, height:800, imageSmoothingQuality:'high' })
+    .toBlob(blob => {
+      const file = new File([blob], cropCurrentFile.name, { type:'image/jpeg' });
+      if (cropMode === 'existing') pushExistingFile(cropTargetPk, file);
+      else                        pushNewFile(cropTargetIdx, file);
+      closeCropper();
+      advanceCropQueue();
+    }, 'image/jpeg', 0.92);
+}
+function skipCrop() {
+  if (cropMode === 'existing') pushExistingFile(cropTargetPk, cropCurrentFile);
+  else                        pushNewFile(cropTargetIdx, cropCurrentFile);
+  closeCropper();
+  advanceCropQueue();
+}
+function advanceCropQueue() {
+  cropCurrentIndex++;
+  if (cropCurrentIndex < cropQueue.length)
+    setTimeout(() => openCropperFor(cropQueue[cropCurrentIndex]), 120);
+  else {
+    cropQueue = [];
+    if (cropMode === 'new') syncNewFilesToInput(cropTargetIdx);
+    else                   syncExistingFilesToInput(cropTargetPk);
+  }
+}
+
+// ── FORM SUBMIT VALIDATION ──
+document.getElementById('productForm').addEventListener('submit', function(e) {
+  let valid = true;
+  const errs = [];
+
+  const clearErr = el => { if (el) el.style.display = 'none'; };
+  const showErr  = el => { if (el) el.style.display = 'flex'; };
+  const markErr  = el => { if (el) { el.classList.add('error'); } };
+  const clearFld = el => { if (el) el.classList.remove('error'); };
+
+  // Category
+  if (!document.getElementById('categorySelect').value) {
+    errs.push('Please select a category.');
+    valid = false;
+  }
+
+  // New variants
+  document.querySelectorAll('[data-new-variant-idx]').forEach((card, i) => {
+    const idx   = card.dataset.newVariantIdx;
+    const n     = i + 1;
+    const dm    = document.getElementById(`dm_select_${idx}`);
+    const ct    = document.getElementById(`nCt_select_${idx}`);
+    const ctFld = document.getElementById(`nCt_field_${idx}`);
+    const price = document.getElementById(`nPrice_${idx}`);
+    const stock = document.getElementById(`nStock_${idx}`);
+    const cnt   = (newVariantFiles[idx] || []).length;
+
+    clearErr(document.getElementById(`nDmError_${idx}`));
+    clearErr(document.getElementById(`nCtError_${idx}`));
+    clearErr(document.getElementById(`nPriceError_${idx}`));
+    clearErr(document.getElementById(`nStockError_${idx}`));
+    clearErr(document.getElementById(`nImgError_${idx}`));
+    clearFld(dm); clearFld(ct); clearFld(price); clearFld(stock);
+
+    if (!dm?.value) {
+      errs.push(`New variant ${n}: Device model is required.`);
+      markErr(dm); showErr(document.getElementById(`nDmError_${idx}`));
+      valid = false;
+    }
+    if (catFlags.is_customizable && ctFld?.style.display !== 'none' && !ct?.value) {
+      errs.push(`New variant ${n}: Case type is required.`);
+      markErr(ct); showErr(document.getElementById(`nCtError_${idx}`));
+      valid = false;
+    }
+    if (!price?.value || parseFloat(price.value) <= 0) {
+      errs.push(`New variant ${n}: Valid price required.`);
+      markErr(price); showErr(document.getElementById(`nPriceError_${idx}`));
+      valid = false;
+    }
+    if (stock?.value === '' || parseInt(stock?.value) < 0) {
+      errs.push(`New variant ${n}: Stock quantity required.`);
+      markErr(stock); showErr(document.getElementById(`nStockError_${idx}`));
+      valid = false;
+    }
+    if (cnt < 3) {
+      errs.push(`New variant ${n}: Upload at least 3 images.`);
+      showErr(document.getElementById(`nImgError_${idx}`));
+      valid = false;
+    }
+  });
+
+  // Existing variants — image count sanity check
+  {% for variant in existing_variants %}
+  (function() {
+    const grid    = document.getElementById('eImgGrid_{{ variant.pk }}');
+    const total   = grid ? grid.querySelectorAll('.img-thumb-wrap').length : 0;
+    const deleted = existingDeletedIds[{{ variant.pk }}] ? existingDeletedIds[{{ variant.pk }}].size : 0;
+    const added   = (existingNewFiles[{{ variant.pk }}] || []).length;
+    const net     = total - deleted + added;
+    const errEl   = document.getElementById('eImgError_{{ variant.pk }}');
+    if (net < 3) {
+      errs.push('Variant "{{ variant.device_model.name|default:"No Device"|escapejs }}": Must have at least 3 images (currently ' + net + ').');
+      if (errEl) { errEl.textContent = 'Must keep at least 3 images after deletions.'; errEl.style.display = 'block'; }
+      valid = false;
+    } else {
+      if (errEl) errEl.style.display = 'none';
+    }
+  })();
+  {% endfor %}
+
+  if (!valid) {
+    e.preventDefault();
+    const box  = document.getElementById('jsErrors');
+    const list = document.getElementById('jsErrorList');
+    box.classList.remove('hidden');
+    list.innerHTML = errs.map(err =>
+      `<p style="font-size:12px;color:#dc2626;font-weight:600;margin-bottom:4px;">• ${err}</p>`
+    ).join('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+});
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', async () => {
+  // Load category flags first
+  const catSel = document.getElementById('categorySelect');
+  if (catSel.value) await onCategoryChange();
+
+  // Populate device model dropdowns for ALL existing variants
+  const brand = document.getElementById('brandSelect')?.value || '';
+  const devices = await fetchDeviceModels(brand);
+
+  {% for variant in existing_variants %}
+  (function() {
+    const sel = document.getElementById('eDm_select_{{ variant.pk }}');
+    if (!sel) return;
+    const currentId = sel.dataset.currentId;
+    sel.innerHTML = '<option value="">— Select device model —</option>' +
+      devices.map(d =>
+        `<option value="${d.id}" ${String(d.id) === String(currentId) ? 'selected' : ''}>${d.name}</option>`
+      ).join('');
+  })();
+  {% endfor %}
+
+  // Init existing image counts
+  {% for variant in existing_variants %}
+  updateExistingImgCount({{ variant.pk }});
+  {% endfor %}
+});
 </script>
 
 {% endblock %}

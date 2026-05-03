@@ -5,40 +5,8 @@ import random, string
 
 
 # ──────────────────────────────────────────
-# CATEGORY
-# ──────────────────────────────────────────
-
-class Category(models.Model):
-    name            = models.CharField(max_length=100)
-    slug            = models.SlugField(max_length=100, unique=True, blank=True)
-    description     = models.TextField(blank=True)
-    image           = CloudinaryField('image', blank=True, null=True)  # optional thumbnail
-    # Customization lives HERE — it's a category trait, not a product trait.
-    # Phone cases and laptop skins are customizable; grips and screen protectors are not.
-    is_customizable = models.BooleanField(default=False)
-    is_active       = models.BooleanField(default=True)
-    created_at      = models.DateTimeField(auto_now_add=True)
-    updated_at      = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['-created_at']
-        verbose_name_plural = 'Categories'
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
-
-    @property
-    def product_count(self):
-        return self.products.filter(is_active=True).count()
-
-
-# ──────────────────────────────────────────
-# PRODUCT
+# BRAND CHOICES
+# Defined at top so both DeviceModel and Product can use it.
 # ──────────────────────────────────────────
 
 BRAND_CHOICES = [
@@ -56,6 +24,108 @@ BRAND_CHOICES = [
 ]
 
 
+# ──────────────────────────────────────────
+# CASE TYPE CHOICES
+# Choices (not a model) — small stable list, same reasoning as BRAND_CHOICES.
+# Only shown when category.has_case_type = True (phone cases, laptop skins).
+# ──────────────────────────────────────────
+
+CASE_TYPE_CHOICES = [
+    ('slim',     'Slim Fit'),
+    ('rugged',   'Rugged Armor'),
+    ('wallet',   'Wallet Folio'),
+    ('clear',    'Crystal Clear'),
+    ('leather',  'Leather Finish'),
+    ('magsafe',  'MagSafe Compatible'),
+    ('bumper',   'Bumper Case'),
+    ('military', 'Military Grade'),
+    ('thin',     'Ultra Thin'),
+    ('matte',    'Matte Finish'),
+    ('other',    'Other'),
+]
+
+
+# ──────────────────────────────────────────
+# DEVICE MODEL
+# A model (not choices) because new phones release constantly
+# and admin must add them without a code deploy.
+# Simple — just brand + name. That is all a dropdown needs.
+# ──────────────────────────────────────────
+
+class DeviceModel(models.Model):
+    brand     = models.CharField(max_length=50, choices=BRAND_CHOICES)
+    name      = models.CharField(max_length=100)   # e.g. "iPhone 15 Pro"
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering        = ['brand', 'name']
+        unique_together = ['brand', 'name']
+        verbose_name        = 'Device Model'
+        verbose_name_plural = 'Device Models'
+
+    def __str__(self):
+        return f"{self.get_brand_display()} — {self.name}"
+
+
+# ──────────────────────────────────────────
+# CATEGORY
+# ──────────────────────────────────────────
+
+class Category(models.Model):
+    name            = models.CharField(max_length=100)
+    slug            = models.SlugField(max_length=100, unique=True, blank=True)
+    description     = models.TextField(blank=True)
+    image           = CloudinaryField('image', blank=True, null=True)
+
+    # Phone cases and laptop skins are customizable; grips and screen protectors are not.
+    is_customizable = models.BooleanField(default=False)
+    is_active       = models.BooleanField(default=True)
+
+    # Controls whether the Case Type field is shown in product variants.
+    # True for: Phone Cases, Laptop Skins.
+    # False for: Grips, Screen Protectors, etc.
+    has_case_type   = models.BooleanField(default=False)
+
+    created_at      = models.DateTimeField(auto_now_add=True)
+    updated_at      = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering            = ['-created_at']
+        verbose_name_plural = 'Categories'
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def product_count(self):
+        return self.products.filter(is_active=True).count()
+
+
+class CategorySpecTemplate(models.Model):
+    """Defines which spec names belong to a category."""
+    category    = models.ForeignKey(Category, on_delete=models.CASCADE,
+                                    related_name='spec_templates')
+    name        = models.CharField(max_length=100)   # e.g. "Material"
+    placeholder = models.CharField(max_length=100, blank=True)  # hint text
+    order       = models.PositiveIntegerField(default=0)
+    is_required = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.category.name} → {self.name}"
+
+
+# ──────────────────────────────────────────
+# PRODUCT
+# ──────────────────────────────────────────
+
 class Product(models.Model):
     category    = models.ForeignKey(
         Category, on_delete=models.SET_NULL, null=True, related_name='products'
@@ -64,8 +134,7 @@ class Product(models.Model):
     slug        = models.SlugField(max_length=150, unique=True, blank=True)
     brand       = models.CharField(max_length=50, choices=BRAND_CHOICES, default='other')
     description = models.TextField(blank=True)
-    # NOTE: is_customizable is REMOVED from Product.
-    # Use product.category.is_customizable to check whether a product supports customization.
+
     is_active               = models.BooleanField(default=True)
     # Set to True when deactivated by a category cascade — lets us restore only
     # these products when the category is re-activated, leaving manually-deactivated
@@ -80,8 +149,8 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             base_slug = slugify(self.name)
-            slug = base_slug
-            counter = 1
+            slug      = base_slug
+            counter   = 1
             while Product.objects.filter(slug=slug).exclude(pk=self.pk).exists():
                 slug = f"{base_slug}-{counter}"
                 counter += 1
@@ -156,25 +225,41 @@ COLOR_CHOICES = [
 
 
 class ProductVariant(models.Model):
-    product      = models.ForeignKey(
+    product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name='variants'
     )
-    device_model = models.CharField(max_length=100)           # e.g. "iPhone 15 Pro"
-    case_type    = models.CharField(max_length=50, blank=True) # e.g. "Slim", "Rugged"
-    color        = models.CharField(max_length=50, choices=COLOR_CHOICES, default='black')
-    color_code   = models.CharField(max_length=7, default='#000000')  # hex
-    sku          = models.CharField(max_length=50, unique=True, blank=True, null=True)
-    price        = models.DecimalField(max_digits=10, decimal_places=2)
-    stock        = models.PositiveIntegerField(default=0)
-    is_active    = models.BooleanField(default=True)
-    created_at   = models.DateTimeField(auto_now_add=True)
+
+    # FK to DeviceModel — always required for all categories.
+    # Admin manages the device list from Django admin.
+    device_model = models.ForeignKey(
+        DeviceModel,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='variants',
+    )
+
+    # Choices — only meaningful when category.has_case_type is True.
+    # Blank for grips, screen protectors, etc.
+    case_type = models.CharField(
+        max_length=50,
+        choices=CASE_TYPE_CHOICES,
+        blank=True,
+        default='',
+    )
+
+    color      = models.CharField(max_length=50, choices=COLOR_CHOICES, default='black')
+    color_code = models.CharField(max_length=7, default='#000000')   # hex
+    sku        = models.CharField(max_length=50, unique=True, blank=True, null=True)
+    price      = models.DecimalField(max_digits=10, decimal_places=2)
+    stock      = models.PositiveIntegerField(default=0)
+    is_active  = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
 
     def save(self, *args, **kwargs):
         if not self.sku:
-            # Retry loop guards against the rare random collision.
             from django.db import IntegrityError
             for _ in range(10):
                 base   = self.product.name.upper().replace(' ', '-')[:8]
@@ -185,12 +270,13 @@ class ProductVariant(models.Model):
                     super().save(*args, **kwargs)
                     return
                 except IntegrityError:
-                    self.sku = None  # try again
+                    self.sku = None
             raise ValueError("Could not generate a unique SKU after 10 attempts.")
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.product.name} — {self.device_model} — {self.color}"
+        device = self.device_model.name if self.device_model else 'No Device'
+        return f"{self.product.name} — {device} — {self.color}"
 
     @property
     def primary_image(self):
