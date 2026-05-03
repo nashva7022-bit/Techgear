@@ -25,6 +25,7 @@ from django.core.cache import cache
 from django.core.mail import BadHeaderError
 from smtplib import SMTPException
 from django.db.models import F
+from products.models import Category,Product
 
 
 logger = logging.getLogger(__name__)
@@ -46,12 +47,25 @@ def landing(request):
     if request.user.is_authenticated:
         return redirect('home')
 
-    from products.models import Category
     categories = Category.objects.filter(is_active=True)[:4]
+    
+    top_products = Product.objects.filter(
+        is_active=True,
+        is_featured=True,
+        category__is_active=True
+    ).prefetch_related('variants__images').order_by('-created_at')[:4]
+
+    # Fallback if no featured products yet
+    if not top_products.exists():
+        top_products = Product.objects.filter(
+            is_active=True,
+            category__is_active=True
+        ).prefetch_related('variants__images').order_by('-created_at')[:4]
 
     return render(request, 'landing.html', {
         'show_signup': True,
         'categories': categories,
+        'top_products': top_products,
     })
 
 #signup
@@ -297,7 +311,7 @@ def login_view(request):
 
     return render(request, 'auth/login.html')
 #logout
-
+@require_POST
 def logout_view(request):
     logout(request)
     request.session.flush()
@@ -426,21 +440,39 @@ def home(request):
         logout(request)
         messages.error(request, "Your account was suspended.")
         return redirect('login')
+    categories = Category.objects.filter(is_active=True)[:4]
+  
+    featured_products = Product.objects.filter(
+        is_active=True,
+        is_featured=True,
+        category__is_active=True
+    ).prefetch_related('variants__images').order_by('-created_at')[:4]
 
-    from products.models import Category, Product
-    
-    # Only active categories — soft deleted ones hidden automatically
-    categories = Category.objects.filter(is_active=True)
-    
-    # Only active products — soft deleted ones hidden automatically
-    top_products = Product.objects.filter(
-        is_active=True
-    ).order_by('-created_at')[:4]
+# Fallback if no featured products marked yet
+    if not featured_products.exists():
+        featured_products = Product.objects.filter(
+            is_active=True,
+            category__is_active=True
+        ).prefetch_related('variants__images').order_by('-created_at')[:4]
+
+    trending_products = Product.objects.filter(
+        is_active=True,
+        is_trending=True,
+        category__is_active=True
+    ).prefetch_related('variants__images').order_by('-created_at')[:4]
+
+# Fallback if no trending products marked yet
+    if not trending_products.exists():
+        trending_products = Product.objects.filter(
+            is_active=True,
+            category__is_active=True
+        ).prefetch_related('variants__images').order_by('-created_at')[:4]
 
     return render(request, 'home/home.html', {
         'categories': categories,
-        'featured_products': top_products,
-    })
+        'featured_products': featured_products,
+        'trending_products': trending_products,
+})
 
 
 @login_required
@@ -500,7 +532,7 @@ def change_password(request):
 
 
 @login_required
-
+@never_cache
 def change_email_request(request):
     if request.method == "POST":
         form = ChangeEmailForm(request.POST)

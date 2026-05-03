@@ -53,8 +53,9 @@ class ProductVariantInline(admin.TabularInline):
  
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display  = ['name', 'brand', 'category', 'is_active', 'min_price', 'total_stock']
+    list_display  = ['name', 'brand', 'category', 'is_active','is_featured', 'is_trending', 'min_price', 'total_stock']
     list_filter   = ['brand', 'category', 'is_active']
+    list_editable = ['is_featured', 'is_trending']
     search_fields = ['name', 'brand']
     inlines       = [ProductVariantInline]
     prepopulated_fields = {'slug': ('name',)}

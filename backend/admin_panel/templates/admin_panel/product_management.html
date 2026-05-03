@@ -353,7 +353,37 @@
 
             <!-- Actions -->
             <td>
-              <div class="flex items-center justify-end gap-1">
+              <div class="flex items-center justify-end gap-1"><!-- Featured toggle -->
+<form method="POST" action="/manage/products/toggle-featured/{{ product.pk }}/" style="display:inline;">
+  {% csrf_token %}
+  <button type="submit"
+          class="w-8 h-8 flex items-center justify-center rounded-lg transition
+          {% if product.is_featured %}text-yellow-500 bg-yellow-50{% else %}text-gray-300 hover:text-yellow-500 hover:bg-yellow-50{% endif %}"
+          title="{% if product.is_featured %}Remove from featured{% else %}Mark as featured{% endif %}">
+    <svg class="w-4 h-4" fill="{% if product.is_featured %}currentColor{% else %}none{% endif %}"
+         stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+    </svg>
+  </button>
+</form>
+
+<!-- Trending toggle -->
+<form method="POST" action="/manage/products/toggle-trending/{{ product.pk }}/" style="display:inline;">
+  {% csrf_token %}
+  <button type="submit"
+          class="w-8 h-8 flex items-center justify-center rounded-lg transition
+          {% if product.is_trending %}text-orange-500 bg-orange-50{% else %}text-gray-300 hover:text-orange-500 hover:bg-orange-50{% endif %}"
+          title="{% if product.is_trending %}Remove from trending{% else %}Mark as trending{% endif %}">
+    <svg class="w-4 h-4" fill="{% if product.is_trending %}currentColor{% else %}none{% endif %}"
+         stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"/>
+    </svg>
+  </button>
+</form>
                 <a href="{% url 'admin_product_edit' product.pk %}"
                    class="action-btn" title="Edit product">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

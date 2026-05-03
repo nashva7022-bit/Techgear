@@ -222,7 +222,26 @@ def product_toggle_status(request, pk):
     messages.success(request, f'"{product.name}" has been {state}.')
     return redirect('admin_product_list')
 
+@staff_member_required(login_url='admin_login')
+@require_POST
+def product_toggle_featured(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    product.is_featured = not product.is_featured
+    product.save()
+    state = 'added to' if product.is_featured else 'removed from'
+    messages.success(request, f'"{product.name}" {state} featured.')
+    return redirect('admin_product_list')
 
+
+@staff_member_required(login_url='admin_login')
+@require_POST
+def product_toggle_trending(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    product.is_trending = not product.is_trending
+    product.save()
+    state = 'added to' if product.is_trending else 'removed from'
+    messages.success(request, f'"{product.name}" {state} trending.')
+    return redirect('admin_product_list')
 # ──────────────────────────────────────────
 # IMAGE / VARIANT HELPERS
 # ──────────────────────────────────────────

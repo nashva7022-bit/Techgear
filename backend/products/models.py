@@ -142,6 +142,9 @@ class Product(models.Model):
     deactivated_by_category = models.BooleanField(default=False)
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
+    is_featured = models.BooleanField(default=False)
+    is_trending = models.BooleanField(default=False)
+
 
     class Meta:
         ordering = ['-created_at']
@@ -181,7 +184,11 @@ class Product(models.Model):
         prices = list(self.variants.filter(is_active=True).values_list('price', flat=True))
         return min(prices) if prices else None
 
+    # models.py inside the Product class
 
+    @property
+    def active_variant(self):
+        return self.variants.filter(is_active=True).first()
 # ──────────────────────────────────────────
 # PRODUCT SPECIFICATION
 # ──────────────────────────────────────────

@@ -16,7 +16,8 @@ urlpatterns = [
     path('products/add/',                 views.product_add,            name='admin_product_add'),
     path('products/edit/<int:pk>/',       views.product_edit,           name='admin_product_edit'),
     path('products/toggle/<int:pk>/',     views.product_toggle_status,  name='admin_product_toggle_status'),
- 
+    path('products/toggle-featured/<int:pk>/', views.product_toggle_featured, name='admin_product_toggle_featured'),
+    path('products/toggle-trending/<int:pk>/',  views.product_toggle_trending,  name='admin_product_toggle_trending'),
     # ── Variants ──
     path('variants/toggle/<int:pk>/',     views.variant_toggle_status,  name='admin_variant_toggle_status'),
  
