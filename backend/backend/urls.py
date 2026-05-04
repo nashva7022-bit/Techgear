@@ -28,6 +28,7 @@ urlpatterns = [
 
     path('', include('users.urls')),
     path('accounts/', include('allauth.urls')),
+    path('store/', include('store.urls')),
    
 ]
 if settings.DEBUG:

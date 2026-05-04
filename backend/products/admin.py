@@ -47,7 +47,7 @@ class VariantImageInline(admin.TabularInline):
 class ProductVariantInline(admin.TabularInline):
     model  = ProductVariant
     extra  = 0
-    fields = ['device_model', 'case_type', 'color', 'sku', 'price', 'stock', 'is_active']
+    fields = ['device_model', 'case_type', 'color', 'sku', 'price','discount_percentage', 'stock', 'is_active']
     show_change_link = True
  
  
@@ -67,4 +67,13 @@ class ProductVariantAdmin(admin.ModelAdmin):
     list_filter   = ['color', 'case_type', 'is_active']
     search_fields = ['product__name', 'sku']
     inlines       = [VariantImageInline]
- 
+
+
+from store.models import Review  # add this import
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display  = ['product', 'user', 'rating', 'created_at']
+    list_filter   = ['rating']
+    search_fields = ['product__name', 'user__email']
+    readonly_fields = ['created_at']

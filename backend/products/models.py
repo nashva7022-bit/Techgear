@@ -2,6 +2,8 @@ from django.db import models
 from cloudinary.models import CloudinaryField
 from django.utils.text import slugify
 import random, string
+from django.core.validators import MinValueValidator, MaxValueValidator
+
 
 
 # ──────────────────────────────────────────
@@ -181,8 +183,23 @@ class Product(models.Model):
 
     @property
     def min_price(self):
-        prices = list(self.variants.filter(is_active=True).values_list('price', flat=True))
+        prices = list(
+        self.variants.filter(is_active=True).values_list('price', flat=True)
+    )
         return min(prices) if prices else None
+
+    @property
+    def min_discounted_price(self):
+        variants = self.variants.filter(is_active=True)
+        prices = [v.discounted_price for v in variants]
+        return min(prices) if prices else None
+
+    @property
+    def has_discount(self):
+        return self.variants.filter(
+            is_active=True,
+            discount_percentage__gt=0
+        ).exists()
 
     # models.py inside the Product class
 
@@ -288,7 +305,23 @@ class ProductVariant(models.Model):
     @property
     def primary_image(self):
         return self.images.first()
+    
 
+    discount_percentage = models.PositiveIntegerField(
+        default=0,
+        validators=[MaxValueValidator(90)]  # max 90% discount
+    )
+
+    @property
+    def discounted_price(self):
+        if self.discount_percentage:
+            discount = (self.price * self.discount_percentage) / 100
+            return round(self.price - discount, 2)
+        return self.price
+
+    @property
+    def has_discount(self):
+        return self.discount_percentage > 0
 
 # ──────────────────────────────────────────
 # VARIANT IMAGE

@@ -498,6 +498,19 @@
                      class="field-input">
             </div>
 
+            <!-- Discount — existing variant -->
+<div>
+  <label class="field-label">Discount <span style="font-size:9px;color:#d1d5db;font-weight:500;text-transform:none;letter-spacing:0;margin-left:4px;">0–90%</span></label>
+  <div style="position:relative;">
+    <input type="number"
+           name="{{ prefix }}_discount_percentage"
+           value="{{ variant.discount_percentage }}"
+           min="0" max="90"
+           class="field-input" style="padding-right:30px;">
+    <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:800;color:#9ca3af;pointer-events:none;">%</span>
+  </div>
+</div>
+
           </div>
 
           <hr class="divider">
@@ -587,6 +600,7 @@
           Add Variant
         </button>
       </div>
+      
       <div style="padding:24px;">
         <div id="newVariantsContainer" style="display:flex;flex-direction:column;gap:20px;"></div>
         <div id="noNewVariantsMsg" class="empty-state">
@@ -1036,6 +1050,17 @@ async function addNewVariant() {
           Stock quantity is required.
         </p>
       </div>
+      <div>
+  <label class="field-label">Discount <span style="font-size:9px;color:#d1d5db;font-weight:500;text-transform:none;letter-spacing:0;margin-left:4px;">0–90%</span></label>
+  <div style="position:relative;">
+    <input type="number"
+           name="new_variant_discount_percentage"
+           value="0"
+           min="0" max="90"
+           class="field-input" style="padding-right:30px;">
+    <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:800;color:#9ca3af;pointer-events:none;">%</span>
+  </div>
+</div>
 
     </div>
 

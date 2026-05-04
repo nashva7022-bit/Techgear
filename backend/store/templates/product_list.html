@@ -1,0 +1,523 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shop — TechGear{% endblock %}
+
+{% block content %}
+
+<style>
+  /* ── Page-level variables matching TechGear palette ── */
+  :root {
+    --teal:       #2F4F4F;
+    --teal-mid:   #557373;
+    --card:       #DFE5F3;
+    --accent:     #F2EFEA;
+    --text-dark:  #1a2e2e;
+  }
+
+  /* Product card hover lift */
+  .prod-card {
+    background: var(--card);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(.22,.68,0,1.2), box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+  }
+  .prod-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 24px 48px rgba(0,0,0,0.25);
+  }
+
+  /* Image zoom on hover */
+  .prod-img-wrap { overflow: hidden; }
+  .prod-img-wrap img {
+    transition: transform 0.5s ease;
+  }
+  .prod-card:hover .prod-img-wrap img {
+    transform: scale(1.07);
+  }
+
+  /* Filter sidebar card */
+  .filter-card {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    padding: 20px;
+    backdrop-filter: blur(8px);
+  }
+  .filter-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  /* Radio filter pills */
+  .filter-radio { display: none; }
+  .filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 99px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .filter-pill:hover {
+    border-color: rgba(255,255,255,0.4);
+    color: #fff;
+  }
+  .filter-radio:checked + .filter-pill {
+    background: var(--card);
+    border-color: var(--card);
+    color: var(--teal);
+    font-weight: 700;
+  }
+
+  /* Sort select */
+  .sort-select {
+    appearance: none;
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 9px 36px 9px 14px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .sort-select:focus { border-color: rgba(255,255,255,0.4); }
+  .sort-select option { background: var(--teal); color: #fff; }
+
+  /* Price input */
+  .price-input {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.07);
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .price-input::placeholder { color: rgba(255,255,255,0.3); }
+  .price-input:focus { border-color: rgba(255,255,255,0.4); }
+
+  /* Search input */
+  .search-input {
+    width: 100%;
+    padding: 10px 40px 10px 38px;
+    border-radius: 12px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.07);
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .search-input::placeholder { color: rgba(255,255,255,0.35); }
+  .search-input:focus {
+    border-color: rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.1);
+  }
+
+  /* Badge */
+  .badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 99px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  /* Wishlist btn */
+  .wish-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+    display: flex; align-items: center; justify-content: center;
+    border: none; cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .wish-btn:hover { background: #fff; transform: scale(1.1); }
+
+  /* Pagination */
+  .page-item {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .page-item-inactive {
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.6);
+  }
+  .page-item-inactive:hover {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+  }
+  .page-item-active {
+    background: var(--card);
+    color: var(--teal);
+    font-weight: 700;
+  }
+
+  /* Apply btn */
+  .apply-btn {
+    width: 100%;
+    padding: 9px;
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--teal);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    margin-top: 10px;
+  }
+  .apply-btn:hover { background: var(--accent); }
+  .apply-btn:active { transform: scale(0.98); }
+
+  /* View btn on card */
+  .view-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
+    background: var(--teal);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 13px;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.15s;
+    flex-shrink: 0;
+  }
+  .view-btn:hover { background: var(--text-dark); transform: scale(1.08); }
+</style>
+
+<div class="container mx-auto px-6 py-10">
+
+  <!-- ── Page heading ── -->
+  <div class="mb-8 flex items-end justify-between">
+    <div>
+      <p class="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">
+        TechGear /
+        {% if selected_category %}{{ selected_category.name }}
+        {% elif search %}Search
+        {% else %}All Products{% endif %}
+      </p>
+      <h1 class="text-3xl font-bold font-serif text-white">
+        {% if selected_category %}{{ selected_category.name }}
+        {% elif search %}Results for "{{ search }}"
+        {% else %}Shop All{% endif %}
+      </h1>
+    </div>
+    <p class="text-white/40 text-sm mb-1">
+      <span class="text-white font-semibold">{{ page_obj.paginator.count }}</span>
+      product{{ page_obj.paginator.count|pluralize }}
+    </p>
+  </div>
+
+  <div class="flex gap-7 items-start">
+
+    <!-- ══════════════════════════════
+         SIDEBAR
+    ══════════════════════════════ -->
+    <aside class="w-60 flex-shrink-0 space-y-3 sticky top-28 self-start">
+
+      <form method="GET" action="{% url 'product_list' %}" id="filterForm">
+
+        <!-- Search -->
+        <div class="filter-card">
+          <span class="filter-label">Search</span>
+          <div class="relative">
+            <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm"></i>
+            <input type="text" name="search" value="{{ search }}"
+                   placeholder="Search products…"
+                   class="search-input">
+            {% if search %}
+            <a href="?{% if category_slug %}category={{ category_slug }}&{% endif %}{% if brand %}brand={{ brand }}&{% endif %}sort={{ sort_by }}"
+               class="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition">
+              <i class="bi bi-x-lg text-xs"></i>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="filter-card">
+          <span class="filter-label">Category</span>
+          <div class="flex flex-wrap gap-2">
+            <input type="radio" name="category" value="" id="cat-all"
+                   class="filter-radio" {% if not category_slug %}checked{% endif %}
+                   onchange="this.form.submit()">
+            <label for="cat-all" class="filter-pill">All</label>
+
+            {% for cat in categories %}
+            <input type="radio" name="category" value="{{ cat.slug }}" id="cat-{{ cat.slug }}"
+                   class="filter-radio" {% if category_slug == cat.slug %}checked{% endif %}
+                   onchange="this.form.submit()">
+            <label for="cat-{{ cat.slug }}" class="filter-pill">{{ cat.name }}</label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Brand -->
+        <div class="filter-card">
+          <span class="filter-label">Brand</span>
+          <div class="flex flex-wrap gap-2">
+            <input type="radio" name="brand" value="" id="brand-all"
+                   class="filter-radio" {% if not brand %}checked{% endif %}
+                   onchange="this.form.submit()">
+            <label for="brand-all" class="filter-pill">All</label>
+
+            {% for value, label in brand_choices %}
+            <input type="radio" name="brand" value="{{ value }}" id="brand-{{ value }}"
+                   class="filter-radio" {% if brand == value %}checked{% endif %}
+                   onchange="this.form.submit()">
+            <label for="brand-{{ value }}" class="filter-pill">{{ label }}</label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Price Range -->
+        <div class="filter-card">
+          <span class="filter-label">Price Range</span>
+          <div class="flex items-center gap-2 mb-1">
+            <input type="number" name="min_price" value="{{ min_price }}"
+                   placeholder="Min ₹" class="price-input">
+            <span class="text-white/30 text-xs font-bold flex-shrink-0">to</span>
+            <input type="number" name="max_price" value="{{ max_price }}"
+                   placeholder="Max ₹" class="price-input">
+          </div>
+          <button type="submit" class="apply-btn">Apply Price</button>
+        </div>
+
+        <!-- Hidden fields to preserve state -->
+        <input type="hidden" name="sort" value="{{ sort_by }}">
+
+      </form>
+
+      <!-- Clear all -->
+      {% if has_filters %}
+      <a href="{% url 'product_list' %}"
+         class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl
+                border border-white/15 text-white/50 text-xs font-bold
+                hover:border-white/30 hover:text-white transition uppercase tracking-widest">
+        <i class="bi bi-x-circle"></i> Clear Filters
+      </a>
+      {% endif %}
+
+    </aside>
+
+    <!-- ══════════════════════════════
+         MAIN CONTENT
+    ══════════════════════════════ -->
+    <div class="flex-1 min-w-0">
+
+      <!-- Sort + count bar -->
+      <div class="flex items-center justify-between mb-6">
+        <p class="text-white/40 text-sm">
+          Showing
+          <span class="text-white font-semibold">{{ page_obj.start_index }}–{{ page_obj.end_index }}</span>
+          of <span class="text-white font-semibold">{{ page_obj.paginator.count }}</span>
+        </p>
+
+        <form method="GET" action="{% url 'product_list' %}" class="flex items-center gap-2">
+          <input type="hidden" name="search"    value="{{ search }}">
+          <input type="hidden" name="category"  value="{{ category_slug }}">
+          <input type="hidden" name="brand"     value="{{ brand }}">
+          <input type="hidden" name="min_price" value="{{ min_price }}">
+          <input type="hidden" name="max_price" value="{{ max_price }}">
+          <span class="text-white/40 text-xs font-semibold uppercase tracking-widest">Sort</span>
+          <div class="relative">
+            <select name="sort" onchange="this.form.submit()" class="sort-select">
+              <option value="newest"     {% if sort_by == 'newest'     %}selected{% endif %}>Newest</option>
+              <option value="price_asc"  {% if sort_by == 'price_asc'  %}selected{% endif %}>Price: Low → High</option>
+              <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price: High → Low</option>
+              <option value="name_asc"   {% if sort_by == 'name_asc'   %}selected{% endif %}>A → Z</option>
+              <option value="name_desc"  {% if sort_by == 'name_desc'  %}selected{% endif %}>Z → A</option>
+            </select>
+            <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-white/40 text-xs pointer-events-none"></i>
+          </div>
+        </form>
+      </div>
+
+      {% if page_obj %}
+
+      <!-- ── Product Grid ── -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {% for product in page_obj %}
+        {% with variant=product.active_variant %}
+        <div class="prod-card">
+
+          <!-- Image area -->
+          <div class="prod-img-wrap relative h-52 bg-white/10">
+            <a href="{% url 'product_detail' product.slug %}">
+              {% if variant and variant.primary_image %}
+              <img src="{{ variant.primary_image.image.url }}"
+                   alt="{{ product.name }}"
+                   class="w-full h-full object-cover">
+              {% else %}
+              <div class="w-full h-full flex items-center justify-center">
+                <i class="bi bi-image text-5xl text-site-bg/20"></i>
+              </div>
+              {% endif %}
+            </a>
+
+
+
+            <!-- Wishlist heart -->
+            <form method="POST" action="{% url 'toggle_wishlist' product.pk %}"
+                  class="absolute top-3 right-3">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button type="submit" class="wish-btn">
+                <i class="bi {% if product.pk in wishlist_ids %}bi-heart-fill text-red-500{% else %}bi-heart text-[#557373]{% endif %} text-sm"></i>
+              </button>
+            </form>
+          </div>
+
+          <!-- Card body -->
+          <div class="p-5 flex flex-col flex-1">
+
+            <!-- Badges — on cream background so colors are always visible -->
+            {% if product.is_trending or product.is_featured or product.has_discount or product.is_customizable %}
+            <div class="flex flex-wrap gap-1.5 mb-2.5">
+              {% if product.is_trending %}
+              <span class="badge" style="background:#e8f0f0;color:#2F4F4F;border:1px solid #b8d0d0;">Trending</span>
+              {% endif %}
+              {% if product.is_featured %}
+              <span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;">Featured</span>
+              {% endif %}
+              {% if product.has_discount %}
+              <span class="badge" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;">Sale</span>
+              {% endif %}
+              {% if product.is_customizable %}
+              <span class="badge" style="background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;">Custom</span>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Brand + category -->
+            <p class="text-[10px] font-bold text-site-bg/50 uppercase tracking-widest mb-1">
+              {{ product.get_brand_display }}{% if product.category %} · {{ product.category.name }}{% endif %}
+            </p>
+
+            <!-- Name -->
+            <a href="{% url 'product_detail' product.slug %}"
+               class="text-site-bg font-bold text-[15px] leading-snug mb-3
+                      hover:text-site-bg/70 transition line-clamp-2">
+              {{ product.name }}
+            </a>
+
+            <!-- Price + CTA -->
+            <div class="mt-auto flex items-center justify-between">
+              <div>
+                {% if product.has_discount and product.min_discounted_price %}
+                <p class="text-site-bg font-black text-lg leading-none">
+                  ₹{{ product.min_discounted_price }}
+                </p>
+                <p class="text-site-bg/40 text-xs line-through mt-0.5">
+                  ₹{{ product.min_price }}
+                </p>
+                {% else %}
+                <p class="text-site-bg font-black text-lg leading-none">
+                  {% if product.min_price %}₹{{ product.min_price }}{% else %}—{% endif %}
+                </p>
+                {% endif %}
+              </div>
+              <a href="{% url 'product_detail' product.slug %}{% if variant %}?variant={{ variant.pk }}{% endif %}" class="view-btn" title="View Product">
+                <i class="bi bi-bag"></i>
+              </a>
+            </div>
+          </div>
+
+        </div>
+        {% endwith %}
+        {% endfor %}
+      </div>
+
+      <!-- ── Pagination ── -->
+      {% if page_obj.paginator.num_pages > 1 %}
+      <div class="flex items-center justify-end mt-10 pt-6 border-t border-white/10">
+        <div class="flex items-center gap-2">
+
+          {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if category_slug %}&category={{ category_slug }}{% endif %}{% if brand %}&brand={{ brand }}{% endif %}&sort={{ sort_by }}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}"
+             class="page-item page-item-inactive">
+            <i class="bi bi-chevron-left text-xs"></i>
+          </a>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <span class="page-item page-item-active">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if category_slug %}&category={{ category_slug }}{% endif %}{% if brand %}&brand={{ brand }}{% endif %}&sort={{ sort_by }}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}"
+               class="page-item page-item-inactive">{{ num }}</a>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if category_slug %}&category={{ category_slug }}{% endif %}{% if brand %}&brand={{ brand }}{% endif %}&sort={{ sort_by }}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}"
+             class="page-item page-item-inactive">
+            <i class="bi bi-chevron-right text-xs"></i>
+          </a>
+          {% endif %}
+
+        </div>
+      </div>
+      {% endif %}
+
+      {% else %}
+      <!-- Empty state -->
+      <div class="flex flex-col items-center justify-center py-28 text-center">
+        <div class="w-20 h-20 rounded-full bg-white/8 border border-white/10
+                    flex items-center justify-center mb-6">
+          <i class="bi bi-box-seam text-3xl text-white/25"></i>
+        </div>
+        <h3 class="text-xl font-bold font-serif text-white mb-2">
+          {% if has_filters %}No products match your filters{% else %}No products yet{% endif %}
+        </h3>
+        <p class="text-white/40 text-sm mb-7 max-w-xs leading-relaxed">
+          {% if has_filters %}
+            Try adjusting your search terms or clearing the filters.
+          {% else %}
+            Check back soon — new products are being added.
+          {% endif %}
+        </p>
+        {% if has_filters %}
+        <a href="{% url 'product_list' %}"
+           class="px-7 py-3 bg-card-bg text-site-bg rounded-full font-bold text-sm
+                  hover:bg-accent-hover transition">
+          <i class="bi bi-x-circle mr-2"></i>Clear All Filters
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

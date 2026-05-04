@@ -304,6 +304,7 @@
           Add Variant
         </button>
       </div>
+      
       <div style="padding:24px;">
         <div id="variantsContainer" style="display:flex;flex-direction:column;gap:20px;"></div>
         <div id="noVariantsMsg" class="empty-state">
@@ -618,8 +619,17 @@ async function addVariant() {
         <label class="field-label">Stock <span class="req">*</span></label>
         <input type="number" name="variant_stock" min="0" placeholder="0" class="field-input">
       </div>
+      <div>
+  <label class="field-label">Discount <span style="font-size:9px;color:#d1d5db;font-weight:500;text-transform:none;letter-spacing:0;margin-left:4px;">0–90%</span></label>
+  <div style="position:relative;">
+    <input type="number" name="variant_discount_percentage" min="0" max="90"
+           placeholder="0" class="field-input" style="padding-right:30px;">
+    <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:800;color:#9ca3af;pointer-events:none;">%</span>
+  </div>
+</div>
 
     </div>
+    
 
     <hr class="divider">
 

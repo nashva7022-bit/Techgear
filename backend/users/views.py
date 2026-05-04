@@ -54,6 +54,8 @@ def landing(request):
         is_featured=True,
         category__is_active=True
     ).prefetch_related('variants__images').order_by('-created_at')[:4]
+    for product in top_products:
+        product.first_variant = product.variants.first()
 
     # Fallback if no featured products yet
     if not top_products.exists():
@@ -61,6 +63,8 @@ def landing(request):
             is_active=True,
             category__is_active=True
         ).prefetch_related('variants__images').order_by('-created_at')[:4]
+        for product in top_products:
+            product.first_variant = product.variants.first()
 
     return render(request, 'landing.html', {
         'show_signup': True,

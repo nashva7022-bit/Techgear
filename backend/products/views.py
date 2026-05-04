@@ -292,6 +292,7 @@ def _save_variants(product, post_data, files):
     Reads new variant fields from POST and saves each variant + images.
     Returns a list of error strings (empty list = success).
     """
+    discounts = post_data.getlist('variant_discount_percentage')
     errors = []
 
     device_model_ids = post_data.getlist('variant_device_model')
@@ -343,6 +344,7 @@ def _save_variants(product, post_data, files):
             sku          = sku or None,
             price        = price,
             stock        = stock,
+            discount_percentage = int(discounts[i]) if i < len(discounts) and discounts[i] else 0,
         )
         variant.save()
 
@@ -375,6 +377,7 @@ def _handle_existing_variants(request, post_data, files, existing_variants):
         # Device model update (optional — only if submitted)
         dm_id        = post_data.get(f'{prefix}_device_model')
         device_model = _resolve_device_model(dm_id) if dm_id else variant.device_model
+        discount = post_data.get(f'{prefix}_discount_percentage', 0)
 
         try:
             if price_val:
@@ -386,8 +389,10 @@ def _handle_existing_variants(request, post_data, files, existing_variants):
             variant.color_code   = color_code
             variant.case_type    = case_type
             variant.is_active    = is_active
+            variant.discount_percentage = int(discount) if discount else 0
             variant.save()
         except (ValueError, TypeError):
+            variant.discount_percentage = 0
             messages.error(request, f'Variant "{variant}": Invalid price or stock value.')
             continue
 
@@ -423,6 +428,7 @@ def _save_new_variants(product, post_data, files):
     Save brand-new variants added during a product edit.
     Returns a list of error strings.
     """
+    discounts = post_data.getlist('new_variant_discount_percentage')
     errors = []
 
     device_model_ids = post_data.getlist('new_variant_device_model')
@@ -473,6 +479,7 @@ def _save_new_variants(product, post_data, files):
             sku          = sku or None,
             price        = price,
             stock        = stock,
+            discount_percentage = int(discounts[i]) if i < len(discounts) and discounts[i] else 0,
         )
         variant.save()
 
