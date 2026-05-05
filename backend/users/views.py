@@ -25,7 +25,7 @@ from django.core.cache import cache
 from django.core.mail import BadHeaderError
 from smtplib import SMTPException
 from django.db.models import F
-from products.models import Category,Product
+from products.models import Category,Product,BRAND_CHOICES
 
 
 logger = logging.getLogger(__name__)
@@ -476,6 +476,7 @@ def home(request):
         'categories': categories,
         'featured_products': featured_products,
         'trending_products': trending_products,
+        'brand_choices':     BRAND_CHOICES,
 })
 
 

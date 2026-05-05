@@ -20,15 +20,18 @@ from users.views import landing
 from django.conf import settings
 from django.conf.urls.static import static
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
     path('', landing, name='landing'),
     path('admin-panel/', include('admin_panel.urls')),
     path('manage/', include('products.urls')),   
 
-    path('', include('users.urls')),
+    
     path('accounts/', include('allauth.urls')),
     path('store/', include('store.urls')),
+    path('', include('users.urls')),
    
 ]
 if settings.DEBUG:

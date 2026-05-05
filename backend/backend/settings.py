@@ -17,7 +17,11 @@ load_dotenv(dotenv_path=env_path)
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-do-not-use-in-production')
 
 DEBUG = os.getenv("DEBUG", "True") == "True"
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.10.10.156']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost','habitant-gruffly-zips.ngrok-free.dev', '*']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://habitant-gruffly-zips.ngrok-free.dev',  # your ngrok URL
+]
 
 #  Cloudinary configuration
 cloudinary.config(
@@ -94,6 +98,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'store.context_processors.cart_wishlist',
             ],
         },
     },

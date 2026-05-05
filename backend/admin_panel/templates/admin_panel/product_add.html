@@ -339,8 +339,36 @@
   const DEVICE_MODELS_URL = "{% url 'admin_api_device_models' %}";
 
 // ── CONSTANTS ──
-const PHONE_CASE_TYPES = ['Slim Fit','Rugged Armor','Wallet Folio','Crystal Clear','Leather Finish','MagSafe Compatible','Bumper Case','Military Grade','Ultra Thin','Matte Finish'];
-const LAPTOP_CASE_TYPES = ['Full Cover','Top Cover Only','Bottom Cover Only','Palm Rest Cover','Full Body Wrap'];
+const PHONE_CASE_TYPES = [
+  ['slim',     'Slim Fit'],
+  ['rugged',   'Rugged Armor'],
+  ['wallet',   'Wallet Folio'],
+  ['clear',    'Crystal Clear'],
+  ['leather',  'Leather Finish'],
+  ['magsafe',  'MagSafe Compatible'],
+  ['bumper',   'Bumper Case'],
+  ['military', 'Military Grade'],
+  ['thin',     'Ultra Thin'],
+  ['matte',    'Matte Finish'],
+  ['other',    'Other'],
+];
+
+const LAPTOP_CASE_TYPES = [
+  ['slim',   'Full Cover'],
+  ['top',    'Top Cover Only'],
+  ['bottom', 'Bottom Cover Only'],
+  ['palm',   'Palm Rest Cover'],
+  ['full',   'Full Body Wrap'],
+];
+
+function getCaseTypeOptions(selected) {
+  const types = catFlags.is_laptop ? LAPTOP_CASE_TYPES : PHONE_CASE_TYPES;
+  let html = '<option value="">— Select case type —</option>';
+  types.forEach(([value, label]) => {
+    html += `<option value="${value}" ${value === selected ? 'selected' : ''}>${label}</option>`;
+  });
+  return html;
+}
 
 const COLOR_HEX = {
   black:'#000000', white:'#FFFFFF', red:'#EF4444', blue:'#3B82F6',
@@ -362,15 +390,18 @@ let catFlags = { is_customizable: false, is_laptop: false };
 
 // Device model cache keyed by brand
 let deviceModelCache = {};
+let currentDeviceType = 'phone'; // updated on category change
 
-// ── DEVICE MODEL API ──
 async function fetchDeviceModels(brand) {
-  const key = brand || '__all__';
+  const key = `${brand}_${currentDeviceType}`;
   if (deviceModelCache[key]) return deviceModelCache[key];
+
   try {
-    const url  = brand
-      ? `${DEVICE_MODELS_URL}?brand=${encodeURIComponent(brand)}`
-      : DEVICE_MODELS_URL;
+    let url = DEVICE_MODELS_URL + '?';
+    if (brand) url += `brand=${encodeURIComponent(brand)}&`;
+    // Only filter by device_type for phone/laptop — 'other' gets all
+    if (currentDeviceType !== 'other') url += `device_type=${currentDeviceType}`;
+
     const res  = await fetch(url);
     const data = await res.json();
     deviceModelCache[key] = data.devices || [];
@@ -380,9 +411,10 @@ async function fetchDeviceModels(brand) {
     return [];
   }
 }
+
 async function buildDeviceOptions(selectedId) {
   const brand  = document.getElementById('brandSelect')?.value || '';
-  const models = catFlags.is_laptop ? await fetchDeviceModels('') : await fetchDeviceModels(brand);
+  const models = await fetchDeviceModels(brand);
   let html = '<option value="">— Select device model —</option>';
   for (const m of models) {
     html += `<option value="${m.id}" ${m.id == selectedId ? 'selected' : ''}>${m.name}</option>`;
@@ -398,7 +430,6 @@ async function refreshDeviceDropdown(idx) {
   sel.innerHTML = await buildDeviceOptions(currentVal);
 }
 
-// ── CATEGORY CHANGE ──
 async function onCategoryChange() {
   const sel = document.getElementById('categorySelect');
   const pk  = sel.value;
@@ -406,16 +437,23 @@ async function onCategoryChange() {
 
   const opt     = sel.selectedOptions[0];
   const metaUrl = opt.dataset.metaUrl;
-  const catName = opt.text.toLowerCase();
-  catFlags.is_laptop = catName.includes('laptop');
+
+  // Clear cache when category changes — device type may have changed
+  deviceModelCache = {};
 
   try {
     const res  = await fetch(metaUrl);
     const data = await res.json();
+
     catFlags.is_customizable = data.is_customizable;
+    catFlags.is_laptop       = data.device_type === 'laptop';
+    currentDeviceType        = data.device_type; // 'phone', 'laptop', or 'other'
+
     buildSpecFields(data.spec_templates);
-  } catch (e) {
+  } catch(e) {
     catFlags.is_customizable = false;
+    catFlags.is_laptop       = false;
+    currentDeviceType        = 'other';
     buildSpecFields([]);
   }
 
@@ -423,20 +461,22 @@ async function onCategoryChange() {
   document.getElementById('customizationNotice').style.display =
     catFlags.is_customizable ? 'block' : 'none';
 
-  // Refresh all existing variant cards
+  // Refresh all variant cards
   document.querySelectorAll('[data-variant-idx]').forEach(card =>
     refreshVariantFields(card.dataset.variantIdx)
   );
 }
 
+// ── BRAND CHANGE ──
 function onBrandChange() {
-  // Clear cache for the selected brand so fresh models are fetched
-  const brand = document.getElementById('brandSelect')?.value || '';
-  delete deviceModelCache[brand];
+  // Clear cache so fresh models load for new brand
+  deviceModelCache = {};
+
   document.querySelectorAll('[data-variant-idx]').forEach(card =>
     refreshDeviceDropdown(card.dataset.variantIdx)
   );
 }
+
 
 // ── SPECIFICATIONS ──
 function showSpecPlaceholder() {
@@ -483,15 +523,6 @@ function makeSpecRow(name, value, placeholder, required, editable) {
   return row;
 }
 
-// ── CASE TYPE OPTIONS ──
-function getCaseTypeOptions(selected) {
-  const types = catFlags.is_laptop ? LAPTOP_CASE_TYPES : PHONE_CASE_TYPES;
-  let html = '<option value="">— Select case type —</option>';
-  types.forEach(c => {
-    html += `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`;
-  });
-  return html;
-}
 
 // ── COLOUR OPTIONS ──
 function getColorOptions(selected) {
@@ -501,8 +532,9 @@ function getColorOptions(selected) {
 }
 
 // ── REFRESH VARIANT FIELDS (called on category/brand change) ──
+
 function refreshVariantFields(idx) {
-  // Case type visibility — show ONLY for customizable categories
+  // Case type — only for customizable categories (phone cases, laptop skins)
   const ct = document.getElementById(`ct_field_${idx}`);
   if (ct) ct.style.display = catFlags.is_customizable ? '' : 'none';
 
@@ -510,6 +542,8 @@ function refreshVariantFields(idx) {
     const ctSel = document.getElementById(`ct_select_${idx}`);
     if (ctSel) ctSel.innerHTML = getCaseTypeOptions(ctSel.value);
   }
+
+  // Refresh device models for new category/brand combo
   refreshDeviceDropdown(idx);
 }
 

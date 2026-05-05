@@ -6,10 +6,8 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 
-# ──────────────────────────────────────────
+
 # BRAND CHOICES
-# Defined at top so both DeviceModel and Product can use it.
-# ──────────────────────────────────────────
 
 BRAND_CHOICES = [
     ('apple',    'Apple'),
@@ -26,11 +24,8 @@ BRAND_CHOICES = [
 ]
 
 
-# ──────────────────────────────────────────
+
 # CASE TYPE CHOICES
-# Choices (not a model) — small stable list, same reasoning as BRAND_CHOICES.
-# Only shown when category.has_case_type = True (phone cases, laptop skins).
-# ──────────────────────────────────────────
 
 CASE_TYPE_CHOICES = [
     ('slim',     'Slim Fit'),
@@ -44,19 +39,22 @@ CASE_TYPE_CHOICES = [
     ('thin',     'Ultra Thin'),
     ('matte',    'Matte Finish'),
     ('other',    'Other'),
+    ('dell', 'Dell'),
+    ('hp', 'HP'),
 ]
 
 
-# ──────────────────────────────────────────
+
 # DEVICE MODEL
-# A model (not choices) because new phones release constantly
-# and admin must add them without a code deploy.
-# Simple — just brand + name. That is all a dropdown needs.
-# ──────────────────────────────────────────
 
 class DeviceModel(models.Model):
+    DEVICE_TYPE_CHOICES = [
+        ('phone',  'Phone'),
+        ('laptop', 'Laptop'),
+    ]
     brand     = models.CharField(max_length=50, choices=BRAND_CHOICES)
     name      = models.CharField(max_length=100)   # e.g. "iPhone 15 Pro"
+    device_type = models.CharField(max_length=10, choices=DEVICE_TYPE_CHOICES, default='phone')
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -69,11 +67,21 @@ class DeviceModel(models.Model):
         return f"{self.get_brand_display()} — {self.name}"
 
 
-# ──────────────────────────────────────────
+
 # CATEGORY
-# ──────────────────────────────────────────
+
 
 class Category(models.Model):
+    DEVICE_TYPE_CHOICES = [
+    ('phone', 'Phone'),
+    ('laptop', 'Laptop'),
+]
+
+    device_type = models.CharField(
+        max_length=10,
+        choices=DEVICE_TYPE_CHOICES,
+        default='phone'
+    )
     name            = models.CharField(max_length=100)
     slug            = models.SlugField(max_length=100, unique=True, blank=True)
     description     = models.TextField(blank=True)
@@ -124,9 +132,8 @@ class CategorySpecTemplate(models.Model):
         return f"{self.category.name} → {self.name}"
 
 
-# ──────────────────────────────────────────
 # PRODUCT
-# ──────────────────────────────────────────
+
 
 class Product(models.Model):
     category    = models.ForeignKey(
@@ -138,9 +145,7 @@ class Product(models.Model):
     description = models.TextField(blank=True)
 
     is_active               = models.BooleanField(default=True)
-    # Set to True when deactivated by a category cascade — lets us restore only
-    # these products when the category is re-activated, leaving manually-deactivated
-    # products untouched.
+    
     deactivated_by_category = models.BooleanField(default=False)
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
@@ -206,9 +211,9 @@ class Product(models.Model):
     @property
     def active_variant(self):
         return self.variants.filter(is_active=True).first()
-# ──────────────────────────────────────────
+
 # PRODUCT SPECIFICATION
-# ──────────────────────────────────────────
+
 
 class ProductSpecification(models.Model):
     product = models.ForeignKey(
@@ -224,10 +229,8 @@ class ProductSpecification(models.Model):
     def __str__(self):
         return f"{self.product.name} — {self.name}: {self.value}"
 
-
-# ──────────────────────────────────────────
 # PRODUCT VARIANT
-# ──────────────────────────────────────────
+
 
 COLOR_CHOICES = [
     ('black',       'Black'),
@@ -254,7 +257,7 @@ class ProductVariant(models.Model):
     )
 
     # FK to DeviceModel — always required for all categories.
-    # Admin manages the device list from Django admin.
+   
     device_model = models.ForeignKey(
         DeviceModel,
         on_delete=models.SET_NULL,
@@ -309,7 +312,8 @@ class ProductVariant(models.Model):
 
     discount_percentage = models.PositiveIntegerField(
         default=0,
-        validators=[MaxValueValidator(90)]  # max 90% discount
+        validators=[MinValueValidator(0),MaxValueValidator(90)] , # max 90% discount
+         help_text='Discount percentage 0-90%'
     )
 
     @property
@@ -323,9 +327,9 @@ class ProductVariant(models.Model):
     def has_discount(self):
         return self.discount_percentage > 0
 
-# ──────────────────────────────────────────
+
 # VARIANT IMAGE
-# ──────────────────────────────────────────
+
 
 class VariantImage(models.Model):
     variant    = models.ForeignKey(

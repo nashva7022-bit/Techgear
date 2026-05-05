@@ -99,9 +99,6 @@
   /* ── EXISTING IMAGE MARK-FOR-DELETE ── */
   .img-thumb-wrap.marked-delete { opacity:0.45; }
   .img-thumb-wrap.marked-delete .remove-btn { display:flex !important; background:rgba(100,100,100,0.8); }
-
-  /* ── INFO STRIP ── */
-  .info-strip { display:flex; align-items:center; gap:6px; padding:8px 14px; background:#f9fafb; border:1.5px solid #f0f0f0; border-radius:10px; font-size:11px; color:#6b7280; font-weight:500; }
 </style>
 
 <!-- ══════ CROP MODAL ══════ -->
@@ -208,7 +205,6 @@
       </div>
       <div style="padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
 
-        <!-- Product Name -->
         <div style="grid-column:1/-1;">
           <label class="field-label">Product Name <span class="req">*</span></label>
           <input type="text" name="name"
@@ -216,14 +212,10 @@
                  placeholder="e.g. Carbon Fibre Phone Case"
                  class="field-input {% if form.name.errors %}error{% endif %}">
           {% if form.name.errors %}
-          <p class="field-error">
-            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-            {{ form.name.errors.0 }}
-          </p>
+          <p class="field-error">{{ form.name.errors.0 }}</p>
           {% endif %}
         </div>
 
-        <!-- Brand -->
         <div>
           <label class="field-label">Brand <span class="req">*</span></label>
           <div class="field-select-wrap">
@@ -235,7 +227,6 @@
           </div>
         </div>
 
-        <!-- Category -->
         <div>
           <label class="field-label">Category <span class="req">*</span></label>
           <div class="field-select-wrap">
@@ -252,14 +243,10 @@
             </select>
           </div>
           {% if form.category.errors %}
-          <p class="field-error">
-            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-            {{ form.category.errors.0 }}
-          </p>
+          <p class="field-error">{{ form.category.errors.0 }}</p>
           {% endif %}
         </div>
 
-        <!-- Description -->
         <div style="grid-column:1/-1;">
           <label class="field-label">Description</label>
           <textarea name="description" rows="4"
@@ -267,7 +254,6 @@
                     class="field-input" style="resize:vertical;line-height:1.6;">{{ form.description.value|default:product.description }}</textarea>
         </div>
 
-        <!-- Product Status -->
         <div style="grid-column:1/-1;">
           <div class="status-row">
             <div>
@@ -282,7 +268,6 @@
           </div>
         </div>
 
-        <!-- Customization Notice (shown when category is_customizable) -->
         <div id="customizationNotice" style="grid-column:1/-1;display:none;">
           <div class="notice-info">
             <svg width="18" height="18" fill="none" stroke="#3b82f6" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -358,7 +343,6 @@
         {% with prefix="existing_variant_"|add:variant.pk|stringformat:"s" %}
         <div class="variant-card" id="evc_{{ variant.pk }}">
 
-          <!-- Existing Variant Header -->
           <div class="variant-header">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
               <span style="font-size:12px;font-weight:900;color:#111;">
@@ -378,7 +362,6 @@
                 {{ variant.get_color_display }}
               </span>
             </div>
-            <!-- Status toggle -->
             <div style="display:flex;align-items:center;gap:10px;">
               <div style="display:flex;align-items:center;gap:8px;">
                 <span style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;">Status</span>
@@ -394,25 +377,25 @@
             </div>
           </div>
 
-          <!-- Existing Variant Fields -->
           <div style="padding:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
 
-           <!-- Device Model — editable dropdown -->
-<div style="grid-column:1/-1;">
-  <label class="field-label">Device Model <span class="req">*</span></label>
-  <div class="field-select-wrap">
-    <select name="{{ prefix }}_device_model"
-            id="eDm_select_{{ variant.pk }}"
-            class="field-input"
-            data-current-id="{{ variant.device_model.pk|default:'' }}">
-      <option value="">Loading…</option>
-    </select>
-  </div>
-  <p style="font-size:10px;color:#d1d5db;font-weight:500;margin-top:4px;">
-    SKU: {{ variant.sku|default:"auto-generated" }}
-  </p>
-</div>
-            <!-- Case Type — only when category is_customizable -->
+            <!-- Device Model -->
+            <div style="grid-column:1/-1;">
+              <label class="field-label">Device Model <span class="req">*</span></label>
+              <div class="field-select-wrap">
+                <select name="{{ prefix }}_device_model"
+                        id="eDm_select_{{ variant.pk }}"
+                        class="field-input"
+                        data-current-id="{{ variant.device_model.pk|default:'' }}">
+                  <option value="">Loading…</option>
+                </select>
+              </div>
+              <p style="font-size:10px;color:#d1d5db;font-weight:500;margin-top:4px;">
+                SKU: {{ variant.sku|default:"auto-generated" }}
+              </p>
+            </div>
+
+            <!-- Case Type -->
             <div id="eCt_field_{{ variant.pk }}"
                  style="grid-column:1/-1;{% if not product.category.is_customizable %}display:none;{% endif %}">
               <label class="field-label">Case Type <span class="req">*</span></label>
@@ -436,22 +419,21 @@
                         id="eColorSelect_{{ variant.pk }}"
                         onchange="syncExistingColor(this, {{ variant.pk }})"
                         class="field-input">
-                  {% for value, label in form.fields.brand.choices %}{% endfor %}
-                  <option value="black" {% if variant.color == "black" %}selected{% endif %}>Black</option>
-                  <option value="white" {% if variant.color == "white" %}selected{% endif %}>White</option>
-                  <option value="red" {% if variant.color == "red" %}selected{% endif %}>Red</option>
-                  <option value="blue" {% if variant.color == "blue" %}selected{% endif %}>Blue</option>
-                  <option value="green" {% if variant.color == "green" %}selected{% endif %}>Green</option>
-                  <option value="yellow" {% if variant.color == "yellow" %}selected{% endif %}>Yellow</option>
-                  <option value="orange" {% if variant.color == "orange" %}selected{% endif %}>Orange</option>
-                  <option value="purple" {% if variant.color == "purple" %}selected{% endif %}>Purple</option>
-                  <option value="pink" {% if variant.color == "pink" %}selected{% endif %}>Pink</option>
-                  <option value="grey" {% if variant.color == "grey" %}selected{% endif %}>Grey</option>
-                  <option value="navy" {% if variant.color == "navy" %}selected{% endif %}>Navy</option>
-                  <option value="gold" {% if variant.color == "gold" %}selected{% endif %}>Gold</option>
-                  <option value="silver" {% if variant.color == "silver" %}selected{% endif %}>Silver</option>
+                  <option value="black"       {% if variant.color == "black"       %}selected{% endif %}>Black</option>
+                  <option value="white"       {% if variant.color == "white"       %}selected{% endif %}>White</option>
+                  <option value="red"         {% if variant.color == "red"         %}selected{% endif %}>Red</option>
+                  <option value="blue"        {% if variant.color == "blue"        %}selected{% endif %}>Blue</option>
+                  <option value="green"       {% if variant.color == "green"       %}selected{% endif %}>Green</option>
+                  <option value="yellow"      {% if variant.color == "yellow"      %}selected{% endif %}>Yellow</option>
+                  <option value="orange"      {% if variant.color == "orange"      %}selected{% endif %}>Orange</option>
+                  <option value="purple"      {% if variant.color == "purple"      %}selected{% endif %}>Purple</option>
+                  <option value="pink"        {% if variant.color == "pink"        %}selected{% endif %}>Pink</option>
+                  <option value="grey"        {% if variant.color == "grey"        %}selected{% endif %}>Grey</option>
+                  <option value="navy"        {% if variant.color == "navy"        %}selected{% endif %}>Navy</option>
+                  <option value="gold"        {% if variant.color == "gold"        %}selected{% endif %}>Gold</option>
+                  <option value="silver"      {% if variant.color == "silver"      %}selected{% endif %}>Silver</option>
                   <option value="transparent" {% if variant.color == "transparent" %}selected{% endif %}>Transparent</option>
-                  <option value="other" {% if variant.color == "other" %}selected{% endif %}>Other</option>
+                  <option value="other"       {% if variant.color == "other"       %}selected{% endif %}>Other</option>
                 </select>
               </div>
             </div>
@@ -498,18 +480,18 @@
                      class="field-input">
             </div>
 
-            <!-- Discount — existing variant -->
-<div>
-  <label class="field-label">Discount <span style="font-size:9px;color:#d1d5db;font-weight:500;text-transform:none;letter-spacing:0;margin-left:4px;">0–90%</span></label>
-  <div style="position:relative;">
-    <input type="number"
-           name="{{ prefix }}_discount_percentage"
-           value="{{ variant.discount_percentage }}"
-           min="0" max="90"
-           class="field-input" style="padding-right:30px;">
-    <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:800;color:#9ca3af;pointer-events:none;">%</span>
-  </div>
-</div>
+            <!-- Discount -->
+            <div>
+              <label class="field-label">Discount <span style="font-size:9px;color:#d1d5db;font-weight:500;text-transform:none;letter-spacing:0;margin-left:4px;">0–90%</span></label>
+              <div style="position:relative;">
+                <input type="number"
+                       name="{{ prefix }}_discount_percentage"
+                       value="{{ variant.discount_percentage }}"
+                       min="0" max="90"
+                       class="field-input" style="padding-right:30px;">
+                <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:800;color:#9ca3af;pointer-events:none;">%</span>
+              </div>
+            </div>
 
           </div>
 
@@ -532,7 +514,6 @@
               </span>
             </div>
 
-            <!-- Existing image grid -->
             <div class="img-grid" style="margin-bottom:14px;" id="eImgGrid_{{ variant.pk }}">
               {% for img in variant.images.all %}
               <div class="img-thumb-wrap" id="eImg_{{ img.pk }}" onclick="toggleDeleteImage({{ variant.pk }}, {{ img.pk }}, this)">
@@ -541,7 +522,6 @@
                 <div class="delete-overlay" id="eDelOverlay_{{ img.pk }}" style="display:none;">
                   <span>Remove</span>
                 </div>
-                <!-- Hidden checkbox — checked = mark for deletion -->
                 <input type="checkbox"
                        name="{{ prefix }}_delete_images"
                        value="{{ img.pk }}"
@@ -551,7 +531,7 @@
               {% endfor %}
             </div>
 
-            <!-- New images for this existing variant -->
+            <!-- New images for existing variant -->
             <div style="margin-bottom:12px;">
               <p style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Add More Images</p>
               <div id="eNewImgPreview_{{ variant.pk }}" class="img-grid" style="margin-bottom:10px;"></div>
@@ -574,7 +554,7 @@
             <p id="eImgError_{{ variant.pk }}" style="font-size:11px;color:#ef4444;font-weight:600;margin-top:4px;display:none;"></p>
           </div>
 
-        </div><!-- /existing variant card -->
+        </div>
         {% endwith %}
         {% empty %}
         <div class="empty-state">
@@ -600,7 +580,6 @@
           Add Variant
         </button>
       </div>
-      
       <div style="padding:24px;">
         <div id="newVariantsContainer" style="display:flex;flex-direction:column;gap:20px;"></div>
         <div id="noNewVariantsMsg" class="empty-state">
@@ -634,18 +613,26 @@
 
 <!-- ══════ JAVASCRIPT ══════ -->
 <script>
-  
-  const DEVICE_MODELS_URL = "{% url 'admin_api_device_models' %}";
+
+const DEVICE_MODELS_URL = "{% url 'admin_api_device_models' %}";
 
 // ── CONSTANTS ──
-const PHONE_CASE_TYPES  = ['Slim Fit','Rugged Armor','Wallet Folio','Crystal Clear','Leather Finish','MagSafe Compatible','Bumper Case','Military Grade','Ultra Thin','Matte Finish'];
-const LAPTOP_CASE_TYPES = ['Full Cover','Top Cover Only','Bottom Cover Only','Palm Rest Cover','Full Body Wrap'];
+const PHONE_CASE_TYPES = [
+  ['slim','Slim Fit'],['rugged','Rugged Armor'],['wallet','Wallet Folio'],
+  ['clear','Crystal Clear'],['leather','Leather Finish'],['magsafe','MagSafe Compatible'],
+  ['bumper','Bumper Case'],['military','Military Grade'],['thin','Ultra Thin'],
+  ['matte','Matte Finish'],['other','Other'],
+];
+const LAPTOP_CASE_TYPES = [
+  ['slim','Full Cover'],['top','Top Cover Only'],['bottom','Bottom Cover Only'],
+  ['palm','Palm Rest Cover'],['full','Full Body Wrap'],
+];
 
 const COLOR_HEX = {
-  black:'#000000', white:'#FFFFFF', red:'#EF4444', blue:'#3B82F6',
-  green:'#22C55E', yellow:'#EAB308', orange:'#F97316', purple:'#A855F7',
-  pink:'#EC4899', grey:'#6B7280', navy:'#1E3A5F', gold:'#F59E0B',
-  silver:'#9CA3AF', transparent:'#F3F4F6', other:'#6B7280'
+  black:'#000000',white:'#FFFFFF',red:'#EF4444',blue:'#3B82F6',
+  green:'#22C55E',yellow:'#EAB308',orange:'#F97316',purple:'#A855F7',
+  pink:'#EC4899',grey:'#6B7280',navy:'#1E3A5F',gold:'#F59E0B',
+  silver:'#9CA3AF',transparent:'#F3F4F6',other:'#6B7280'
 };
 const COLOR_CHOICES = [
   ['black','Black'],['white','White'],['red','Red'],['blue','Blue'],
@@ -655,26 +642,28 @@ const COLOR_CHOICES = [
 ];
 
 // ── STATE ──
-let newVariantCount = 0;
-const newVariantFiles    = {};    // { idx: [File, ...] }
-const existingNewFiles   = {};    // { variantPk: [File, ...] }
-const existingDeletedIds = {};    // { variantPk: Set of image pks }
+let newVariantCount  = 0;
+const newVariantFiles  = {};
+const existingNewFiles = {};
+const existingDeletedIds = {};
 
+// FIX: currentDeviceType is set from the API (data.device_type), same as add page
+let currentDeviceType = '{{ product.category.device_type|default:"phone" }}';
 let catFlags = {
   is_customizable: {{ product.category.is_customizable|yesno:"true,false" }},
-  is_laptop: false,
+  is_laptop: {% if product.category.device_type == 'laptop' %}true{% else %}false{% endif %},
 };
 
 // ── DEVICE MODEL CACHE ──
 let deviceModelCache = {};
 
 async function fetchDeviceModels(brand) {
-  const key = brand || '__all__';
+  const key = `${brand}_${currentDeviceType}`;
   if (deviceModelCache[key]) return deviceModelCache[key];
   try {
-    const url  = brand
-      ? `${DEVICE_MODELS_URL}?brand=${encodeURIComponent(brand)}`
-      : DEVICE_MODELS_URL;
+    let url = DEVICE_MODELS_URL + '?';
+    if (brand) url += `brand=${encodeURIComponent(brand)}&`;
+    if (currentDeviceType && currentDeviceType !== 'other') url += `device_type=${currentDeviceType}`;
     const res  = await fetch(url);
     const data = await res.json();
     deviceModelCache[key] = data.devices || [];
@@ -684,16 +673,29 @@ async function fetchDeviceModels(brand) {
     return [];
   }
 }
+
 async function buildDeviceOptions(selectedId) {
-  const brand  = document.getElementById('brandSelect')?.value || '';
-  const models = catFlags.is_laptop ? await fetchDeviceModels('') : await fetchDeviceModels(brand);
+  const brand   = document.getElementById('brandSelect')?.value || '';
+  const models  = await fetchDeviceModels(brand);
   let html = '<option value="">— Select device model —</option>';
   for (const m of models) {
-    html += `<option value="${m.id}" ${m.id == selectedId ? 'selected' : ''}>${m.name}</option>`;
+    html += `<option value="${m.id}" ${String(m.id) === String(selectedId) ? 'selected' : ''}>${m.name}</option>`;
   }
   return html;
 }
 
+// Refresh a single existing variant's device dropdown
+async function refreshExistingDeviceDropdown(variantPk) {
+  const sel = document.getElementById(`eDm_select_${variantPk}`);
+  if (!sel) return;
+  const currentId = sel.dataset.currentId || sel.value;
+  sel.innerHTML = '<option value="">Loading…</option>';
+  sel.innerHTML = await buildDeviceOptions(currentId);
+  // Keep currentId in sync after rebuild
+  sel.dataset.currentId = currentId;
+}
+
+// Refresh a new variant's device dropdown
 async function refreshNewVariantDevice(idx) {
   const sel = document.getElementById(`dm_select_${idx}`);
   if (!sel) return;
@@ -703,30 +705,35 @@ async function refreshNewVariantDevice(idx) {
 }
 
 // ── CATEGORY CHANGE ──
+// FIX: Uses data.device_type from API (same as add page). Does NOT overwrite existing specs.
 async function onCategoryChange() {
-  const sel     = document.getElementById('categorySelect');
-  const pk      = sel.value;
+  const sel = document.getElementById('categorySelect');
+  const pk  = sel.value;
   if (!pk) { showSpecPlaceholder(); return; }
 
   const opt     = sel.selectedOptions[0];
   const metaUrl = opt.dataset.metaUrl;
-  const catName = opt.text.toLowerCase();
-  catFlags.is_laptop = catName.includes('laptop');
+
+  deviceModelCache = {};
 
   try {
     const res  = await fetch(metaUrl);
     const data = await res.json();
+
+    // Use device_type from API — same approach as add page
     catFlags.is_customizable = data.is_customizable;
-    buildSpecFields(data.spec_templates);
-  } catch (e) {
+    catFlags.is_laptop       = data.device_type === 'laptop';
+    currentDeviceType        = data.device_type || 'phone';
+  } catch(e) {
     catFlags.is_customizable = false;
-    buildSpecFields([]);
+    catFlags.is_laptop       = false;
+    currentDeviceType        = 'other';
   }
 
   document.getElementById('customizationNotice').style.display =
     catFlags.is_customizable ? 'block' : 'none';
 
-  // Refresh existing variant case type fields
+  // Update case type visibility on existing variants
   document.querySelectorAll('[id^="eCt_field_"]').forEach(el => {
     el.style.display = catFlags.is_customizable ? '' : 'none';
   });
@@ -735,56 +742,46 @@ async function onCategoryChange() {
   document.querySelectorAll('[data-new-variant-idx]').forEach(card =>
     refreshNewVariantFields(card.dataset.newVariantIdx)
   );
+
+  // Refresh all device dropdowns (existing + new) for new device_type
+  await refreshAllDeviceDropdowns();
 }
 
-function onBrandChange() {
-  const brand = document.getElementById('brandSelect')?.value || '';
-  delete deviceModelCache[brand];
+// ── BRAND CHANGE ──
+// FIX: only refreshes dropdowns, does NOT call onBrandChange() in DOMContentLoaded
+async function onBrandChange() {
+  deviceModelCache = {};
+  await refreshAllDeviceDropdowns();
+}
 
-  // Refresh new variant dropdowns
+// Refresh ALL device dropdowns (existing variants + new variants)
+async function refreshAllDeviceDropdowns() {
+  // Existing variants
+  const existingPks = [{% for variant in existing_variants %}{{ variant.pk }},{% endfor %}];
+  for (const pk of existingPks) {
+    await refreshExistingDeviceDropdown(pk);
+  }
+  // New variants
   document.querySelectorAll('[data-new-variant-idx]').forEach(card =>
     refreshNewVariantDevice(card.dataset.newVariantIdx)
   );
-
-  // Refresh existing variant dropdowns
-  fetchDeviceModels(brand).then(devices => {
-    {% for variant in existing_variants %}
-    (function() {
-      const sel = document.getElementById('eDm_select_{{ variant.pk }}');
-      if (!sel) return;
-      const cur = sel.value;
-      sel.innerHTML = '<option value="">— Select device model —</option>' +
-        devices.map(d =>
-          `<option value="${d.id}" ${String(d.id) === String(cur) ? 'selected' : ''}>${d.name}</option>`
-        ).join('');
-    })();
-    {% endfor %}
-  });
 }
 
 // ── SPECS ──
+// FIX: onCategoryChange no longer calls buildSpecFields — specs are server-rendered.
+// buildSpecFields is only called if admin explicitly clicks "Add Custom".
 function showSpecPlaceholder() {
   document.getElementById('specPlaceholder').style.display = 'flex';
   document.getElementById('specsContainer').style.display  = 'none';
 }
-function buildSpecFields(templates) {
-  const ph   = document.getElementById('specPlaceholder');
-  const cont = document.getElementById('specsContainer');
-  ph.style.display   = 'none';
-  cont.style.display = 'flex';
-  cont.innerHTML     = '';
-  if (!templates.length) {
-    cont.innerHTML = `<p style="font-size:12px;color:#d1d5db;font-weight:600;text-align:center;padding:16px 0;">No predefined specs for this category. Use "Add Custom" to add your own.</p>`;
-    return;
-  }
-  templates.forEach(s => cont.appendChild(makeSpecRow(s.name, '', s.placeholder, s.is_required, false)));
-}
+
 function addCustomSpec() {
   const cont = document.getElementById('specsContainer');
   document.getElementById('specPlaceholder').style.display = 'none';
   cont.style.display = 'flex';
   cont.appendChild(makeSpecRow('', '', '', false, true));
 }
+
 function makeSpecRow(name, value, placeholder, required, editable) {
   const row = document.createElement('div');
   row.className = 'spec-row';
@@ -884,7 +881,6 @@ function startExistingCropQueue(files, variantPk) {
   });
   if (errEl) { errEl.textContent = errors.join('  '); errEl.style.display = errors.length ? 'block' : 'none'; }
   if (!valid.length) return;
-
   cropQueue        = valid;
   cropCurrentIndex = 0;
   cropTargetPk     = variantPk;
@@ -926,13 +922,16 @@ function syncExistingFilesToInput(variantPk) {
   input.files = dt.files;
 }
 
-// ── NEW VARIANT ADD ──
+// ── NEW VARIANT HELPERS ──
 function getCaseTypeOptions(selected) {
   const types = catFlags.is_laptop ? LAPTOP_CASE_TYPES : PHONE_CASE_TYPES;
   let html = '<option value="">— Select case type —</option>';
-  types.forEach(c => { html += `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`; });
+  types.forEach(([value, label]) => {
+    html += `<option value="${value}" ${value === selected ? 'selected' : ''}>${label}</option>`;
+  });
   return html;
 }
+
 function getColorOptions(selected) {
   return COLOR_CHOICES.map(([v,l]) =>
     `<option value="${v}" ${v === selected ? 'selected' : ''}>${l}</option>`
@@ -945,9 +944,9 @@ async function addNewVariant() {
   newVariantFiles[idx] = [];
 
   const card = document.createElement('div');
-  card.className              = 'variant-card new-variant';
-  card.dataset.newVariantIdx  = idx;
-  card.id                     = `nvc_${idx}`;
+  card.className             = 'variant-card new-variant';
+  card.dataset.newVariantIdx = idx;
+  card.id                    = `nvc_${idx}`;
 
   const deviceOptionsHTML = await buildDeviceOptions('');
 
@@ -975,7 +974,6 @@ async function addNewVariant() {
     </div>
 
     <div style="padding:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
-
       <div style="grid-column:1/-1;">
         <label class="field-label">Device Model <span class="req">*</span></label>
         <div class="field-select-wrap">
@@ -983,10 +981,6 @@ async function addNewVariant() {
             ${deviceOptionsHTML}
           </select>
         </div>
-        <p id="nDmError_${idx}" class="field-error" style="display:none;">
-          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-          Device model is required.
-        </p>
       </div>
 
       <div id="nCt_field_${idx}" style="grid-column:1/-1;${catFlags.is_customizable ? '' : 'display:none;'}">
@@ -996,10 +990,6 @@ async function addNewVariant() {
             ${getCaseTypeOptions('')}
           </select>
         </div>
-        <p id="nCtError_${idx}" class="field-error" style="display:none;">
-          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-          Case type is required for customizable products.
-        </p>
       </div>
 
       <div>
@@ -1032,36 +1022,24 @@ async function addNewVariant() {
         <label class="field-label">Price (₹) <span class="req">*</span></label>
         <div style="position:relative;">
           <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:800;color:#9ca3af;pointer-events:none;">₹</span>
-          <input type="number" name="new_variant_price" min="0.01" step="0.01"
-                 placeholder="0.00" class="field-input" style="padding-left:30px;" id="nPrice_${idx}">
+          <input type="number" name="new_variant_price" id="nPrice_${idx}" min="0.01" step="0.01"
+                 placeholder="0.00" class="field-input" style="padding-left:30px;">
         </div>
-        <p id="nPriceError_${idx}" class="field-error" style="display:none;">
-          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-          A valid price is required.
-        </p>
       </div>
 
       <div>
         <label class="field-label">Stock <span class="req">*</span></label>
-        <input type="number" name="new_variant_stock" min="0" placeholder="0"
-               class="field-input" id="nStock_${idx}">
-        <p id="nStockError_${idx}" class="field-error" style="display:none;">
-          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-          Stock quantity is required.
-        </p>
+        <input type="number" name="new_variant_stock" id="nStock_${idx}" min="0" placeholder="0" class="field-input">
       </div>
-      <div>
-  <label class="field-label">Discount <span style="font-size:9px;color:#d1d5db;font-weight:500;text-transform:none;letter-spacing:0;margin-left:4px;">0–90%</span></label>
-  <div style="position:relative;">
-    <input type="number"
-           name="new_variant_discount_percentage"
-           value="0"
-           min="0" max="90"
-           class="field-input" style="padding-right:30px;">
-    <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:800;color:#9ca3af;pointer-events:none;">%</span>
-  </div>
-</div>
 
+      <div>
+        <label class="field-label">Discount <span style="font-size:9px;color:#d1d5db;font-weight:500;text-transform:none;letter-spacing:0;margin-left:4px;">0–90%</span></label>
+        <div style="position:relative;">
+          <input type="number" name="new_variant_discount_percentage" value="0" min="0" max="90"
+                 class="field-input" style="padding-right:30px;">
+          <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:800;color:#9ca3af;pointer-events:none;">%</span>
+        </div>
+      </div>
     </div>
 
     <hr class="divider">
@@ -1088,10 +1066,7 @@ async function addNewVariant() {
       <input type="file" id="nImgInput_${idx}" name="new_variant_images_${idx}"
              multiple accept="image/jpeg,image/png,image/webp" style="display:none;"
              onchange="handleNewFileSelect(this,${idx})">
-      <p id="nImgError_${idx}" class="field-error" style="display:none;margin-top:8px;">
-        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-        Minimum 3 images required.
-      </p>
+      <p id="nImgError_${idx}" style="font-size:11px;color:#ef4444;font-weight:600;margin-top:8px;display:none;"></p>
     </div>
   `;
 
@@ -1130,7 +1105,6 @@ function onNewVariantStatusChange(idx, isActive) {
   badge.textContent = isActive ? 'Active' : 'Inactive';
 }
 
-// ── NEW VARIANT COLOUR ──
 function syncNewColor(select, idx) {
   const hex = COLOR_HEX[select.value] || '#000000';
   document.getElementById(`nColorPicker_${idx}`).value = hex;
@@ -1161,14 +1135,7 @@ function startNewCropQueue(files, idx) {
     if (f.size > MAX_SIZE)               { errors.push(`"${f.name}": exceeds 5 MB.`); return; }
     valid.push(f);
   });
-  if (errEl) {
-    if (errors.length) {
-      errEl.style.display = 'flex';
-      errEl.childNodes[errEl.childNodes.length - 1].textContent = ' ' + errors.join(' ');
-    } else {
-      errEl.style.display = 'none';
-    }
-  }
+  if (errEl) { errEl.textContent = errors.join('  '); errEl.style.display = errors.length ? 'block' : 'none'; }
   if (!valid.length) return;
   cropQueue        = valid;
   cropCurrentIndex = 0;
@@ -1222,7 +1189,7 @@ let cropCurrentIndex = 0;
 let cropTargetIdx    = null;
 let cropTargetPk     = null;
 let cropCurrentFile  = null;
-let cropMode         = 'new'; // 'new' | 'existing'
+let cropMode         = 'new';
 
 function openCropperFor(file) {
   cropCurrentFile = file;
@@ -1276,18 +1243,12 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
   let valid = true;
   const errs = [];
 
-  const clearErr = el => { if (el) el.style.display = 'none'; };
-  const showErr  = el => { if (el) el.style.display = 'flex'; };
-  const markErr  = el => { if (el) { el.classList.add('error'); } };
-  const clearFld = el => { if (el) el.classList.remove('error'); };
-
-  // Category
   if (!document.getElementById('categorySelect').value) {
     errs.push('Please select a category.');
     valid = false;
   }
 
-  // New variants
+  // New variants validation
   document.querySelectorAll('[data-new-variant-idx]').forEach((card, i) => {
     const idx   = card.dataset.newVariantIdx;
     const n     = i + 1;
@@ -1298,41 +1259,35 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     const stock = document.getElementById(`nStock_${idx}`);
     const cnt   = (newVariantFiles[idx] || []).length;
 
-    clearErr(document.getElementById(`nDmError_${idx}`));
-    clearErr(document.getElementById(`nCtError_${idx}`));
-    clearErr(document.getElementById(`nPriceError_${idx}`));
-    clearErr(document.getElementById(`nStockError_${idx}`));
-    clearErr(document.getElementById(`nImgError_${idx}`));
-    clearFld(dm); clearFld(ct); clearFld(price); clearFld(stock);
-
     if (!dm?.value) {
       errs.push(`New variant ${n}: Device model is required.`);
-      markErr(dm); showErr(document.getElementById(`nDmError_${idx}`));
+      if (dm) dm.classList.add('error');
       valid = false;
     }
     if (catFlags.is_customizable && ctFld?.style.display !== 'none' && !ct?.value) {
       errs.push(`New variant ${n}: Case type is required.`);
-      markErr(ct); showErr(document.getElementById(`nCtError_${idx}`));
+      if (ct) ct.classList.add('error');
       valid = false;
     }
     if (!price?.value || parseFloat(price.value) <= 0) {
       errs.push(`New variant ${n}: Valid price required.`);
-      markErr(price); showErr(document.getElementById(`nPriceError_${idx}`));
+      if (price) price.classList.add('error');
       valid = false;
     }
     if (stock?.value === '' || parseInt(stock?.value) < 0) {
       errs.push(`New variant ${n}: Stock quantity required.`);
-      markErr(stock); showErr(document.getElementById(`nStockError_${idx}`));
+      if (stock) stock.classList.add('error');
       valid = false;
     }
     if (cnt < 3) {
       errs.push(`New variant ${n}: Upload at least 3 images.`);
-      showErr(document.getElementById(`nImgError_${idx}`));
+      const errEl = document.getElementById(`nImgError_${idx}`);
+      if (errEl) { errEl.textContent = 'Minimum 3 images required.'; errEl.style.display = 'block'; }
       valid = false;
     }
   });
 
-  // Existing variants — image count sanity check
+  // Existing variants image count check
   {% for variant in existing_variants %}
   (function() {
     const grid    = document.getElementById('eImgGrid_{{ variant.pk }}');
@@ -1364,32 +1319,47 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
 });
 
 // ── INIT ──
+// FIX: Load device models properly on page load without calling onBrandChange()
+// which would overwrite already-set device dropdowns.
 document.addEventListener('DOMContentLoaded', async () => {
-  // Load category flags first
-  const catSel = document.getElementById('categorySelect');
-  if (catSel.value) await onCategoryChange();
 
-  // Populate device model dropdowns for ALL existing variants
-  const brand = document.getElementById('brandSelect')?.value || '';
+  // Set badge states from actual checkbox values
+  {% for variant in existing_variants %}
+  (function() {
+    const chk = document.getElementById('eVarStatus_{{ variant.pk }}');
+    if (chk) onExistingVariantStatusChange({{ variant.pk }}, chk.checked);
+  })();
+  {% endfor %}
+
+  // Show customization notice if category is customizable
+  if (catFlags.is_customizable) {
+    document.getElementById('customizationNotice').style.display = 'block';
+  }
+
+  // Load device models for existing variants using the current brand + device_type
+  const brand   = document.getElementById('brandSelect')?.value || '';
   const devices = await fetchDeviceModels(brand);
 
   {% for variant in existing_variants %}
   (function() {
     const sel = document.getElementById('eDm_select_{{ variant.pk }}');
     if (!sel) return;
-    const currentId = sel.dataset.currentId;
+    const currentId = '{{ variant.device_model.pk|default:"" }}';
     sel.innerHTML = '<option value="">— Select device model —</option>' +
       devices.map(d =>
         `<option value="${d.id}" ${String(d.id) === String(currentId) ? 'selected' : ''}>${d.name}</option>`
       ).join('');
+    sel.dataset.currentId = currentId;
   })();
   {% endfor %}
 
-  // Init existing image counts
+  // Initialize image counts for existing variants
   {% for variant in existing_variants %}
   updateExistingImgCount({{ variant.pk }});
   {% endfor %}
+
 });
+
 </script>
 
 {% endblock %}

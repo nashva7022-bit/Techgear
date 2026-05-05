@@ -1,39 +1,46 @@
+html
+
 {% extends 'base.html' %}
 {% load static %}
 
 {% block content %}
 
-<!-- 1. HERO: Animated Zoom Pan -->
+<!-- 1. HERO -->
 <section class="relative w-full h-[85vh] flex items-center justify-center overflow-hidden">
-    <img src="https://res.cloudinary.com/da4xw9ois/image/upload/v1777004559/photo-1682094506687-bd8416aad2d6_facwma.jpg" class="absolute inset-0 w-full h-full object-cover animate-slow-pan">
+    <img src="https://res.cloudinary.com/da4xw9ois/image/upload/v1777004559/photo-1682094506687-bd8416aad2d6_facwma.jpg"
+         class="absolute inset-0 w-full h-full object-cover animate-slow-pan">
     <div class="absolute inset-0 bg-site-bg/60"></div>
     <div class="relative z-10 text-center px-4">
         <h1 class="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter mb-6 font-serif">TechGear</h1>
         <p class="text-xl md:text-2xl text-white mb-8 tracking-widest uppercase">Precision Crafted Protection</p>
-        <a href="#shop" class="px-10 py-4 bg-card-bg text-site-bg rounded-full font-bold hover:bg-accent-hover transition-all">Explore Collection</a>
+        <a href="{% url 'product_list' %}"
+           class="px-10 py-4 bg-card-bg text-site-bg rounded-full font-bold hover:bg-accent-hover transition-all">
+            Explore Collection
+        </a>
     </div>
 </section>
 
-<!-- 2. SHOP BY BRAND (Hover Tilt) -->
+<!-- 2. SHOP BY BRAND -->
 <section class="py-20 container mx-auto px-6">
     <h2 class="text-3xl font-bold font-serif mb-12 text-center text-white">Shop By Brand</h2>
     <div class="grid grid-cols-2 md:grid-cols-6 gap-6">
-        <a href="#" class="p-8 bg-card-bg text-site-bg rounded-2xl text-center font-bold hover:bg-accent-hover transition hover:scale-105">Apple</a>
-        <a href="#" class="p-8 bg-card-bg text-site-bg rounded-2xl text-center font-bold hover:bg-accent-hover transition hover:scale-105">Samsung</a>
-        <a href="#" class="p-8 bg-card-bg text-site-bg rounded-2xl text-center font-bold hover:bg-accent-hover transition hover:scale-105">Google</a>
-        <a href="#" class="p-8 bg-card-bg text-site-bg rounded-2xl text-center font-bold hover:bg-accent-hover transition hover:scale-105">Sony</a>
-        <a href="#" class="p-8 bg-card-bg text-site-bg rounded-2xl text-center font-bold hover:bg-accent-hover transition hover:scale-105">Bose</a>
-        <a href="#" class="p-8 bg-card-bg text-site-bg rounded-2xl text-center font-bold hover:bg-accent-hover transition hover:scale-105">Nothing</a>
+        {% for value, label in brand_choices %}
+        <a href="{% url 'product_list' %}?brand={{ value }}"
+           class="p-8 bg-card-bg text-site-bg rounded-2xl text-center font-bold hover:bg-accent-hover transition hover:scale-105">
+            {{ label }}
+        </a>
+        {% endfor %}
     </div>
 </section>
 
-<!-- 3. CATEGORIES — DB connected -->
+<!-- 3. CATEGORIES -->
 <section class="py-20 bg-white/5 border-y border-white/10">
     <div class="container mx-auto px-6">
         <h2 class="text-4xl font-bold font-serif mb-16 text-center text-white">Collections</h2>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
             {% for cat in categories %}
-            <a href="#" class="h-[400px] bg-card-bg p-8 rounded-3xl transition hover:-translate-y-4 hover:shadow-2xl hover:bg-accent-hover flex flex-col justify-end relative overflow-hidden">
+            <a href="{% url 'product_list' %}?category={{ cat.slug }}"
+               class="h-[400px] bg-card-bg p-8 rounded-3xl transition hover:-translate-y-4 hover:shadow-2xl hover:bg-accent-hover flex flex-col justify-end relative overflow-hidden">
                 {% if cat.image %}
                 <img src="{{ cat.image.url }}" alt="{{ cat.name }}"
                      class="absolute inset-0 w-full h-full object-cover opacity-40">
@@ -47,52 +54,100 @@
     </div>
 </section>
 
-<!-- 4. CUSTOMIZATION (Interactive Side-Slide Image) -->
+<!-- 4. CUSTOMIZATION -->
 <section class="py-24 container mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
     <div class="text-white">
         <h2 class="text-5xl font-serif font-bold mb-8">Personalize Your Tech</h2>
         <div class="space-y-4">
-            <a href="#" class="block bg-card-bg text-site-bg p-6 rounded-2xl hover:bg-accent-hover transition font-bold text-lg">Custom Laptop Skin (Text/Image) →</a>
-            <a href="#" class="block bg-card-bg text-site-bg p-6 rounded-2xl hover:bg-accent-hover transition font-bold text-lg">Custom Phone Case (Text/Image) →</a>
+            <a href="{% url 'product_list' %}?category=laptop-skins"
+               class="block bg-card-bg text-site-bg p-6 rounded-2xl hover:bg-accent-hover transition font-bold text-lg">
+               Custom Laptop Skin (Text/Image) →
+            </a>
+            <a href="{% url 'product_list' %}?category=phone-cases"
+               class="block bg-card-bg text-site-bg p-6 rounded-2xl hover:bg-accent-hover transition font-bold text-lg">
+               Custom Phone Case (Text/Image) →
+            </a>
         </div>
     </div>
     <div class="h-96 bg-card-bg rounded-[3rem] flex items-center justify-center overflow-hidden group">
-        <img src="https://res.cloudinary.com/da4xw9ois/image/upload/v1777004667/photo-1743865001634-0bf8a22b94cf_vwmtbo.jpg" class="h-64 transition-transform duration-700 group-hover:translate-x-12 group-hover:rotate-6">
+        <img src="https://res.cloudinary.com/da4xw9ois/image/upload/v1777004667/photo-1743865001634-0bf8a22b94cf_vwmtbo.jpg"
+             class="h-64 transition-transform duration-700 group-hover:translate-x-12 group-hover:rotate-6">
     </div>
 </section>
 
-<!-- 5. TRENDING PRODUCTS — DB connected -->
+<!-- 5. TRENDING PRODUCTS -->
 <section id="shop" class="py-20 container mx-auto px-6 border-t border-white/10">
     <div class="flex justify-between items-center mb-12">
         <h2 class="text-3xl font-bold text-white font-serif">Trending</h2>
-        <a href="#" class="text-accent-hover font-bold hover:underline">View All →</a>
+        <a href="{% url 'product_list' %}" class="text-accent-hover font-bold hover:underline">View All →</a>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-      {% for product in trending_products %}
+        {% for product in trending_products %}
         {% with variant=product.active_variant %}
-        <div class="bg-card-bg p-6 rounded-3xl transition hover:-translate-y-2 group shadow-xl">
-            <div class="h-48 bg-white/40 rounded-xl mb-4 overflow-hidden">
+        <div class="bg-card-bg rounded-3xl transition hover:-translate-y-2 group shadow-xl overflow-hidden flex flex-col">
+
+            <!-- Image — clicking goes to detail -->
+            <a href="{% url 'product_detail' product.slug %}" class="block h-48 bg-white/40 overflow-hidden">
                 {% if variant and variant.primary_image %}
                 <img src="{{ variant.primary_image.image.url }}"
                      alt="{{ product.name }}"
                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                {% else %}
+                <div class="w-full h-full flex items-center justify-center">
+                    <i class="bi bi-image text-4xl text-site-bg/20"></i>
+                </div>
                 {% endif %}
-            </div>
-            <div class="flex justify-between items-center">
-                <h3 class="font-bold text-site-bg">{{ product.name }}</h3>
-                <i class="bi bi-heart hover:text-red-500 cursor-pointer text-site-bg"></i>
-            </div>
-            <div class="flex text-yellow-600 my-2 text-xs">
-                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-            </div>
-            <div class="flex justify-between items-center mt-4">
-                <span class="font-bold text-lg text-site-bg">
-                    {% if product.min_price %}₹{{ product.min_price }}{% else %}—{% endif %}
-                </span>
-                <button class="bg-site-bg text-white p-3 rounded-full hover:bg-black transition">
-                    <i class="bi bi-cart"></i>
-                </button>
+            </a>
+
+            <div class="p-6 flex flex-col flex-1">
+                <div class="flex justify-between items-start mb-2">
+                    <a href="{% url 'product_detail' product.slug %}"
+                       class="font-bold text-site-bg hover:text-site-bg/70 transition leading-tight">
+                        {{ product.name }}
+                    </a>
+                    <!-- Wishlist toggle -->
+                    <form method="POST" action="{% url 'toggle_wishlist' product.pk %}" class="flex-shrink-0 ml-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <button type="submit" class="text-site-bg hover:text-red-500 transition">
+                            <i class="bi {% if product.pk in wishlist_ids %}bi-heart-fill text-red-500{% else %}bi-heart{% endif %}"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Rating -->
+                {% if product.avg_rating %}
+                <div class="flex items-center gap-1 my-1">
+                    {% for i in "12345" %}
+                    <i class="bi bi-star-fill text-xs {% if forloop.counter <= product.avg_rating %}text-yellow-500{% else %}text-gray-300{% endif %}"></i>
+                    {% endfor %}
+                    <span class="text-xs text-site-bg/50 ml-1">({{ product.review_count }})</span>
+                </div>
+                {% else %}
+                <div class="flex items-center gap-1 my-1">
+                    {% for i in "12345" %}
+                    <i class="bi bi-star text-xs text-gray-300"></i>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="flex justify-between items-center mt-auto pt-3">
+                    <div>
+                        {% if product.has_discount and product.min_discounted_price %}
+                        <span class="font-bold text-lg text-site-bg">₹{{ product.min_discounted_price }}</span>
+                        <span class="text-xs text-site-bg/40 line-through ml-1">₹{{ product.min_price }}</span>
+                        {% else %}
+                        <span class="font-bold text-lg text-site-bg">
+                            {% if product.min_price %}₹{{ product.min_price }}{% else %}—{% endif %}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'product_detail' product.slug %}"
+                       class="bg-site-bg text-white p-3 rounded-full hover:bg-black transition"
+                       title="View product">
+                        <i class="bi bi-eye text-sm"></i>
+                    </a>
+                </div>
             </div>
         </div>
         {% endwith %}
@@ -102,41 +157,79 @@
     </div>
 </section>
 
-<!-- 6. FEATURED PRODUCTS — DB connected -->
+<!-- 6. FEATURED PRODUCTS -->
 <section class="py-20 container mx-auto px-6 border-t border-white/10">
     <div class="flex justify-between items-center mb-12">
         <h2 class="text-3xl font-bold text-white font-serif">Featured</h2>
-        <a href="#" class="text-accent-hover font-bold hover:underline">View All →</a>
+        <a href="{% url 'product_list' %}" class="text-accent-hover font-bold hover:underline">View All →</a>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
         {% for product in featured_products %}
-        <div class="bg-card-bg p-6 rounded-3xl transition hover:-translate-y-2 group shadow-xl">
-            <div class="h-48 bg-white/40 rounded-xl mb-4 overflow-hidden">
-                {% with first_variant=product.variants.first %}
-                {% if first_variant and first_variant.images.first %}
-                <img src="{{ first_variant.images.first.image.url }}"
+        {% with variant=product.active_variant %}
+        <div class="bg-card-bg rounded-3xl transition hover:-translate-y-2 group shadow-xl overflow-hidden flex flex-col">
+
+            <a href="{% url 'product_detail' product.slug %}" class="block h-48 bg-white/40 overflow-hidden">
+                {% if variant and variant.primary_image %}
+                <img src="{{ variant.primary_image.image.url }}"
                      alt="{{ product.name }}"
                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                {% else %}
+                <div class="w-full h-full flex items-center justify-center">
+                    <i class="bi bi-image text-4xl text-site-bg/20"></i>
+                </div>
                 {% endif %}
-                {% endwith %}
-            </div>
-            <div class="flex justify-between items-center">
-                <h3 class="font-bold text-site-bg">{{ product.name }}</h3>
-                <i class="bi bi-heart hover:text-red-500 cursor-pointer text-site-bg"></i>
-            </div>
-            <div class="flex text-yellow-600 my-2 text-xs">
-                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-            </div>
-            <div class="flex justify-between items-center mt-4">
-                <span class="font-bold text-lg text-site-bg">
-                    {% if product.min_price %}₹{{ product.min_price }}{% else %}—{% endif %}
-                </span>
-                <button class="bg-site-bg text-white p-3 rounded-full hover:bg-black transition">
-                    <i class="bi bi-cart"></i>
-                </button>
+            </a>
+
+            <div class="p-6 flex flex-col flex-1">
+                <div class="flex justify-between items-start mb-2">
+                    <a href="{% url 'product_detail' product.slug %}"
+                       class="font-bold text-site-bg hover:text-site-bg/70 transition leading-tight">
+                        {{ product.name }}
+                    </a>
+                    <form method="POST" action="{% url 'toggle_wishlist' product.pk %}" class="flex-shrink-0 ml-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <button type="submit" class="text-site-bg hover:text-red-500 transition">
+                            <i class="bi {% if product.pk in wishlist_ids %}bi-heart-fill text-red-500{% else %}bi-heart{% endif %}"></i>
+                        </button>
+                    </form>
+                </div>
+
+                {% if product.avg_rating %}
+                <div class="flex items-center gap-1 my-1">
+                    {% for i in "12345" %}
+                    <i class="bi bi-star-fill text-xs {% if forloop.counter <= product.avg_rating %}text-yellow-500{% else %}text-gray-300{% endif %}"></i>
+                    {% endfor %}
+                    <span class="text-xs text-site-bg/50 ml-1">({{ product.review_count }})</span>
+                </div>
+                {% else %}
+                <div class="flex items-center gap-1 my-1">
+                    {% for i in "12345" %}
+                    <i class="bi bi-star text-xs text-gray-300"></i>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="flex justify-between items-center mt-auto pt-3">
+                    <div>
+                        {% if product.has_discount and product.min_discounted_price %}
+                        <span class="font-bold text-lg text-site-bg">₹{{ product.min_discounted_price }}</span>
+                        <span class="text-xs text-site-bg/40 line-through ml-1">₹{{ product.min_price }}</span>
+                        {% else %}
+                        <span class="font-bold text-lg text-site-bg">
+                            {% if product.min_price %}₹{{ product.min_price }}{% else %}—{% endif %}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'product_detail' product.slug %}"
+                       class="bg-site-bg text-white p-3 rounded-full hover:bg-black transition"
+                       title="View product">
+                        <i class="bi bi-eye text-sm"></i>
+                    </a>
+                </div>
             </div>
         </div>
+        {% endwith %}
         {% empty %}
         <p class="text-white/40 col-span-4 text-center">No featured products available.</p>
         {% endfor %}
@@ -146,9 +239,18 @@
 <!-- 7. SITE FEATURES -->
 <section class="py-24 border-t border-white/10">
     <div class="container mx-auto px-6 grid md:grid-cols-3 gap-8">
-        <div class="bg-card-bg p-10 rounded-2xl text-center"><h4 class="font-bold text-site-bg text-xl mb-2">Quality</h4><p class="text-sm text-site-bg/80">Premium materials</p></div>
-        <div class="bg-card-bg p-10 rounded-2xl text-center"><h4 class="font-bold text-site-bg text-xl mb-2">Custom</h4><p class="text-sm text-site-bg/80">Design your own</p></div>
-        <div class="bg-card-bg p-10 rounded-2xl text-center"><h4 class="font-bold text-site-bg text-xl mb-2">Fast</h4><p class="text-sm text-site-bg/80">48-hour dispatch</p></div>
+        <div class="bg-card-bg p-10 rounded-2xl text-center">
+            <h4 class="font-bold text-site-bg text-xl mb-2">Quality</h4>
+            <p class="text-sm text-site-bg/80">Premium materials</p>
+        </div>
+        <div class="bg-card-bg p-10 rounded-2xl text-center">
+            <h4 class="font-bold text-site-bg text-xl mb-2">Custom</h4>
+            <p class="text-sm text-site-bg/80">Design your own</p>
+        </div>
+        <div class="bg-card-bg p-10 rounded-2xl text-center">
+            <h4 class="font-bold text-site-bg text-xl mb-2">Fast</h4>
+            <p class="text-sm text-site-bg/80">48-hour dispatch</p>
+        </div>
     </div>
 </section>
 
@@ -156,4 +258,5 @@
     @keyframes slow-pan { 0% { transform: scale(1); } 100% { transform: scale(1.08); } }
     .animate-slow-pan { animation: slow-pan 20s infinite alternate; }
 </style>
+
 {% endblock %}
