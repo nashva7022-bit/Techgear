@@ -206,7 +206,7 @@ class Product(models.Model):
             discount_percentage__gt=0
         ).exists()
 
-    # models.py inside the Product class
+    
 
     @property
     def active_variant(self):

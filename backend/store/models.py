@@ -5,12 +5,10 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 from cloudinary.models import CloudinaryField
-# ──────────────────────────────────────────
+
 # CART
 # One cart per user.
-# Created automatically when user first
-# adds a product to cart.
-# ──────────────────────────────────────────
+
 
 class Cart(models.Model):
     user = models.OneToOneField(
@@ -49,9 +47,8 @@ class Cart(models.Model):
         return any(not item.is_available for item in self.items.all())
 
 
-# ──────────────────────────────────────────
 # CART ITEM
-# ──────────────────────────────────────────
+
 
 class CartItem(models.Model):
     cart     = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
@@ -149,12 +146,9 @@ class CartItem(models.Model):
         return ''
 
 
-# ──────────────────────────────────────────
+
 # WISHLIST
-# One wishlist per user.
-# Stores products (not variants) —
-# user picks variant when they move to cart.
-# ──────────────────────────────────────────
+
 
 class Wishlist(models.Model):
     user       = models.OneToOneField(
@@ -172,11 +166,8 @@ class Wishlist(models.Model):
         return self.items.count()
 
 
-# ──────────────────────────────────────────
 # WISHLIST ITEM
-# Stores a product in the wishlist.
-# unique_together prevents duplicates.
-# ──────────────────────────────────────────
+
 
 class WishlistItem(models.Model):
     wishlist = models.ForeignKey(

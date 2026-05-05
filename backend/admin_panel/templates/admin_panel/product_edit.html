@@ -340,7 +340,7 @@
       <div style="padding:24px;display:flex;flex-direction:column;gap:20px;">
 
         {% for variant in existing_variants %}
-        {% with prefix="existing_variant_"|add:variant.pk|stringformat:"s" %}
+        {% with pk_str=variant.pk|stringformat:"s" %}{% with prefix="existing_variant_"|add:pk_str %}
         <div class="variant-card" id="evc_{{ variant.pk }}">
 
           <div class="variant-header">
@@ -555,7 +555,7 @@
           </div>
 
         </div>
-        {% endwith %}
+        {% endwith %}{% endwith %}
         {% empty %}
         <div class="empty-state">
           <p style="font-size:12px;font-weight:600;color:#d1d5db;">No existing variants found.</p>

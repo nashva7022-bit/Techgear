@@ -360,8 +360,8 @@ def _save_variants(product, post_data, files):
 
 
 def _handle_existing_variants(request, post_data, files, existing_variants):
-    has_errors = False
-
+    
+    has_errors = False 
     for variant in existing_variants:
         prefix = f'existing_variant_{variant.pk}'
 
