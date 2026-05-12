@@ -57,6 +57,10 @@ INSTALLED_APPS = [
     'admin_panel',
     'products',
     'store',
+    'orders',
+    'admin_orders',
+    
+    
 
     # Third-party Apps
     'allauth',

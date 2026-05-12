@@ -357,14 +357,14 @@
         </div>
 
         {% if cart.has_unavailable or cart.has_out_of_stock %}
-          <button class="checkout-btn" disabled>
+          <button class="checkout-btn">
             <i class="bi bi-exclamation-circle"></i> Resolve Issues First
           </button>
           <p class="text-[11px] text-white/30 text-center mt-3 leading-relaxed">
             Remove unavailable or out-of-stock items to proceed.
           </p>
         {% else %}
-          <a href="#" class="checkout-btn">
+          <a href="{% url 'orders:checkout' %}" class="checkout-btn">
             <i class="bi bi-lock-fill text-xs"></i> Proceed to Checkout
           </a>
         {% endif %}

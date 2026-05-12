@@ -1,0 +1,447 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Orders — TechGear{% endblock %}
+
+{% block content %}
+
+<style>
+  :root {
+    --teal:     #2F4F4F;
+    --teal-mid: #557373;
+    --card:     #DFE5F3;
+    --accent:   #F2EFEA;
+  }
+
+  /* ── Order card ── */
+  .order-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .order-card:hover {
+    border-color: rgba(255,255,255,0.18);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+
+  /* ── Order card header ── */
+  .order-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* ── Status badge ── */
+  .status-badge {
+    font-size: 10px; font-weight: 800;
+    padding: 4px 12px;
+    border-radius: 99px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+  .status-pending       { background: rgba(251,191,36,0.12);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+  .status-shipped       { background: rgba(59,130,246,0.12);  color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
+  .status-out_for_delivery { background: rgba(168,85,247,0.12); color: #c084fc; border: 1px solid rgba(168,85,247,0.25); }
+  .status-delivered     { background: rgba(34,197,94,0.12);   color: #4ade80; border: 1px solid rgba(34,197,94,0.25); }
+  .status-cancelled     { background: rgba(239,68,68,0.12);   color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+
+  /* ── Item row ── */
+  .item-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .item-row:last-child { border-bottom: none; }
+
+  .item-img {
+    width: 60px; height: 60px;
+    border-radius: 12px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.06);
+  }
+  .item-img-placeholder {
+    width: 60px; height: 60px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.06);
+    border: 1px dashed rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ── Item status pill ── */
+  .item-status-pill {
+    font-size: 9px; font-weight: 800;
+    padding: 2px 8px; border-radius: 99px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .item-active    { background: rgba(34,197,94,0.1);  color: #4ade80;  border: 1px solid rgba(34,197,94,0.2); }
+  .item-cancelled { background: rgba(239,68,68,0.1);  color: #f87171;  border: 1px solid rgba(239,68,68,0.2); }
+  .item-returned  { background: rgba(168,85,247,0.1); color: #c084fc;  border: 1px solid rgba(168,85,247,0.2); }
+
+  /* ── Custom tag ── */
+  .custom-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 9px; font-weight: 700;
+    padding: 2px 8px; border-radius: 99px;
+    background: rgba(124,58,237,0.12);
+    color: #a78bfa;
+    border: 1px solid rgba(124,58,237,0.2);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+
+  /* ── View detail btn ── */
+  .view-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: transparent;
+    color: rgba(255,255,255,0.6);
+    font-size: 11px; font-weight: 700;
+    text-decoration: none;
+    transition: all 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .view-btn:hover {
+    border-color: rgba(255,255,255,0.35);
+    color: #fff;
+    background: rgba(255,255,255,0.06);
+  }
+
+  /* ── Search input ── */
+  .search-input {
+    width: 100%;
+    padding: 11px 40px 11px 40px;
+    border-radius: 12px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.07);
+    color: #fff; font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .search-input::placeholder { color: rgba(255,255,255,0.3); }
+  .search-input:focus {
+    border-color: rgba(255,255,255,0.35);
+    background: rgba(255,255,255,0.1);
+  }
+
+  /* ── Pagination ── */
+  .page-item {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .page-inactive {
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.6);
+  }
+  .page-inactive:hover { background: rgba(255,255,255,0.15); color: #fff; }
+  .page-active {
+    background: var(--card);
+    color: var(--teal);
+    font-weight: 800;
+  }
+
+  /* ── Empty state ── */
+  .empty-wrap {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 80px 20px; text-align: center;
+  }
+  .empty-icon {
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  /* breadcrumb */
+  .breadcrumb-sep { color: rgba(255,255,255,0.25); margin: 0 6px; }
+</style>
+
+<!-- Breadcrumb -->
+<div class="container mx-auto px-6 pt-4 pb-2">
+  <nav class="flex items-center text-xs font-semibold text-white/40 flex-wrap">
+    <a href="{% url 'home' %}" class="hover:text-white transition">Home</a>
+    <span class="breadcrumb-sep">/</span>
+    <span class="text-white/70">My Orders</span>
+  </nav>
+</div>
+
+<div class="container mx-auto px-6 py-8">
+
+  <!-- Page header -->
+  <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
+    <div>
+      <h1 class="text-3xl font-bold font-serif text-white">My Orders</h1>
+      <p class="text-white/40 text-sm mt-1">
+        {{ page_obj.paginator.count }} order{{ page_obj.paginator.count|pluralize }} total
+      </p>
+    </div>
+    <a href="{% url 'product_list' %}"
+       class="view-btn">
+      <i class="bi bi-bag text-xs"></i> Continue Shopping
+    </a>
+  </div>
+
+  <!-- Search -->
+  <form method="GET" action="{% url 'orders:order_list' %}" class="mb-8">
+    <div class="relative max-w-md">
+      <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-white/35 text-sm"></i>
+      <input type="text"
+             name="search"
+             value="{{ search }}"
+             placeholder="Search by order ID or product name…"
+             class="search-input">
+      {% if search %}
+      <a href="{% url 'orders:order_list' %}"
+         class="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/35 hover:text-white transition">
+        <i class="bi bi-x-lg text-xs"></i>
+      </a>
+      {% endif %}
+    </div>
+  </form>
+
+  {% if page_obj.object_list %}
+
+  <!-- Orders list -->
+  <div class="space-y-5">
+    {% for order in page_obj %}
+    <div class="order-card">
+
+      <!-- ── Card header ── -->
+      <div class="order-header">
+
+        <!-- Left: order number + date -->
+        <div class="flex items-center gap-4 flex-wrap">
+          <div>
+            <p class="text-[10px] font-bold text-white/35 uppercase tracking-widest mb-0.5">Order ID</p>
+            <p class="text-sm font-black text-white font-mono tracking-wider">{{ order.order_number }}</p>
+          </div>
+          <div class="w-px h-8 bg-white/10 hidden sm:block"></div>
+          <div>
+            <p class="text-[10px] font-bold text-white/35 uppercase tracking-widest mb-0.5">Placed on</p>
+            <p class="text-sm font-semibold text-white">{{ order.created_at|date:"d M Y" }}</p>
+          </div>
+          <div class="w-px h-8 bg-white/10 hidden sm:block"></div>
+          <div>
+            <p class="text-[10px] font-bold text-white/35 uppercase tracking-widest mb-0.5">Total</p>
+            <p class="text-sm font-black text-white">₹{{ order.total_amount }}</p>
+          </div>
+          <div class="w-px h-8 bg-white/10 hidden sm:block"></div>
+          <div>
+            <p class="text-[10px] font-bold text-white/35 uppercase tracking-widest mb-0.5">Payment</p>
+            <p class="text-xs font-semibold text-white/60">{{ order.get_payment_method_display }}</p>
+          </div>
+        </div>
+
+        <!-- Right: status + view button -->
+        <div class="flex items-center gap-3">
+          <span class="status-badge status-{{ order.status }}">
+            {{ order.get_status_display }}
+          </span>
+          <a href="{% url 'orders:order_detail' order.order_number %}" class="view-btn">
+            View Details <i class="bi bi-arrow-right text-[10px]"></i>
+          </a>
+        </div>
+
+      </div>
+
+      <!-- ── Items ── -->
+      {% for item in order.items.all %}
+      <div class="item-row">
+
+        <!-- Image -->
+        {% if item.variant and item.variant.images.first %}
+          <img src="{{ item.variant.images.first.image.url }}"
+               alt="{{ item.product_name }}"
+               class="item-img">
+        {% else %}
+          <div class="item-img-placeholder">
+            <i class="bi bi-image text-white/20 text-lg"></i>
+          </div>
+        {% endif %}
+
+        <!-- Details -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start justify-between gap-3 flex-wrap">
+            <div class="min-w-0">
+
+              <!-- Product name -->
+              <p class="text-sm font-bold text-white leading-snug line-clamp-1 mb-1">
+                {{ item.product_name }}
+              </p>
+
+              <!-- Variant details -->
+              <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+                {% if item.device_model %}
+                <span class="text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+                  {{ item.device_model }}
+                </span>
+                {% endif %}
+                {% if item.case_type %}
+                <span class="text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+                  {{ item.case_type }}
+                </span>
+                {% endif %}
+                {% if item.color %}
+                <span class="flex items-center gap-1 text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+                  {% if item.color_code %}
+                  <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 border border-white/20"
+                        style="background: {{ item.color_code }}"></span>
+                  {% endif %}
+                  {{ item.color }}
+                </span>
+                {% endif %}
+
+                {# ── CUSTOMIZATION INDICATOR ── #}
+                {% if item.custom_text or item.custom_image %}
+                <span class="custom-tag">
+                  <i class="bi bi-palette2 text-[8px]"></i> Personalised
+                </span>
+                {% endif %}
+              </div>
+
+              {# ── CUSTOMIZATION DETAIL ── #}
+              {% if item.custom_text %}
+              <p class="text-[10px] text-purple-400/70 italic mb-1">
+                <i class="bi bi-type mr-1"></i>"{{ item.custom_text }}"
+              </p>
+              {% endif %}
+              {% if item.custom_image %}
+              <p class="text-[10px] text-purple-400/60">
+                <i class="bi bi-image mr-1"></i>Custom image attached
+              </p>
+              {% endif %}
+
+            </div>
+
+            <!-- Price + qty + item status -->
+            <div class="text-right flex-shrink-0">
+              <p class="text-sm font-black text-white">₹{{ item.subtotal }}</p>
+              <p class="text-[10px] text-white/35 mt-0.5">
+                ₹{{ item.unit_price }} × {{ item.quantity }}
+              </p>
+              <div class="mt-1.5">
+                <span class="item-status-pill item-{{ item.item_status }}">
+                  {{ item.get_item_status_display }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      {% endfor %}
+
+      <!-- ── Card footer ── -->
+      <div class="px-5 py-3 bg-white/3 border-t border-white/5 flex items-center justify-between flex-wrap gap-3">
+        <div class="flex items-center gap-4">
+          <span class="text-[10px] text-white/30 font-medium">
+            {{ order.items.count }} item{{ order.items.count|pluralize }}
+          </span>
+          {% if order.discount_amount > 0 %}
+          <span class="text-[10px] text-green-400 font-semibold">
+            <i class="bi bi-tag-fill mr-1"></i>Saved ₹{{ order.discount_amount }}
+          </span>
+          {% endif %}
+          {% if order.shipping_charge == 0 %}
+          <span class="text-[10px] text-white/30">
+            <i class="bi bi-truck mr-1"></i>Free shipping
+          </span>
+          {% endif %}
+        </div>
+
+        {% if order.status == 'delivered' %}
+        <a href="{% url 'orders:download_invoice' order.order_number %}"
+           class="flex items-center gap-1.5 text-[10px] font-bold text-white/40 hover:text-white transition">
+          <i class="bi bi-download text-xs"></i> Download Invoice
+        </a>
+        {% endif %}
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- ── Pagination ── -->
+  {% if page_obj.paginator.num_pages > 1 %}
+  <div class="flex items-center justify-center gap-2 mt-10 pt-6 border-t border-white/8">
+
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}"
+       class="page-item page-inactive">
+      <i class="bi bi-chevron-left text-xs"></i>
+    </a>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}
+        <span class="page-item page-active">{{ num }}</span>
+      {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}"
+           class="page-item page-inactive">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}"
+       class="page-item page-inactive">
+      <i class="bi bi-chevron-right text-xs"></i>
+    </a>
+    {% endif %}
+
+  </div>
+  {% endif %}
+
+  {% else %}
+
+  <!-- ── Empty state ── -->
+  <div class="empty-wrap">
+    <div class="empty-icon">
+      <i class="bi bi-bag text-4xl text-white/20"></i>
+    </div>
+    {% if search %}
+      <h2 class="text-xl font-bold font-serif text-white mb-2">No orders found</h2>
+      <p class="text-white/40 text-sm mb-6 max-w-xs leading-relaxed">
+        No orders match "{{ search }}". Try searching by order ID or product name.
+      </p>
+      <a href="{% url 'orders:order_list' %}"
+         class="view-btn">
+        <i class="bi bi-x-circle text-xs"></i> Clear Search
+      </a>
+    {% else %}
+      <h2 class="text-xl font-bold font-serif text-white mb-2">No orders yet</h2>
+      <p class="text-white/40 text-sm mb-6 max-w-xs leading-relaxed">
+        You haven't placed any orders yet. Start shopping and your orders will appear here.
+      </p>
+      <a href="{% url 'product_list' %}"
+         class="inline-flex items-center gap-2 px-7 py-3.5 rounded-14px rounded-xl
+                bg-white text-[var(--teal)] font-bold text-sm hover:bg-[var(--accent)] transition">
+        <i class="bi bi-bag-plus text-sm"></i> Start Shopping
+      </a>
+    {% endif %}
+  </div>
+
+  {% endif %}
+
+</div>
+
+{% endblock %}

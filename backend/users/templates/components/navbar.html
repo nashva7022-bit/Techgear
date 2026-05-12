@@ -76,7 +76,7 @@
                         <a href="{% url 'dashboard' %}" class="flex items-center px-5 py-3 text-sm hover:bg-gray-50"><i class="bi bi-person mr-3"></i> Profile</a>
                         <a href="#" class="flex items-center px-5 py-3 text-sm hover:bg-gray-50"><i class="bi bi-wallet2 mr-3"></i> Wallet</a>
                         <a href="#" class="flex items-center px-5 py-3 text-sm hover:bg-gray-50"><i class="bi bi-question-circle mr-3"></i> FAQs</a>
-                        <a href="#" class="flex items-center px-5 py-3 text-sm hover:bg-gray-50"><i class="bi bi- mr-3"></i> My Orders</a>
+                        <a href="{% url 'orders:order_list' %}" class="flex items-center px-5 py-3 text-sm hover:bg-gray-50"><i class="bi bi- mr-3"></i> My Orders</a>
                         <form action="{% url 'logout' %}" method="POST" class="border-t">
                             {% csrf_token %}
                             <button class="w-full text-left px-5 py-3 text-sm text-red-500 hover:bg-red-50"><i class="bi bi-box-arrow-right mr-3"></i> Logout</button>

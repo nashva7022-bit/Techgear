@@ -47,8 +47,7 @@ class Address(models.Model):
     postal_code = models.CharField(max_length=20)
     country = models.CharField(max_length=100, default="India")
     is_default = models.BooleanField(default=False)
-    address_label = models.CharField(max_length=50, default="Home") # Add this
-    address_line_1 = models.CharField(max_length=255)
+    
     created_at = models.DateTimeField(default=timezone.now)     
     updated_at = models.DateTimeField(auto_now=True)
 

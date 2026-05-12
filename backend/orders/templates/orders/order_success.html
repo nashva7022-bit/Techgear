@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order Placed — TechGear{% endblock %}
+
+{% block content %}
+
+<style>
+  :root {
+    --teal:     #2F4F4F;
+    --teal-mid: #557373;
+    --card:     #DFE5F3;
+    --accent:   #F2EFEA;
+  }
+
+  /* ── Success animation ── */
+  @keyframes popIn {
+    0%   { transform: scale(0.5); opacity: 0; }
+    70%  { transform: scale(1.1); }
+    100% { transform: scale(1);   opacity: 1; }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes checkDraw {
+    from { stroke-dashoffset: 100; }
+    to   { stroke-dashoffset: 0; }
+  }
+  @keyframes pulse-ring {
+    0%   { transform: scale(1);    opacity: 0.4; }
+    100% { transform: scale(1.6);  opacity: 0; }
+  }
+
+  .success-icon-wrap {
+    position: relative;
+    width: 100px; height: 100px;
+    margin: 0 auto 28px;
+    animation: popIn 0.5s cubic-bezier(.22,.68,0,1.2) 0.1s both;
+  }
+  .success-icon-wrap::before,
+  .success-icon-wrap::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.2);
+    animation: pulse-ring 1.8s ease-out 0.6s infinite;
+  }
+  .success-icon-wrap::after {
+    inset: -16px;
+    animation-delay: 0.9s;
+  }
+  .success-icon {
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: 2px solid rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .check-svg {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: checkDraw 0.5s ease 0.5s forwards;
+  }
+
+  .fade-up-1 { animation: fadeUp 0.5s ease 0.3s both; }
+  .fade-up-2 { animation: fadeUp 0.5s ease 0.45s both; }
+  .fade-up-3 { animation: fadeUp 0.5s ease 0.6s both; }
+  .fade-up-4 { animation: fadeUp 0.5s ease 0.75s both; }
+  .fade-up-5 { animation: fadeUp 0.5s ease 0.9s both; }
+
+  /* ── Order info card ── */
+  .order-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 24px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* ── Status step ── */
+  .status-step {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .status-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Action buttons ── */
+  .action-btn-primary {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 14px 28px;
+    border-radius: 14px;
+    background: #fff;
+    color: var(--teal);
+    font-size: 13px; font-weight: 800;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.1s;
+    border: none;
+  }
+  .action-btn-primary:hover { background: var(--accent); transform: translateY(-1px); }
+
+  .action-btn-secondary {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 14px 28px;
+    border-radius: 14px;
+    border: 1.5px solid rgba(255,255,255,0.2);
+    background: transparent;
+    color: rgba(255,255,255,0.7);
+    font-size: 13px; font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .action-btn-secondary:hover {
+    border-color: rgba(255,255,255,0.4);
+    color: #fff;
+    background: rgba(255,255,255,0.05);
+    transform: translateY(-1px);
+  }
+
+  /* ── Divider ── */
+  .divider { height: 1px; background: rgba(255,255,255,0.08); margin: 16px 0; }
+</style>
+
+<div class="container mx-auto px-6 py-16">
+  <div class="max-w-lg mx-auto text-center">
+
+    <!-- ── Success icon ── -->
+    <div class="success-icon-wrap">
+      <div class="success-icon">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <polyline class="check-svg"
+                    points="10,26 20,36 38,14"
+                    stroke="white" stroke-width="4"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- ── Heading ── -->
+    <h1 class="text-3xl font-bold font-serif text-white mb-3 fade-up-1">
+      Order Placed Successfully!
+    </h1>
+    <p class="text-white/50 text-sm leading-relaxed mb-8 fade-up-2">
+      Thank you for shopping with TechGear. Your order has been confirmed
+      and will be dispatched within 48 hours.
+    </p>
+
+    <!-- ── Order info card ── -->
+    <div class="order-card fade-up-3">
+
+      <!-- Order number -->
+      <div class="flex items-center justify-between mb-4">
+        <div class="text-left">
+          <p class="text-[10px] font-bold text-white/35 uppercase tracking-widest mb-0.5">Order ID</p>
+          <p class="text-base font-black text-white font-mono tracking-wider">{{ order.order_number }}</p>
+        </div>
+        <div class="text-right">
+          <p class="text-[10px] font-bold text-white/35 uppercase tracking-widest mb-0.5">Date</p>
+          <p class="text-sm font-semibold text-white">{{ order.created_at|date:"d M Y" }}</p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Order items summary -->
+      <div class="space-y-2 mb-4">
+        {% for item in order.items.all %}
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 min-w-0">
+            {% if item.color_code %}
+            <span class="w-3 h-3 rounded-full flex-shrink-0 border border-white/20"
+                  style="background: {{ item.color_code }}"></span>
+            {% endif %}
+            <span class="text-xs text-white/60 truncate">
+              {{ item.product_name }}
+              {% if item.device_model %} · {{ item.device_model }}{% endif %}
+              <span class="text-white/30"> × {{ item.quantity }}</span>
+            </span>
+          </div>
+          <span class="text-xs font-semibold text-white flex-shrink-0 ml-3">₹{{ item.subtotal }}</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Totals -->
+      <div class="space-y-1.5 mb-4">
+        {% if order.discount_amount > 0 %}
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-green-400">Discount saved</span>
+          <span class="text-xs font-semibold text-green-400">− ₹{{ order.discount_amount }}</span>
+        </div>
+        {% endif %}
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-white/50">Shipping</span>
+          <span class="text-xs font-semibold text-green-400">Free</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-bold text-white">Total Paid</span>
+          <span class="text-lg font-black text-white">₹{{ order.total_amount }}</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Payment + status -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="bi bi-cash-coin text-white/40 text-sm"></i>
+          <span class="text-xs text-white/50">Cash on Delivery</span>
+        </div>
+        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full
+                     bg-yellow-400/15 text-yellow-400 border border-yellow-400/20 uppercase">
+          Pending
+        </span>
+      </div>
+
+      <!-- Delivery address -->
+      <div class="mt-4 p-3 rounded-xl bg-white/5 border border-white/8 text-left">
+        <p class="text-[10px] font-bold text-white/35 uppercase tracking-widest mb-1.5">
+          Delivering to
+        </p>
+        <p class="text-xs font-semibold text-white">{{ order.shipping_full_name }}</p>
+        <p class="text-xs text-white/45 leading-relaxed mt-0.5">
+          {{ order.shipping_address_line_1 }}
+          {% if order.shipping_address_line_2 %}, {{ order.shipping_address_line_2 }}{% endif %},
+          {{ order.shipping_city }}, {{ order.shipping_state }} — {{ order.shipping_postal_code }}
+        </p>
+        <p class="text-xs text-white/35 mt-1">
+          <i class="bi bi-telephone mr-1"></i>{{ order.shipping_phone }}
+        </p>
+      </div>
+
+    </div>
+
+    <!-- ── What happens next ── -->
+    <div class="mt-8 fade-up-4">
+      <p class="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-4">What happens next</p>
+      <div class="flex items-center justify-center gap-0 max-w-sm mx-auto">
+
+        <div class="flex flex-col items-center gap-1.5 flex-1">
+          <div class="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
+            <i class="bi bi-box-seam text-white text-sm"></i>
+          </div>
+          <p class="text-[10px] text-white/40 font-semibold text-center">Packing</p>
+        </div>
+
+        <div class="h-px flex-1 bg-white/10 mb-5"></div>
+
+        <div class="flex flex-col items-center gap-1.5 flex-1">
+          <div class="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
+            <i class="bi bi-truck text-white text-sm"></i>
+          </div>
+          <p class="text-[10px] text-white/40 font-semibold text-center">Shipped</p>
+        </div>
+
+        <div class="h-px flex-1 bg-white/10 mb-5"></div>
+
+        <div class="flex flex-col items-center gap-1.5 flex-1">
+          <div class="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
+            <i class="bi bi-house-check text-white text-sm"></i>
+          </div>
+          <p class="text-[10px] text-white/40 font-semibold text-center">Delivered</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Action buttons ── -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mt-10 fade-up-5">
+      <a href="{% url 'orders:order_detail' order.order_number %}"
+         class="action-btn-primary w-full sm:w-auto">
+        <i class="bi bi-receipt text-sm"></i>
+        View Order Details
+      </a>
+      <a href="{% url 'product_list' %}"
+         class="action-btn-secondary w-full sm:w-auto">
+        <i class="bi bi-bag text-sm"></i>
+        Continue Shopping
+      </a>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

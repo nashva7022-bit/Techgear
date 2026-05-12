@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  This template is NOT a normal webpage template.
+  It does NOT extend base.html because weasyprint renders it
+  as a standalone HTML file and converts it to PDF.
+  If we extended base.html, weasyprint would try to load all
+  the navbar, footer, Tailwind CDN etc — which don't work in PDF.
+  So this is a completely self-contained HTML file with inline CSS only.
+  weasyprint reads this HTML string and converts it to a PDF file.
+-->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice — {{ order.order_number }}</title>
+  <style>
+    /* ── RESET & BASE ── */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    /* We use box-sizing: border-box so padding doesn't mess up widths.
+       Without this, adding padding to elements would make them wider
+       than expected and break the layout. */
+
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 12px;
+      color: #1a1a1a;
+      background: #ffffff;
+      line-height: 1.5;
+    }
+    /* We use system fonts (Helvetica, Arial) because weasyprint
+       doesn't have access to Google Fonts or CDN fonts.
+       If we used a Google Font, it would fall back to a default
+       font that might look inconsistent. */
+
+    /* ── PAGE SETUP ── */
+    @page {
+      size: A4;
+      margin: 20mm 18mm 20mm 18mm;
+    }
+      /* A4 is the standard invoice paper size.
+         margin sets the whitespace around the content on every page.
+         Without @page, weasyprint uses its own default margins
+         which might cut off content. */
+
+    @page {
+      @bottom-right {
+        content: "Page " counter(page) " of " counter(pages);
+        font-size: 9px;
+        color: #9ca3af;
+        /* Automatically adds page numbers like "Page 1 of 2"
+           at the bottom right of every page.
+           Without this, multi-page invoices have no page numbers. */
+      }
+    }
+
+    /* ── LAYOUT HELPERS ── */
+    .flex {
+      display: flex;
+    }
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+
+    /* ── TYPOGRAPHY ── */
+    .text-xs   { font-size: 10px; }
+    .text-sm   { font-size: 11px; }
+    .text-base { font-size: 13px; }
+    .text-lg   { font-size: 16px; }
+    .text-xl   { font-size: 20px; }
+    .text-2xl  { font-size: 24px; }
+
+    .font-bold   { font-weight: 700; }
+    .font-black  { font-weight: 900; }
+    .font-medium { font-weight: 500; }
+
+    .text-muted   { color: #6b7280; }
+    .text-light   { color: #9ca3af; }
+    .text-dark    { color: #111827; }
+    .text-green   { color: #16a34a; }
+    .text-red     { color: #dc2626; }
+    .text-purple  { color: #7c3aed; }
+
+    /* ── SPACING ── */
+    .mb-1  { margin-bottom: 4px; }
+    .mb-2  { margin-bottom: 8px; }
+    .mb-3  { margin-bottom: 12px; }
+    .mb-4  { margin-bottom: 16px; }
+    .mb-6  { margin-bottom: 24px; }
+    .mb-8  { margin-bottom: 32px; }
+    .mt-1  { margin-top: 4px; }
+    .mt-2  { margin-top: 8px; }
+    .mt-4  { margin-top: 16px; }
+    .mt-6  { margin-top: 24px; }
+
+    /* ── INVOICE HEADER ── */
+    .invoice-header {
+      padding-bottom: 24px;
+      border-bottom: 2px solid #1a1a1a;
+      margin-bottom: 28px;
+    }
+    /* The thick border at the top separates the brand header from
+       the rest of the invoice. Makes it look professional. */
+
+    .brand-name {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: #1a1a1a;
+    }
+
+    .brand-tagline {
+      font-size: 10px;
+      color: #9ca3af;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+
+    .invoice-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      text-align: right;
+      margin-bottom: 4px;
+    }
+
+    .invoice-number {
+      font-size: 18px;
+      font-weight: 900;
+      color: #1a1a1a;
+      text-align: right;
+      font-family: 'Courier New', monospace;
+      /* Monospace font for the order number looks clean and
+         professional — like a real invoice ID. */
+    }
+
+    /* ── META SECTION (date, status, payment) ── */
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+    }
+    /* 4-column grid shows: Order Date | Status | Payment | Items count
+       If we didn't use a grid here, all these details would be in a line
+       and hard to read. */
+
+    .meta-label {
+      font-size: 9px;
+      font-weight: 800;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 4px;
+    }
+
+    .meta-value {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+
+    /* ── ADDRESS SECTION ── */
+    .address-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+    /* Two columns: Bill To (user info) | Ship To (delivery address)
+       This is the standard invoice layout. */
+
+    .address-box {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .address-box-title {
+      font-size: 9px;
+      font-weight: 800;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    /* ── ITEMS TABLE ── */
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      /* border-collapse removes the double borders between cells.
+         Without this, each cell would have its own border and they'd
+         overlap, creating thick double lines. */
+      margin-bottom: 24px;
+    }
+
+    .items-table thead th {
+      font-size: 9px;
+      font-weight: 800;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 10px 12px;
+      background: #f3f4f6;
+      border-bottom: 1px solid #e5e7eb;
+      /* Header row has a grey background so it's clearly different
+         from the data rows. */
+    }
+
+    .items-table thead th:first-child { border-radius: 8px 0 0 0; }
+    .items-table thead th:last-child  { border-radius: 0 8px 0 0; }
+    /* Rounded corners on first and last header cells. */
+
+    .items-table tbody tr {
+      border-bottom: 1px solid #f3f4f6;
+      /* Light line between each row. Without this, rows blur together. */
+    }
+
+    .items-table tbody tr:last-child {
+      border-bottom: none;
+      /* No line after the last row — looks cleaner. */
+    }
+
+    .items-table tbody td {
+      padding: 12px 12px;
+      vertical-align: top;
+      /* vertical-align: top so if one cell has more text than another,
+         content starts from the top, not the middle. */
+    }
+
+    .items-table tbody tr:nth-child(even) {
+      background: #fafafa;
+      /* Alternating row colours (white/light grey) make long tables
+         much easier to read. Called "zebra striping". */
+    }
+
+    /* ── PRODUCT NAME & TAGS IN TABLE ── */
+    .product-name {
+      font-weight: 700;
+      font-size: 12px;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+
+    .variant-tag {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 600;
+      color: #6b7280;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin-right: 3px;
+      margin-top: 2px;
+    }
+
+    .custom-note {
+      font-size: 9px;
+      color: #7c3aed;
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    .item-cancelled-tag {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      color: #dc2626;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin-top: 3px;
+    }
+
+    .item-returned-tag {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      color: #7c3aed;
+      background: #f5f3ff;
+      border: 1px solid #ddd6fe;
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin-top: 3px;
+    }
+
+    /* ── TOTALS SECTION ── */
+    .totals-section {
+      display: flex;
+      justify-content: flex-end;
+      /* Totals are always right-aligned on invoices — standard convention. */
+      margin-bottom: 28px;
+    }
+
+    .totals-box {
+      width: 260px;
+      /* Fixed width so the totals table doesn't stretch full width
+         and looks like a proper receipt section. */
+    }
+
+    .totals-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 11px;
+    }
+
+    .totals-row:last-child {
+      border-bottom: none;
+    }
+
+    .totals-row.grand-total {
+      border-top: 2px solid #1a1a1a;
+      border-bottom: none;
+      padding-top: 10px;
+      margin-top: 4px;
+      /* The grand total row has a thick top border to separate it
+         visually — standard invoice design. */
+    }
+
+    .totals-label { color: #6b7280; }
+    .totals-value { font-weight: 700; color: #1a1a1a; }
+    .totals-value.discount { color: #16a34a; }
+
+    .savings-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-top: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #15803d;
+      text-align: center;
+    }
+    /* "You saved ₹X" badge — always nice to show on invoices. */
+
+    /* ── STATUS TIMELINE (compact for PDF) ── */
+    .timeline-section {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+    }
+
+    .timeline-section-title {
+      font-size: 9px;
+      font-weight: 800;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+    }
+
+    .timeline-log-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 10px;
+    }
+
+    .timeline-dot-pdf {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #d1d5db;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+
+    .timeline-dot-pdf.done { background: #4ade80; }
+
+    /* ── FOOTER ── */
+    .invoice-footer {
+      border-top: 1px solid #e5e7eb;
+      padding-top: 20px;
+      margin-top: 28px;
+    }
+
+    .footer-note {
+      font-size: 9px;
+      color: #9ca3af;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    /* ── PAGE BREAK ── */
+    .page-break {
+      page-break-before: always;
+      /* Forces content after this to start on a new page.
+         Useful if item list is very long and we want the totals
+         section to always start cleanly. */
+    }
+
+    /* ── STATUS STAMP ── */
+    .status-stamp {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      padding: 4px 14px;
+      border-radius: 6px;
+      border-width: 2px;
+      border-style: solid;
+    }
+    .stamp-delivered  { color: #15803d; border-color: #15803d; background: #f0fdf4; }
+    .stamp-cancelled  { color: #dc2626; border-color: #dc2626; background: #fef2f2; }
+    .stamp-pending    { color: #b45309; border-color: #b45309; background: #fffbeb; }
+    .stamp-shipped    { color: #1d4ed8; border-color: #1d4ed8; background: #eff6ff; }
+    .stamp-out_for_delivery { color: #6d28d9; border-color: #6d28d9; background: #f5f3ff; }
+
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════
+       INVOICE HEADER — Brand + Invoice number
+  ═══════════════════════════════════════════════════ -->
+  <div class="invoice-header flex-between">
+
+    <!-- Left: Brand -->
+    <div>
+      <div class="brand-name">TechGear</div>
+      <div class="brand-tagline">Precision Crafted Protection</div>
+      <div class="mt-2 text-muted text-xs">
+        <div>support@techgear.com</div>
+        <div>www.techgear.com</div>
+      </div>
+    </div>
+
+    <!-- Right: Invoice label + order number + status stamp -->
+    <div class="text-right">
+      <div class="invoice-title">Tax Invoice</div>
+      <div class="invoice-number">{{ order.order_number }}</div>
+      <div class="mt-2">
+        <span class="status-stamp stamp-{{ order.status }}">
+          {{ order.get_status_display }}
+        </span>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       META INFO — Date, payment, items count
+  ═══════════════════════════════════════════════════ -->
+  <div class="meta-grid">
+
+    <div>
+      <div class="meta-label">Order Date</div>
+      <div class="meta-value">{{ order.created_at|date:"d M Y" }}</div>
+      <div class="text-xs text-muted">{{ order.created_at|date:"h:i A" }}</div>
+    </div>
+
+    <div>
+      <div class="meta-label">Invoice Date</div>
+      <div class="meta-value">{% now "d M Y" %}</div>
+      
+    </div>
+
+    <div>
+      <div class="meta-label">Payment Method</div>
+      <div class="meta-value">{{ order.get_payment_method_display }}</div>
+    </div>
+
+    <div>
+      <div class="meta-label">Total Items</div>
+      <div class="meta-value">{{ items|length }} item{{ items|length|pluralize }}</div>
+    </div>
+
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       ADDRESSES — Bill To + Ship To
+  ═══════════════════════════════════════════════════ -->
+  <div class="address-grid">
+
+    <!-- Bill To — who placed the order -->
+    <div class="address-box">
+      <div class="address-box-title">Bill To</div>
+      <div class="font-bold text-dark mb-1">
+        {{ order.user.get_full_name|default:order.user.email }}
+      </div>
+      <div class="text-muted text-xs">{{ order.user.email }}</div>
+      {% if order.user.phone %}
+      <div class="text-muted text-xs">{{ order.user.phone }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Ship To — delivery address snapshot -->
+    <div class="address-box">
+      <div class="address-box-title">Ship To</div>
+      <div class="font-bold text-dark mb-1">{{ order.shipping_full_name }}</div>
+      <div class="text-muted text-xs">{{ order.shipping_address_line_1 }}</div>
+      {% if order.shipping_address_line_2 %}
+      <div class="text-muted text-xs">{{ order.shipping_address_line_2 }}</div>
+      {% endif %}
+      <div class="text-muted text-xs">
+        {{ order.shipping_city }}, {{ order.shipping_state }} — {{ order.shipping_postal_code }}
+      </div>
+      <div class="text-muted text-xs">{{ order.shipping_country }}</div>
+      <div class="text-muted text-xs mt-1">Ph: {{ order.shipping_phone }}</div>
+    </div>
+
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       ITEMS TABLE
+  ═══════════════════════════════════════════════════ -->
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th style="width:40%; text-align:left;">Product</th>
+        <th style="width:12%; text-align:center;">Qty</th>
+        <th style="width:16%; text-align:right;">Unit Price</th>
+        <th style="width:16%; text-align:right;">Subtotal</th>
+        <th style="width:16%; text-align:center;">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+
+        <!-- Product name + variant details -->
+        <td>
+          <div class="product-name">{{ item.product_name }}</div>
+
+          <!-- Variant tags -->
+          <div>
+            {% if item.device_model %}
+            <span class="variant-tag">{{ item.device_model }}</span>
+            {% endif %}
+            {% if item.case_type %}
+            <span class="variant-tag">{{ item.case_type }}</span>
+            {% endif %}
+            {% if item.color %}
+            <span class="variant-tag">{{ item.color }}</span>
+            {% endif %}
+          </div>
+
+          <!-- SKU -->
+          {% if item.variant_sku %}
+          <div class="text-xs text-light mt-1" style="font-family: monospace;">
+            SKU: {{ item.variant_sku }}
+          </div>
+          {% endif %}
+
+          <!-- Customization note -->
+          {% if item.custom_text %}
+          <div class="custom-note">✏ "{{ item.custom_text }}"</div>
+          {% endif %}
+          {% if item.custom_image %}
+          <div class="custom-note">🖼 Custom image attached</div>
+          {% endif %}
+        </td>
+
+        <!-- Quantity -->
+        <td style="text-align:center; color:#6b7280;">
+          {{ item.quantity }}
+        </td>
+
+        <!-- Unit price -->
+        <td style="text-align:right; font-weight:600;">
+          ₹{{ item.unit_price }}
+        </td>
+
+        <!-- Subtotal -->
+        <td style="text-align:right; font-weight:700;">
+          {% if item.item_status == 'cancelled' or item.item_status == 'returned' %}
+          <span style="text-decoration: line-through; color:#9ca3af;">
+            ₹{{ item.subtotal }}
+          </span>
+          <!-- Strikethrough price for cancelled/returned items.
+               The amount was not charged or was refunded. -->
+          {% else %}
+          ₹{{ item.subtotal }}
+          {% endif %}
+        </td>
+
+        <!-- Item status -->
+        <td style="text-align:center;">
+          {% if item.item_status == 'active' %}
+          <span style="font-size:9px; font-weight:800; color:#15803d;">Active</span>
+          {% elif item.item_status == 'cancelled' %}
+          <span class="item-cancelled-tag">Cancelled</span>
+          {% elif item.item_status == 'returned' %}
+          <span class="item-returned-tag">Returned</span>
+          {% endif %}
+        </td>
+
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+
+  <!-- ══════════════════════════════════════════════════
+       TOTALS — Right-aligned summary
+  ═══════════════════════════════════════════════════ -->
+  <div class="totals-section">
+    <div class="totals-box">
+
+      <div class="totals-row">
+        <span class="totals-label">Subtotal</span>
+        <span class="totals-value">₹{{ order.subtotal }}</span>
+      </div>
+
+      {% if order.discount_amount > 0 %}
+      <div class="totals-row">
+        <span class="totals-label">Discount</span>
+        <span class="totals-value discount">− ₹{{ order.discount_amount }}</span>
+      </div>
+      {% endif %}
+
+      <div class="totals-row">
+        <span class="totals-label">Shipping</span>
+        {% if order.shipping_charge == 0 %}
+        <span class="totals-value" style="color:#15803d;">FREE</span>
+        {% else %}
+        <span class="totals-value">₹{{ order.shipping_charge }}</span>
+        {% endif %}
+      </div>
+
+      <div class="totals-row grand-total">
+        <span style="font-weight:900; font-size:13px; color:#1a1a1a;">Total</span>
+        <span style="font-weight:900; font-size:15px; color:#1a1a1a;">₹{{ order.total_amount }}</span>
+      </div>
+
+      {% if order.discount_amount > 0 %}
+      <div class="savings-box">
+        🎉 You saved ₹{{ order.discount_amount }} on this order!
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       ORDER ACTIVITY LOG — Compact timeline for PDF
+  ═══════════════════════════════════════════════════ -->
+  {% if status_logs %}
+  <div class="timeline-section">
+    <div class="timeline-section-title">Order Activity</div>
+    {% for log in status_logs %}
+    <div class="timeline-log-row">
+      <div class="timeline-dot-pdf {% if log.new_status == 'delivered' %}done{% endif %}"></div>
+      <div>
+        <span style="font-weight:700; color:#374151;">
+          {% if log.old_status %}
+            {{ log.old_status|title }} → {{ log.new_status|title }}
+          {% else %}
+            Order Placed
+          {% endif %}
+        </span>
+        {% if log.note %}
+        <span style="color:#9ca3af; margin-left:6px;">· {{ log.note }}</span>
+        {% endif %}
+        <div style="font-size:9px; color:#d1d5db; margin-top:1px;">
+          {{ log.created_at|date:"d M Y, h:i A" }}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+
+  <!-- ══════════════════════════════════════════════════
+       FOOTER — Thank you note + legal text
+  ═══════════════════════════════════════════════════ -->
+  <div class="invoice-footer">
+    <div class="footer-note">
+      <div style="font-weight:700; color:#374151; margin-bottom:4px;">
+        Thank you for shopping with TechGear!
+      </div>
+      <div>
+        This is a computer-generated invoice and does not require a signature.
+      </div>
+      <div class="mt-1">
+        For support, contact us at support@techgear.com
+      </div>
+      <div class="mt-1" style="color:#d1d5db;">
+        TechGear · Precision Crafted Protection · www.techgear.com
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

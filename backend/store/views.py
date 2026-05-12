@@ -269,8 +269,8 @@ def add_to_cart(request):
     custom_image = request.FILES.get('custom_image')
  
     existing_item = None
-    if not variant.product.is_customizable:
-        existing_item = CartItem.objects.filter(cart=cart, variant=variant).first()
+    
+    existing_item = CartItem.objects.filter(cart=cart, variant=variant).first()
  #adds the new amount with old
     if existing_item:
         new_qty = existing_item.quantity + quantity
