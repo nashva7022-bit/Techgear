@@ -8,7 +8,6 @@
 <style>
   :root { --teal:#2F4F4F; --teal-mid:#557373; --card:#DFE5F3; --accent:#F2EFEA; }
 
-  /* ── Wishlist item card ── */
   .wish-card {
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.1);
@@ -26,7 +25,6 @@
   }
   .wish-card.unavailable { opacity: 0.5; }
 
-  /* ── Product image ── */
   .wish-img-wrap {
     height: 200px;
     background: rgba(255,255,255,0.04);
@@ -40,7 +38,6 @@
   }
   .wish-card:hover .wish-img-wrap img { transform: scale(1.06); }
 
-  /* ── Remove (heart) button — top right of image ── */
   .remove-wish-btn {
     position: absolute;
     top: 12px; right: 12px;
@@ -61,7 +58,6 @@
     transform: scale(1.1);
   }
 
-  /* ── Availability badge ── */
   .avail-badge {
     position: absolute;
     top: 12px; left: 12px;
@@ -72,10 +68,8 @@
     text-transform: uppercase;
   }
 
-  /* ── Card body ── */
   .wish-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
 
-  /* ── Move to cart btn ── */
   .move-btn {
     width: 100%;
     padding: 11px;
@@ -97,7 +91,6 @@
     cursor: not-allowed; transform: none;
   }
 
-  /* ── View product link ── */
   .view-link {
     display: inline-flex; align-items: center; justify-content: center;
     width: 36px; height: 36px;
@@ -111,19 +104,19 @@
   }
   .view-link:hover { border-color: rgba(255,255,255,0.4); color: #fff; background: rgba(255,255,255,0.07); }
 
-  /* ── Stock dot ── */
   .stock-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 
-  /* ── Colour dots row ── */
-  .colour-dot {
-    width: 12px; height: 12px;
-    border-radius: 50%;
-    border: 1.5px solid rgba(255,255,255,0.25);
-    display: inline-block;
-    flex-shrink: 0;
+  /* Variant tag pills */
+  .variant-tag {
+    font-size: 10px; font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 99px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.5);
+    display: inline-flex; align-items: center; gap: 4px;
   }
 
-  /* ── Empty state ── */
   .empty-icon-wrap {
     width: 110px; height: 110px;
     border-radius: 50%;
@@ -133,7 +126,6 @@
     margin: 0 auto 28px;
   }
 
-  /* ── Shop link ── */
   .shop-link {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 10px 20px; border-radius: 12px;
@@ -143,7 +135,6 @@
   }
   .shop-link:hover { border-color: rgba(255,255,255,0.35); color: #fff; background: rgba(255,255,255,0.05); }
 
-  /* ── Start shopping CTA ── */
   .start-btn {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 14px 32px; border-radius: 14px;
@@ -154,17 +145,7 @@
   }
   .start-btn:hover { background: var(--accent); }
 
-  /* Breadcrumb */
   .breadcrumb-sep { color: rgba(255,255,255,0.25); margin: 0 6px; }
-
-  /* Info banner */
-  .info-banner {
-    background: rgba(59,130,246,0.08);
-    border: 1px solid rgba(59,130,246,0.2);
-    border-radius: 12px; padding: 12px 16px;
-    font-size: 12px; color: #93c5fd;
-    display: flex; align-items: flex-start; gap: 10px;
-  }
 </style>
 
 <!-- Breadcrumb -->
@@ -204,15 +185,6 @@
 
   {% if items %}
 
-  <!-- Info note about move to cart behaviour -->
-  <div class="info-banner mb-6">
-    <i class="bi bi-info-circle-fill flex-shrink-0 mt-0.5"></i>
-    <span>
-      Moving an item to cart uses the first available variant.
-      You can change the colour, case type, or device model on the product page.
-    </span>
-  </div>
-
   <!-- Grid -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
 
@@ -222,9 +194,9 @@
       <!-- Image area -->
       <div class="wish-img-wrap">
 
-        <a href="{% url 'product_detail' item.product.slug %}">
+        <a href="{% url 'product_detail' item.variant.product.slug %}?variant={{ item.variant.pk }}">
           {% if item.primary_image %}
-            <img src="{{ item.primary_image.image.url }}" alt="{{ item.product.name }}">
+            <img src="{{ item.primary_image.image.url }}" alt="{{ item.variant.product.name }}">
           {% else %}
             <div class="w-full h-full flex items-center justify-center">
               <i class="bi bi-image text-5xl text-white/10"></i>
@@ -235,9 +207,11 @@
         <!-- Availability badge -->
         {% if not item.is_available %}
           <span class="avail-badge bg-red-500/20 text-red-400 border border-red-500/20">Unavailable</span>
+        {% elif item.variant.stock == 0 %}
+          <span class="avail-badge bg-yellow-500/20 text-yellow-400 border border-yellow-500/20">Out of Stock</span>
         {% endif %}
 
-        <!-- Remove from wishlist — heart button -->
+        <!-- Remove from wishlist -->
         <form method="POST" action="{% url 'remove_from_wishlist' item.pk %}">
           {% csrf_token %}
           <button type="submit" class="remove-wish-btn" title="Remove from wishlist">
@@ -252,80 +226,83 @@
 
         <!-- Brand + category -->
         <p class="text-[10px] font-bold text-white/35 uppercase tracking-widest mb-0.5">
-          {{ item.product.get_brand_display }}
-          {% if item.product.category %} · {{ item.product.category.name }}{% endif %}
+          {{ item.variant.product.get_brand_display }}
+          {% if item.variant.product.category %} · {{ item.variant.product.category.name }}{% endif %}
         </p>
 
         <!-- Product name -->
-        <a href="{% url 'product_detail' item.product.slug %}"
+        <a href="{% url 'product_detail' item.variant.product.slug %}?variant={{ item.variant.pk }}"
            class="text-white font-bold text-sm leading-snug hover:text-white/75 transition line-clamp-2 block mb-2">
-          {{ item.product.name }}
+          {{ item.variant.product.name }}
         </a>
 
-        <!-- Price -->
+        <!-- Variant details — the specific variant they wishlisted -->
+        <div class="flex flex-wrap gap-1.5 mb-3">
+          {% if item.variant.device_model %}
+            <span class="variant-tag">
+              <i class="bi bi-phone text-[9px]"></i>
+              {{ item.variant.device_model.name }}
+            </span>
+          {% endif %}
+          {% if item.variant.case_type %}
+            <span class="variant-tag">{{ item.variant.get_case_type_display }}</span>
+          {% endif %}
+          <span class="variant-tag">
+            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 border border-white/20"
+                  style="background:{{ item.variant.color_code }}"></span>
+            {{ item.variant.get_color_display }}
+          </span>
+        </div>
+
+        <!-- Price — exact variant price -->
         <div class="mb-3">
-          {% if item.product.min_discounted_price and item.product.has_discount %}
-            <span class="text-white font-black text-base">₹{{ item.product.min_discounted_price }}</span>
-            <span class="text-white/30 text-xs line-through ml-1.5">₹{{ item.product.min_price }}</span>
-          {% elif item.product.min_price %}
-            <span class="text-white font-black text-base">₹{{ item.product.min_price }}</span>
+          {% if item.variant.has_discount %}
+            <span class="text-white font-black text-base">₹{{ item.variant.discounted_price }}</span>
+            <span class="text-white/30 text-xs line-through ml-1.5">₹{{ item.variant.price }}</span>
+            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green-400/15 text-green-400 border border-green-400/20 ml-1">
+              {{ item.variant.discount_percentage }}% OFF
+            </span>
           {% else %}
-            <span class="text-white/30 text-sm">—</span>
+            <span class="text-white font-black text-base">₹{{ item.variant.price }}</span>
           {% endif %}
         </div>
 
-        <!-- Stock status -->
-        {% with first_variant=item.product.variants.filter %}
-        <div class="flex items-center gap-1.5 mb-3">
-          {% if item.product.variants.filter %}{% endif %}
-          {% with active_count=item.product.variants.all|length %}
-            {% if active_count > 0 %}
-              <span class="stock-dot bg-green-400"></span>
-              <span class="text-[11px] font-semibold text-green-400">In Stock</span>
-            {% else %}
-              <span class="stock-dot bg-red-400"></span>
-              <span class="text-[11px] font-semibold text-red-400">Out of Stock</span>
-            {% endif %}
-          {% endwith %}
-        </div>
-        {% endwith %}
-
-        <!-- Available colour dots -->
-        {% with variants=item.product.variants.all %}
-        {% if variants %}
-        <div class="flex items-center gap-1 mb-4 flex-wrap">
-          {% for v in variants|slice:":6" %}
-            <span class="colour-dot" style="background: {{ v.color_code }}"
-                  title="{{ v.get_color_display }}"></span>
-          {% endfor %}
-          {% if variants|length > 6 %}
-            <span class="text-[10px] text-white/30 font-semibold ml-1">+{{ variants|length|add:"-6" }} more</span>
+        <!-- Stock status — exact variant stock -->
+        <div class="flex items-center gap-1.5 mb-4">
+          {% if item.variant.stock > 10 %}
+            <span class="stock-dot bg-green-400"></span>
+            <span class="text-[11px] font-semibold text-green-400">In Stock</span>
+          {% elif item.variant.stock > 0 %}
+            <span class="stock-dot bg-yellow-400"></span>
+            <span class="text-[11px] font-semibold text-yellow-400">Only {{ item.variant.stock }} left</span>
+          {% else %}
+            <span class="stock-dot bg-red-400"></span>
+            <span class="text-[11px] font-semibold text-red-400">Out of Stock</span>
           {% endif %}
         </div>
-        {% endif %}
-        {% endwith %}
 
         <!-- Action row -->
         <div class="flex items-center gap-2 mt-auto">
 
-          {# Move to cart — disabled if product unavailable or all variants OOS #}
-          {% if item.is_available %}
-            {% with in_stock=item.product.variants.all %}
+          {% if item.is_available and item.variant.stock > 0 %}
             <form method="POST" action="{% url 'move_to_cart' item.pk %}" class="flex-1">
               {% csrf_token %}
               <button type="submit" class="move-btn">
                 <i class="bi bi-bag-plus text-xs"></i> Move to Cart
               </button>
             </form>
-            {% endwith %}
-          {% else %}
+          {% elif not item.is_available %}
             <button class="move-btn flex-1" disabled>
               <i class="bi bi-x-circle text-xs"></i> Unavailable
             </button>
+          {% else %}
+            <button class="move-btn flex-1" disabled>
+              <i class="bi bi-x-circle text-xs"></i> Out of Stock
+            </button>
           {% endif %}
 
-          {# View product page #}
-          <a href="{% url 'product_detail' item.product.slug %}"
+          <!-- View exact variant on product page -->
+          <a href="{% url 'product_detail' item.variant.product.slug %}?variant={{ item.variant.pk }}"
              class="view-link" title="View product">
             <i class="bi bi-eye"></i>
           </a>

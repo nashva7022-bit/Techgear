@@ -550,10 +550,18 @@
                   ₹{{ item.unit_price }} × {{ item.quantity }}
                 </p>
                 <div class="mt-2">
-                  <span class="item-status-pill item-{{ item.item_status }}">
-                    {{ item.get_item_status_display }}
-                  </span>
-                </div>
+  {% if item.item_status == 'active' %}
+  <span class="item-status-pill item-active">Active</span>
+  {% elif item.item_status == 'cancelled' %}
+  <span class="item-status-pill item-cancelled">Cancelled</span>
+  {% elif item.item_status == 'returned' %}
+  <span class="item-status-pill item-returned">Returned</span>
+  {% elif item.item_status == 'return_requested' %}
+  <span class="item-status-pill" style="background:rgba(251,191,36,0.1);color:#fbbf24;border:1px solid rgba(251,191,36,0.2);">Return Requested</span>
+  {% elif item.item_status == 'return_rejected' %}
+  <span class="item-status-pill" style="background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2);">Return Rejected</span>
+  {% endif %}
+</div>
                 {% if item.cancellation_reason %}
                 <p class="text-[9px] text-white/25 mt-1 max-w-[140px] text-right">
                   Reason: {{ item.cancellation_reason }}
@@ -564,6 +572,11 @@
                   Return: {{ item.return_reason }}
                 </p>
                 {% endif %}
+                {% if item.return_rejected_reason %}
+<p class="text-[9px] text-red-400/60 mt-1 max-w-[140px] text-right">
+  Rejected: {{ item.return_rejected_reason }}
+</p>
+{% endif %}
               </div>
 
             </div>
@@ -572,6 +585,91 @@
         {% endfor %}
 
       </div>
+
+      <!-- ── WRITE A REVIEW ───────────────────────────────────────── -->
+{% if order.status == 'delivered' %}
+<div class="detail-card">
+  <div class="card-header">
+    <span class="card-header-title">Rate Your Products</span>
+  </div>
+
+  {% for item in items %}
+  {% if item.item_status == 'active' and item.variant %}
+  <div class="px-6 py-5 {% if not forloop.last %}border-b border-white/5{% endif %}">
+    <div class="flex items-start gap-4">
+
+      <!-- Image -->
+      {% if item.variant.images.first %}
+      <img src="{{ item.variant.images.first.image.url }}"
+           alt="{{ item.product_name }}"
+           class="w-12 h-12 rounded-xl object-cover flex-shrink-0">
+      {% else %}
+      <div class="w-12 h-12 rounded-xl bg-white/5 flex-shrink-0 flex items-center justify-center">
+        <i class="bi bi-image text-white/20"></i>
+      </div>
+      {% endif %}
+
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-bold text-white mb-3">{{ item.product_name }}</p>
+
+        {% if item.variant.product.pk in reviewed_product_ids %}
+        <!-- Already reviewed -->
+        <div class="flex items-center gap-2">
+          <div class="flex gap-0.5">
+            {% for r in item.variant.product.reviews.all %}
+              {% if r.user == request.user %}
+                {% for i in "12345" %}
+                  <i class="bi bi-star{% if forloop.counter <= r.rating %}-fill text-yellow-400{% else %} text-white/15{% endif %} text-sm"></i>
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+          </div>
+          <span class="text-xs text-white/40 font-medium">Review submitted</span>
+        </div>
+
+        {% else %}
+        <!-- Review form -->
+        <form method="POST"
+              action="{% url 'submit_review' item.variant.product.pk %}">
+          {% csrf_token %}
+
+          <!-- Star rating -->
+          <div class="flex items-center gap-1 mb-3" id="stars-{{ item.pk }}">
+            {% for i in "12345" %}
+            <button type="button"
+                    onclick="setRating({{ forloop.counter }}, '{{ item.pk }}')"
+                    class="star-btn text-2xl text-white/15 hover:text-yellow-400 transition"
+                    data-value="{{ forloop.counter }}">
+              <i class="bi bi-star-fill"></i>
+            </button>
+            {% endfor %}
+            <input type="hidden" name="rating" id="rating-{{ item.pk }}" value="">
+          </div>
+
+          <!-- Comment -->
+          <textarea name="comment"
+                    rows="2"
+                    placeholder="Share your experience (optional)..."
+                    class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10
+                           text-white text-xs placeholder-white/20 resize-none outline-none
+                           focus:border-white/25 transition mb-3"></textarea>
+
+          <button type="submit"
+                  class="px-5 py-2 rounded-xl bg-white text-[#2F4F4F] text-xs font-black
+                         uppercase tracking-widest hover:bg-[#F2EFEA] transition">
+            Submit Review
+          </button>
+        </form>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+
+</div>
+{% endif %}
 
 
       <!-- ── STATUS LOG / ACTIVITY TIMELINE ──────────────────────── -->
@@ -1091,6 +1189,28 @@ async function submitReturn() {
     btn.disabled    = false;
     btn.textContent = 'Submit Return';
   }
+}
+
+// ── STAR RATING ──────────────────────────────────────────────────────────────
+function setRating(value, itemPk) {
+  const container = document.getElementById(`stars-${itemPk}`);
+  const input     = document.getElementById(`rating-${itemPk}`);
+  if (!container || !input) return;
+
+  input.value = value;
+
+  container.querySelectorAll('.star-btn').forEach((btn, idx) => {
+    const icon = btn.querySelector('i');
+    if (idx < value) {
+      icon.className = 'bi bi-star-fill';
+      btn.classList.add('text-yellow-400');
+      btn.classList.remove('text-white/15');
+    } else {
+      icon.className = 'bi bi-star-fill';
+      btn.classList.remove('text-yellow-400');
+      btn.classList.add('text-white/15');
+    }
+  });
 }
 </script>
 

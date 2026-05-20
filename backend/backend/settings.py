@@ -29,7 +29,11 @@ cloudinary.config(
     api_key=os.getenv('CLOUDINARY_API_KEY'),
     api_secret=os.getenv('CLOUDINARY_API_SECRET'),
 )
+ORDERS_PER_PAGE = 15
 
+PRODUCTS_PER_PAGE = 4
+CATEGORIES_PER_PAGE = 5
+USERS_PER_PAGE = 20
 # Tell Django to use Cloudinary for all file uploads
 STORAGES = {
     "default": {
@@ -47,9 +51,9 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'cloudinary_storage',            #  BEFORE staticfiles
+    'cloudinary_storage',            
     'django.contrib.staticfiles',
-    'cloudinary',                    #  AFTER staticfiles
+    'cloudinary',                    
     'django.contrib.sites',
 
     # Custom Apps
@@ -59,7 +63,7 @@ INSTALLED_APPS = [
     'store',
     'orders',
     'admin_orders',
-    
+
     
 
     # Third-party Apps

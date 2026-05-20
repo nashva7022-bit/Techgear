@@ -901,6 +901,25 @@ document.getElementById('productForm').addEventListener('submit', function (e) {
       valid = false;
       markError(stock);
     }
+
+    // Discount validation
+const discount = card.querySelector('input[name="variant_discount_percentage"]');
+const priceVal = parseFloat(price?.value || 0);
+const discVal  = parseFloat(discount?.value || 0);
+
+if (discVal < 0 || discVal > 90) {
+    errs.push(`Variant ${n}: Discount must be between 0% and 90%.`);
+    valid = false;
+    markError(discount);
+}
+if (priceVal > 0 && discVal > 0) {
+    const discounted = priceVal - (priceVal * discVal / 100);
+    if (discounted <= 0) {
+        errs.push(`Variant ${n}: Discount makes the final price ₹0 or less.`);
+        valid = false;
+        markError(discount);
+    }
+}
     if (imgCnt < 3) {
       errs.push(`Variant ${n}: Upload at least 3 images.`);
       const errEl = document.getElementById(`imgError_${idx}`);

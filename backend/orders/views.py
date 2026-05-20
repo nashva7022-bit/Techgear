@@ -1,11 +1,12 @@
 from django.shortcuts import render
+from django.conf import settings
 
 # Create your views here.
 # views.py handles what happens when a user visits a URL.
 # It receives the request, does some logic, and returns a response.
 # We keep views THIN — they just receive, validate, call services, and respond.
 # The heavy logic lives in services.py, not here.
-from django.template.loader import render_to_string
+
 from django.shortcuts import render, redirect, get_object_or_404
 # render        — takes a template and context, returns an HTML response
 # redirect      — sends user to a different URL
@@ -242,7 +243,7 @@ def order_list(request):
 
     # orders are already ordered newest first because of Meta ordering in model.
 
-    paginator   = Paginator(orders, 10)
+    paginator = Paginator(orders, settings.ORDERS_PER_PAGE)
     # Show 10 orders per page.
     page_number = request.GET.get('page')
     page_obj    = paginator.get_page(page_number)
@@ -262,36 +263,27 @@ def order_list(request):
 @login_required
 @never_cache
 def order_detail(request, order_number):
-    # Shows the full detail of one order — items, address, status timeline, etc.
-
     order = get_object_or_404(
         Order,
         order_number = order_number,
         user         = request.user,
     )
-    # Security check — order must belong to logged-in user.
-
-    # Load order items with variant images for display.
-    items = order.items.select_related('variant').prefetch_related(
-        'variant__images'
-    )
-    # select_related('variant') loads the variant in one query.
-    # prefetch_related('variant__images') loads images for all items at once.
-    # Without this, each item would trigger separate DB queries — slow.
-
-    # Load the status change timeline for this order.
+    items = order.items.select_related('variant').prefetch_related('variant__images')
     status_logs = order.status_logs.all()
-    # These are the OrderStatusLog entries — shows the timeline like:
-    # "Pending → Shipped → Out for Delivery → Delivered"
-    # Already ordered chronologically because of Meta ordering in model.
+
+    # Get product IDs the user has already reviewed
+    from store.models import Review
+    reviewed_product_ids = set(
+        Review.objects.filter(user=request.user).values_list('product_id', flat=True)
+    )
 
     context = {
-        'order':       order,
-        'items':       items,
-        'status_logs': status_logs,
+        'order':                order,
+        'items':                items,
+        'status_logs':          status_logs,
+        'reviewed_product_ids': reviewed_product_ids,
     }
     return render(request, 'orders/order_detail.html', context)
-
 
 # ── CANCEL ENTIRE ORDER ───────────────────────────────────────────────────────
 

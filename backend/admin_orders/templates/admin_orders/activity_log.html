@@ -1,0 +1,190 @@
+{% extends 'admin_panel/admin_base.html' %}
+{% block content %}
+
+<!-- Header -->
+<div class="flex items-start justify-between mb-8">
+  <div>
+    <h1 class="text-2xl font-black text-gray-900 tracking-tight">Activity Log</h1>
+    <p class="text-sm text-gray-500 mt-1 font-medium">
+      A complete audit trail of all admin actions — who did what and when.
+    </p>
+  </div>
+  <div class="flex items-center gap-3">
+    <a href="{% url 'admin_orders:order_list' %}"
+       class="inline-flex items-center gap-2 border border-gray-200 text-gray-500 px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:border-black hover:text-black transition">
+      Orders
+    </a>
+    <a href="{% url 'admin_orders:inventory_list' %}"
+       class="inline-flex items-center gap-2 bg-black text-white px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition shadow-sm">
+      Inventory
+    </a>
+  </div>
+</div>
+
+<!-- Activity Log Table -->
+{% if page_obj.object_list %}
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
+  <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+      {{ page_obj.paginator.count }} action{{ page_obj.paginator.count|pluralize }} recorded
+    </p>
+    <p class="text-[10px] text-gray-300 font-medium">Newest first</p>
+  </div>
+
+  <div class="divide-y divide-gray-50">
+    {% for log in page_obj %}
+    <div class="flex items-start gap-5 px-6 py-5 hover:bg-gray-50 transition">
+
+      <!-- Action Icon -->
+      <div class="flex-shrink-0 mt-0.5">
+        {% if log.action == 'order_status_change' %}
+        <div class="w-9 h-9 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
+          <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+          </svg>
+        </div>
+        {% elif log.action == 'stock_update' %}
+        <div class="w-9 h-9 rounded-full bg-green-50 border border-green-100 flex items-center justify-center">
+          <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+        </div>
+        {% elif log.action == 'order_cancel' %}
+        <div class="w-9 h-9 rounded-full bg-red-50 border border-red-100 flex items-center justify-center">
+          <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </div>
+        {% else %}
+        <div class="w-9 h-9 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center">
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Log Details -->
+      <div class="flex-1 min-w-0">
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <!-- Action type badge -->
+            <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full
+              {% if log.action == 'order_status_change' %}bg-blue-50 text-blue-600 border border-blue-100
+              {% elif log.action == 'stock_update' %}bg-green-50 text-green-600 border border-green-100
+              {% elif log.action == 'order_cancel' %}bg-red-50 text-red-500 border border-red-100
+              {% else %}bg-gray-50 text-gray-500 border border-gray-100{% endif %}">
+              {{ log.get_action_display }}
+            </span>
+
+            <!-- Description -->
+            <p class="text-sm font-medium text-gray-900 mt-1.5 leading-snug">
+              {{ log.description }}
+            </p>
+
+            <!-- Links to affected object -->
+            <div class="flex items-center gap-3 mt-1.5">
+              {% if log.order_number %}
+              <a href="{% url 'admin_orders:order_detail' log.order_number %}"
+                 class="text-[10px] font-bold text-blue-500 hover:text-blue-700 transition flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                </svg>
+                View Order {{ log.order_number }}
+              </a>
+              {% endif %}
+              {% if log.variant_id %}
+              <span class="text-[10px] text-gray-400 font-mono">
+                Variant ID: {{ log.variant_id }}
+              </span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Time + Admin -->
+          <div class="text-right flex-shrink-0">
+            <p class="text-xs font-bold text-gray-700">
+              {{ log.created_at|date:"d M Y" }}
+            </p>
+            <p class="text-[10px] text-gray-400 mt-0.5">
+              {{ log.created_at|date:"h:i A" }}
+            </p>
+            <p class="text-[10px] text-gray-400 mt-1 flex items-center justify-end gap-1">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+              {% if log.admin %}
+                {{ log.admin.get_full_name|default:log.admin.email }}
+              {% else %}
+                System
+              {% endif %}
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Pagination -->
+<div class="flex items-center justify-between border-t border-gray-100 pt-6">
+  <p class="text-xs text-gray-400 font-medium">
+    Showing
+    <span class="text-black font-bold">{{ page_obj.start_index }}</span>–<span class="text-black font-bold">{{ page_obj.end_index }}</span>
+    of <span class="text-black font-bold">{{ page_obj.paginator.count }}</span> actions
+  </p>
+  <div class="flex items-center gap-1.5">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}"
+       class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-black hover:text-black transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </a>
+    {% endif %}
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}
+      <span class="w-9 h-9 flex items-center justify-center rounded-lg bg-black text-white text-xs font-bold shadow-sm">{{ num }}</span>
+      {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+      <a href="?page={{ num }}"
+         class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-black hover:text-black transition text-xs font-semibold">
+        {{ num }}
+      </a>
+      {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}"
+       class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-black hover:text-black transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+{% else %}
+<!-- Empty State -->
+<div class="bg-white rounded-3xl border border-gray-100 p-16 text-center shadow-sm">
+  <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+    <svg class="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+    </svg>
+  </div>
+  <h3 class="text-xl font-bold text-gray-900 mb-2">No activity recorded yet</h3>
+  <p class="text-gray-400 text-sm max-w-xs mx-auto">
+    Admin actions like status changes and stock updates will appear here automatically.
+  </p>
+</div>
+{% endif %}
+
+{% endblock %}

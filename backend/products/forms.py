@@ -93,6 +93,7 @@ class ProductVariantForm(forms.ModelForm):
             'color_code',
             'sku',
             'price',
+            'discount_percentage',
             'stock',
             'is_active',
         ]
@@ -109,6 +110,20 @@ class ProductVariantForm(forms.ModelForm):
         if price <= 0:
             raise ValidationError('Price must be greater than 0.')
         return price
+    
+    def clean_discount_percentage(self):
+        discount = self.cleaned_data.get('discount_percentage')
+
+        if discount is None:
+            return 0
+
+        if discount < 0:
+            raise ValidationError('Discount cannot be negative.')
+
+        if discount >= 90:
+            raise ValidationError('Discount cannot exceed 90%.')
+
+        return discount
 
     def clean_stock(self):
         stock = self.cleaned_data.get('stock')

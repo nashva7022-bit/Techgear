@@ -34,6 +34,7 @@ urlpatterns = [
     path('', include('users.urls')),
 
     path('orders/', include('orders.urls', namespace='orders')),
+    path('manage/orders/', include('admin_orders.urls', namespace='admin_orders')),
    
 ]
 if settings.DEBUG:

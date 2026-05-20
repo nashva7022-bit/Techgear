@@ -1,0 +1,670 @@
+{% extends 'admin_panel/admin_base.html' %}
+{% block content %}
+
+<!-- Back + Header -->
+<div class="mb-8">
+  <a href="{% url 'admin_orders:order_list' %}"
+     class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-black transition mb-4">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Back to Orders
+  </a>
+  <div class="flex items-start justify-between flex-wrap gap-4">
+    <div>
+      <h1 class="text-2xl font-black text-gray-900 tracking-tight font-mono">{{ order.order_number }}</h1>
+      <p class="text-sm text-gray-500 mt-1">
+        Placed on {{ order.created_at|date:"d M Y, h:i A" }}
+        &nbsp;·&nbsp;{{ order.get_payment_method_display }}
+        &nbsp;·&nbsp;{% if order.user %}{{ order.user.email }}{% else %}Deleted User{% endif %}
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      {% if order.status == 'pending' %}
+      <span class="text-[10px] font-black px-3 py-1.5 rounded-full bg-yellow-50 text-yellow-600 border border-yellow-100 uppercase tracking-widest">Pending</span>
+      {% elif order.status == 'shipped' %}
+      <span class="text-[10px] font-black px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-widest">Shipped</span>
+      {% elif order.status == 'out_for_delivery' %}
+      <span class="text-[10px] font-black px-3 py-1.5 rounded-full bg-purple-50 text-purple-600 border border-purple-100 uppercase tracking-widest">Out for Delivery</span>
+      {% elif order.status == 'delivered' %}
+      <span class="text-[10px] font-black px-3 py-1.5 rounded-full bg-green-50 text-green-600 border border-green-100 uppercase tracking-widest">Delivered</span>
+      {% elif order.status == 'cancelled' %}
+      <span class="text-[10px] font-black px-3 py-1.5 rounded-full bg-red-50 text-red-500 border border-red-100 uppercase tracking-widest">Cancelled</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <!-- ═══ LEFT COLUMN ═══ -->
+  <div class="lg:col-span-2 flex flex-col gap-6">
+
+    <!-- STATUS CHANGE CARD -->
+    {% if next_statuses %}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Update Order Status</p>
+        <p class="text-xs text-gray-400 mt-0.5">
+          Strict flow enforced:
+          <span class="font-bold text-gray-600">Pending → Shipped → Out for Delivery → Delivered</span>
+        </p>
+      </div>
+      <div class="p-6">
+        <form id="statusForm" class="flex flex-wrap items-end gap-4">
+          {% csrf_token %}
+          <div class="flex-1 min-w-[180px]">
+            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Change To</label>
+            <div class="relative">
+              <select name="new_status" id="statusSelect"
+                      class="w-full appearance-none bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold px-4 py-3 pr-8 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer">
+                <option value="">— Select next status —</option>
+                {% for s in next_statuses %}
+                <option value="{{ s.value }}">{{ s.label }}</option>
+                {% endfor %}
+              </select>
+              <svg class="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+          <div class="flex-1 min-w-[200px]">
+            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+              Note <span class="text-gray-300 font-normal normal-case">(optional)</span>
+            </label>
+            <input type="text" name="note" id="statusNote"
+                   placeholder="e.g. Shipped via Delhivery #12345"
+                   class="w-full bg-gray-50 border border-gray-100 rounded-xl text-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black transition">
+          </div>
+          <button type="button" onclick="submitStatusChange()" id="statusBtn"
+                  class="px-6 py-3 bg-black text-white text-xs font-bold rounded-xl hover:bg-gray-800 transition uppercase tracking-widest whitespace-nowrap">
+            Update Status
+          </button>
+        </form>
+        <div id="statusMsg" class="hidden mt-4 px-4 py-3 rounded-xl text-xs font-bold"></div>
+      </div>
+    </div>
+    {% else %}
+    <div class="bg-gray-50 rounded-2xl border border-gray-100 p-5">
+      <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">
+        {% if order.status == 'delivered' %}✅ This order has been delivered. No further status changes possible.
+        {% elif order.status == 'cancelled' %}❌ This order has been cancelled. No further status changes possible.
+        {% endif %}
+      </p>
+    </div>
+    {% endif %}
+
+    <!-- STATUS TIMELINE -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order Timeline</p>
+      </div>
+      <div class="p-6">
+        {% if status_logs %}
+        <div class="flex flex-col gap-0">
+          {% for log in status_logs %}
+          <div class="flex gap-4 {% if not forloop.last %}pb-5{% endif %}">
+            <div class="flex flex-col items-center">
+              <div class="w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0
+                {% if log.new_status == 'delivered' %}bg-green-500
+                {% elif log.new_status == 'cancelled' %}bg-red-500
+                {% elif log.new_status == 'pending' %}bg-gray-300
+                {% else %}bg-black{% endif %}">
+              </div>
+              {% if not forloop.last %}
+              <div class="w-px flex-1 bg-gray-100 mt-1"></div>
+              {% endif %}
+            </div>
+            <div class="pb-1 flex-1">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <p class="text-xs font-bold text-gray-900">
+                  {% if log.old_status %}{{ log.old_status|title }} → {{ log.new_status|title }}
+                  {% else %}Order Placed{% endif %}
+                </p>
+                <p class="text-[10px] text-gray-400">{{ log.created_at|date:"d M Y, h:i A" }}</p>
+              </div>
+              {% if log.note %}<p class="text-[11px] text-gray-500 mt-0.5">{{ log.note }}</p>{% endif %}
+              {% if log.changed_by %}
+              <p class="text-[10px] text-gray-300 mt-0.5">by {{ log.changed_by.get_full_name|default:log.changed_by.email }}</p>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-xs text-gray-400">No activity recorded yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ORDER ITEMS -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+          Order Items — {{ items|length }} item{{ items|length|pluralize }}
+        </p>
+      </div>
+
+      {% for item in items %}
+      <div class="px-6 py-5 {% if not forloop.last %}border-b border-gray-50{% endif %}">
+
+        <!-- TOP ROW: image + details + price/status -->
+        <div class="flex items-start gap-5">
+
+          <!-- Image -->
+          {% if item.variant and item.variant.images.first %}
+          <img src="{{ item.variant.images.first.image.url }}"
+               alt="{{ item.product_name }}"
+               class="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-gray-100">
+          {% else %}
+          <div class="w-16 h-16 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0">
+            <svg class="w-6 h-6 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          {% endif %}
+
+          <!-- Middle: name + tags + SKU -->
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-bold text-gray-900 leading-tight">{{ item.product_name }}</p>
+
+            <!-- Variant tags -->
+            <div class="flex flex-wrap gap-1.5 mt-1.5">
+              {% if item.device_model %}
+              <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100">{{ item.device_model }}</span>
+              {% endif %}
+              {% if item.case_type %}
+              <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100">{{ item.case_type }}</span>
+              {% endif %}
+              {% if item.color %}
+              <span class="flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100">
+                {% if item.color_code %}
+                <span class="w-2 h-2 rounded-full inline-block border border-gray-200" style="background:{{ item.color_code }}"></span>
+                {% endif %}
+                {{ item.color }}
+              </span>
+              {% endif %}
+            </div>
+
+            {% if item.variant_sku %}
+            <p class="text-[10px] text-gray-300 font-mono mt-1">SKU: {{ item.variant_sku }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Right: price + status badge -->
+          <div class="text-right flex-shrink-0">
+            <p class="text-sm font-black text-gray-900">₹{{ item.subtotal }}</p>
+            <p class="text-[10px] text-gray-400 mt-0.5">₹{{ item.unit_price }} × {{ item.quantity }}</p>
+            <div class="mt-2">
+              {% if item.item_status == 'active' %}
+              <span class="text-[9px] font-black px-2 py-1 rounded-full bg-green-50 text-green-600 border border-green-100 uppercase">Active</span>
+              {% elif item.item_status == 'cancelled' %}
+              <span class="text-[9px] font-black px-2 py-1 rounded-full bg-red-50 text-red-500 border border-red-100 uppercase">Cancelled</span>
+              {% elif item.item_status == 'returned' %}
+              <span class="text-[9px] font-black px-2 py-1 rounded-full bg-purple-50 text-purple-600 border border-purple-100 uppercase">Returned</span>
+              {% elif item.item_status == 'return_requested' %}
+              <span class="text-[9px] font-black px-2 py-1 rounded-full bg-yellow-50 text-yellow-600 border border-yellow-100 uppercase">Return Requested</span>
+              {% elif item.item_status == 'return_rejected' %}
+              <span class="text-[9px] font-black px-2 py-1 rounded-full bg-red-50 text-red-500 border border-red-100 uppercase">Return Rejected</span>
+              {% endif %}
+            </div>
+          </div>
+
+        </div>
+        <!-- END TOP ROW -->
+
+        <!-- BOTTOM SECTION: customization + reasons + action buttons -->
+        <div class="ml-21 mt-3 pl-[84px]">
+
+          <!-- Customization panel -->
+          {% if item.custom_text or item.custom_image %}
+          <div class="p-3 bg-purple-50 border border-purple-100 rounded-xl mb-3">
+            <p class="text-[9px] font-black text-purple-600 uppercase tracking-widest mb-2">🎨 Personalised Order — Action Required</p>
+            {% if item.custom_text %}
+            <p class="text-xs text-purple-800 font-medium">
+              <span class="font-black">Custom Text:</span> "{{ item.custom_text }}"
+            </p>
+            {% endif %}
+            {% if item.custom_image %}
+            <a href="{{ item.custom_image.url }}" target="_blank" download
+               class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-purple-600 text-white text-[9px] font-bold rounded-lg hover:bg-purple-700 transition uppercase tracking-wider">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              Download Custom Image
+            </a>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <!-- Cancellation reason -->
+          {% if item.cancellation_reason %}
+          <p class="text-[10px] text-red-500 mb-2 font-medium">Cancelled: {{ item.cancellation_reason }}</p>
+          {% endif %}
+
+          <!-- Return reason -->
+          {% if item.return_reason %}
+          <p class="text-[10px] text-purple-500 mb-2 font-medium">Return reason: {{ item.return_reason }}</p>
+          {% endif %}
+
+          <!-- Return rejection reason -->
+          {% if item.return_rejected_reason %}
+          <p class="text-[10px] text-red-400 mb-2 font-medium">Rejection reason: {{ item.return_rejected_reason }}</p>
+          {% endif %}
+
+          <!-- Approve / Reject buttons — only when return is pending -->
+          {% if item.item_status == 'return_requested' %}
+          <div class="flex gap-2 mb-2">
+            <button onclick="openApproveModal('{{ order.order_number }}', {{ item.pk }}, '{{ item.product_name|escapejs }}', '{{ item.return_reason|escapejs }}')"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 text-green-600 border border-green-100 text-[10px] font-bold uppercase tracking-wider hover:bg-green-100 transition">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+              </svg>
+              Approve Return
+            </button>
+            <button onclick="openRejectModal('{{ order.order_number }}', {{ item.pk }}, '{{ item.product_name|escapejs }}')"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-500 border border-red-100 text-[10px] font-bold uppercase tracking-wider hover:bg-red-100 transition">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              Reject Return
+            </button>
+          </div>
+          {% endif %}
+
+          <!-- Admin cancel button — only on active items in pending orders -->
+          {% if item.item_status == 'active' and order.status == 'pending' %}
+          <button onclick="adminCancelItem('{{ item.pk }}', '{{ item.product_name|escapejs }}')"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-500 border border-red-100 text-[10px] font-bold uppercase tracking-wider hover:bg-red-100 transition">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            Cancel Item
+          </button>
+          {% endif %}
+
+        </div>
+        <!-- END BOTTOM SECTION -->
+
+      </div>
+      {% endfor %}
+    </div>
+    <!-- END ORDER ITEMS -->
+
+  </div>
+  <!-- END LEFT COLUMN -->
+
+
+  <!-- ═══ RIGHT COLUMN ═══ -->
+  <div class="lg:col-span-1 flex flex-col gap-6">
+
+    <!-- CUSTOMER INFO -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
+        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Customer</p>
+      </div>
+      <div class="p-5">
+        {% if order.user %}
+        <p class="text-sm font-bold text-gray-900">{{ order.user.get_full_name|default:"—" }}</p>
+        <p class="text-xs text-gray-500 mt-1">{{ order.user.email }}</p>
+        {% if order.user.phone %}
+        <p class="text-xs text-gray-500 mt-0.5">{{ order.user.phone }}</p>
+        {% endif %}
+        {% else %}
+        <p class="text-xs text-gray-400 italic">User account deleted</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- DELIVERY ADDRESS -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
+        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Delivery Address</p>
+      </div>
+      <div class="p-5">
+        <p class="text-sm font-bold text-gray-900">{{ order.shipping_full_name }}</p>
+        <p class="text-xs text-gray-500 mt-1 leading-relaxed">
+          {{ order.shipping_address_line_1 }}
+          {% if order.shipping_address_line_2 %}, {{ order.shipping_address_line_2 }}{% endif %}
+        </p>
+        <p class="text-xs text-gray-500">{{ order.shipping_city }}, {{ order.shipping_state }} — {{ order.shipping_postal_code }}</p>
+        <p class="text-xs text-gray-500">{{ order.shipping_country }}</p>
+        <p class="text-xs text-gray-400 mt-2 flex items-center gap-1">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+          </svg>
+          {{ order.shipping_phone }}
+        </p>
+      </div>
+    </div>
+
+    <!-- PRICE SUMMARY -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
+        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Price Summary</p>
+      </div>
+      <div class="p-5 flex flex-col gap-3 text-sm">
+        <div class="flex justify-between text-gray-500">
+          <span>Subtotal</span>
+          <span class="font-bold text-gray-900">₹{{ order.subtotal }}</span>
+        </div>
+        {% if order.discount_amount > 0 %}
+        <div class="flex justify-between text-green-600">
+          <span>Discount</span>
+          <span class="font-bold">− ₹{{ order.discount_amount }}</span>
+        </div>
+        {% endif %}
+        <div class="flex justify-between text-gray-500">
+          <span>Shipping</span>
+          {% if order.shipping_charge == 0 %}
+          <span class="font-bold text-green-600">FREE</span>
+          {% else %}
+          <span class="font-bold text-gray-900">₹{{ order.shipping_charge }}</span>
+          {% endif %}
+        </div>
+        <div class="border-t border-gray-100 pt-3 flex justify-between">
+          <span class="font-black text-gray-900">Total</span>
+          <span class="font-black text-gray-900 text-base">₹{{ order.total_amount }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="flex flex-col gap-3">
+      {% if order.status in 'delivered cancelled' %}
+      <a href="{% url 'orders:download_invoice' order.order_number %}" target="_blank"
+         class="flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 text-xs font-bold text-gray-500 hover:border-black hover:text-black transition uppercase tracking-widest">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Download Invoice
+      </a>
+      {% endif %}
+      <a href="{% url 'admin_orders:order_list' %}"
+         class="flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-100 text-xs font-bold text-gray-400 hover:border-gray-300 hover:text-gray-600 transition uppercase tracking-widest">
+        ← Back to Orders
+      </a>
+    </div>
+
+  </div>
+  <!-- END RIGHT COLUMN -->
+
+</div>
+
+
+<!-- ═══ ADMIN CANCEL ITEM MODAL ═══ -->
+<div id="adminCancelItemModal"
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+    <div class="bg-red-50 px-6 pt-6 pb-4 flex items-center gap-4">
+      <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-gray-900">Cancel Item?</h3>
+        <p class="text-xs text-gray-400 mt-0.5" id="adminCancelItemName"></p>
+      </div>
+    </div>
+    <div class="px-6 py-4">
+      <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+        Reason <span class="text-gray-300 font-normal normal-case">(optional)</span>
+      </label>
+      <textarea id="adminCancelItemReason" rows="3"
+                placeholder="Reason for cancelling this item..."
+                class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-xs text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-black transition"></textarea>
+      <p id="adminCancelItemError" class="hidden text-[10px] text-red-500 mt-1"></p>
+    </div>
+    <div class="px-6 pb-6 flex gap-3">
+      <button onclick="closeAdminCancelItem()"
+              class="flex-1 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-500 hover:border-gray-400 transition">
+        Keep Item
+      </button>
+      <button onclick="submitAdminCancelItem()" id="adminCancelItemBtn"
+              class="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition">
+        Yes, Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ APPROVE MODAL ═══ -->
+<div id="approveModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+    <div class="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-green-50 border border-green-100 flex items-center justify-center flex-shrink-0">
+        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-sm font-black text-gray-900">Approve Return</h2>
+        <p class="text-xs text-gray-400 mt-0.5">This action cannot be undone.</p>
+      </div>
+    </div>
+    <div class="p-6">
+      <div class="bg-gray-50 rounded-xl p-4 mb-3">
+        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Product</p>
+        <p class="text-sm font-bold text-gray-900" id="approveProductName"></p>
+      </div>
+      <div class="bg-gray-50 rounded-xl p-4 mb-3">
+        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Customer's Reason</p>
+        <p class="text-xs text-gray-700 leading-relaxed" id="approveReason"></p>
+      </div>
+      <div class="p-4 bg-green-50 rounded-xl border border-green-100">
+        <p class="text-xs text-green-700">Stock will be restored and item marked as <span class="font-bold">Returned</span>.</p>
+      </div>
+    </div>
+    <div class="px-6 pb-6 flex gap-3">
+      <button onclick="submitApprove()" id="approveConfirmBtn"
+              class="flex-1 py-3 bg-green-500 text-white text-xs font-bold rounded-xl hover:bg-green-600 transition uppercase tracking-widest">
+        Yes, Approve Return
+      </button>
+      <button onclick="closeApproveModal()"
+              class="flex-1 py-3 border border-gray-200 text-xs font-bold text-gray-500 rounded-xl hover:border-gray-400 transition uppercase tracking-widest">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ REJECT MODAL ═══ -->
+<div id="rejectModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+    <div class="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0">
+        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-sm font-black text-gray-900">Reject Return</h2>
+        <p class="text-xs text-gray-400 mt-0.5" id="rejectModalSubtitle"></p>
+      </div>
+    </div>
+    <div class="p-6">
+      <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+        Rejection Reason <span class="text-red-400">*</span>
+      </label>
+      <textarea id="rejectReason" rows="3"
+                placeholder="e.g. Return window exceeded, item shows signs of damage…"
+                class="w-full bg-gray-50 border border-gray-100 rounded-xl text-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black transition resize-none"></textarea>
+      <p id="rejectReasonError" class="text-[10px] text-red-500 mt-1.5 hidden">Please provide a reason.</p>
+      <div class="p-4 bg-red-50 rounded-xl border border-red-100 mt-4">
+        <p class="text-xs text-red-600">Status will be marked as <span class="font-bold">Return Rejected</span>. Stock will not be restored.</p>
+      </div>
+    </div>
+    <div class="px-6 pb-6 flex gap-3">
+      <button onclick="submitReject()" id="rejectConfirmBtn"
+              class="flex-1 py-3 bg-red-500 text-white text-xs font-bold rounded-xl hover:bg-red-600 transition uppercase tracking-widest">
+        Confirm Rejection
+      </button>
+      <button onclick="closeRejectModal()"
+              class="flex-1 py-3 border border-gray-200 text-xs font-bold text-gray-500 rounded-xl hover:border-gray-400 transition uppercase tracking-widest">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ── ADMIN CANCEL ITEM ──────────────────────────────────────────────────────
+let adminActiveItemId = null;
+
+function adminCancelItem(itemId, itemName) {
+  adminActiveItemId = itemId;
+  document.getElementById('adminCancelItemName').textContent = itemName;
+  document.getElementById('adminCancelItemReason').value     = '';
+  document.getElementById('adminCancelItemError').classList.add('hidden');
+  showModal('adminCancelItemModal');
+}
+function closeAdminCancelItem() { hideModal('adminCancelItemModal'); }
+
+async function submitAdminCancelItem() {
+  const reason  = document.getElementById('adminCancelItemReason').value.trim();
+  const btn     = document.getElementById('adminCancelItemBtn');
+  const errorEl = document.getElementById('adminCancelItemError');
+  btn.disabled = true; btn.textContent = 'Cancelling…';
+  errorEl.classList.add('hidden');
+  const fd = new FormData();
+  fd.append('reason', reason);
+  fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+  try {
+    const res  = await fetch(`/manage/orders/{{ order.order_number }}/items/${adminActiveItemId}/cancel/`, {
+      method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd,
+    });
+    const data = await res.json();
+    if (data.ok) { closeAdminCancelItem(); window.location.reload(); }
+    else { errorEl.textContent = data.error || 'Something went wrong.'; errorEl.classList.remove('hidden'); }
+  } catch { errorEl.textContent = 'Network error.'; errorEl.classList.remove('hidden'); }
+  finally { btn.disabled = false; btn.textContent = 'Yes, Cancel'; }
+}
+
+
+// ── STATUS CHANGE ──────────────────────────────────────────────────────────
+async function submitStatusChange() {
+  const select    = document.getElementById('statusSelect');
+  const noteEl    = document.getElementById('statusNote');
+  const btn       = document.getElementById('statusBtn');
+  const msgEl     = document.getElementById('statusMsg');
+  const newStatus = select.value;
+  if (!newStatus) { showMsg('Please select a status to change to.', 'error'); return; }
+  btn.disabled = true; btn.textContent = 'Updating…';
+  msgEl.classList.add('hidden');
+  const fd = new FormData();
+  fd.append('new_status', newStatus);
+  fd.append('note', noteEl.value.trim());
+  fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+  try {
+    const resp = await fetch('{% url "admin_orders:change_status" order.order_number %}', {
+      method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd,
+    });
+    const data = await resp.json();
+    if (data.ok) { showMsg(data.message, 'success'); setTimeout(() => window.location.reload(), 1000); }
+    else { showMsg(data.error || 'Something went wrong.', 'error'); btn.disabled = false; btn.textContent = 'Update Status'; }
+  } catch { showMsg('Network error.', 'error'); btn.disabled = false; btn.textContent = 'Update Status'; }
+}
+
+function showMsg(text, type) {
+  const el = document.getElementById('statusMsg');
+  el.textContent = text;
+  el.className = type === 'success'
+    ? 'mt-4 px-4 py-3 rounded-xl text-xs font-bold bg-green-50 text-green-700 border border-green-100'
+    : 'mt-4 px-4 py-3 rounded-xl text-xs font-bold bg-red-50 text-red-600 border border-red-100';
+  el.classList.remove('hidden');
+}
+
+
+// ── RETURN APPROVE / REJECT ────────────────────────────────────────────────
+let _approveOrderNumber = null, _approveItemId = null;
+let _rejectOrderNumber  = null, _rejectItemId  = null;
+
+function openApproveModal(orderNumber, itemId, productName, returnReason) {
+  _approveOrderNumber = orderNumber; _approveItemId = itemId;
+  document.getElementById('approveProductName').textContent = productName;
+  document.getElementById('approveReason').textContent      = returnReason || '—';
+  showModal('approveModal');
+}
+function closeApproveModal() { hideModal('approveModal'); }
+
+async function submitApprove() {
+  const btn = document.getElementById('approveConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Processing…';
+  const fd = new FormData();
+  fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+  try {
+    const res  = await fetch(`/manage/orders/${_approveOrderNumber}/items/${_approveItemId}/approve-return/`, {
+      method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd,
+    });
+    const data = await res.json();
+    if (data.ok) { closeApproveModal(); setTimeout(() => window.location.reload(), 400); }
+    else { showMsg(data.error || 'Something went wrong.', 'error'); }
+  } catch { showMsg('Network error.', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Yes, Approve Return'; }
+}
+
+function openRejectModal(orderNumber, itemId, productName) {
+  _rejectOrderNumber = orderNumber; _rejectItemId = itemId;
+  document.getElementById('rejectModalSubtitle').textContent = productName;
+  document.getElementById('rejectReason').value              = '';
+  document.getElementById('rejectReasonError').classList.add('hidden');
+  showModal('rejectModal');
+}
+function closeRejectModal() { hideModal('rejectModal'); }
+
+async function submitReject() {
+  const reason  = document.getElementById('rejectReason').value.trim();
+  const errorEl = document.getElementById('rejectReasonError');
+  if (!reason) { errorEl.classList.remove('hidden'); return; }
+  errorEl.classList.add('hidden');
+  const btn = document.getElementById('rejectConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Processing…';
+  const fd = new FormData();
+  fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+  fd.append('reason', reason);
+  try {
+    const res  = await fetch(`/manage/orders/${_rejectOrderNumber}/items/${_rejectItemId}/reject-return/`, {
+      method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd,
+    });
+    const data = await res.json();
+    if (data.ok) { closeRejectModal(); setTimeout(() => window.location.reload(), 400); }
+    else { showMsg(data.error || 'Something went wrong.', 'error'); }
+  } catch { showMsg('Network error.', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Confirm Rejection'; }
+}
+
+
+// ── MODAL HELPERS ──────────────────────────────────────────────────────────
+function showModal(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('hidden'); el.classList.add('flex');
+  document.body.style.overflow = 'hidden';
+}
+function hideModal(id) {
+  const el = document.getElementById(id);
+  el.classList.add('hidden'); el.classList.remove('flex');
+  document.body.style.overflow = '';
+}
+
+// Close on backdrop click
+['adminCancelItemModal','approveModal','rejectModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) hideModal(id);
+  });
+});
+
+// Close on ESC
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    hideModal('adminCancelItemModal');
+    hideModal('approveModal');
+    hideModal('rejectModal');
+  }
+});
+</script>
+
+{% endblock %}

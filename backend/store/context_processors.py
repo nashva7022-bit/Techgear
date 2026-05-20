@@ -22,3 +22,14 @@ def cart_wishlist(request):
         'wishlist_count': wishlist_count,
         'categories':     categories,
     }
+
+from orders.models import OrderItem
+
+def admin_stats(request):
+    if request.user.is_authenticated and request.user.is_staff:
+        return {
+            'pending_returns_count': OrderItem.objects.filter(
+                item_status='return_requested'
+            ).count()
+        }
+    return {}

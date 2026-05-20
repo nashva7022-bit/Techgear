@@ -12,6 +12,6 @@ urlpatterns = [
 
     path('dashboard/', views.admin_dashboard, name='admin_dashboard'),
 
-    # ✅ FIXED LINE
+    
     path('api/device-models/', device_models_by_brand, name='admin_api_device_models'),
 ]

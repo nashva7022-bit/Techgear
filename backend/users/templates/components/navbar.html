@@ -37,25 +37,29 @@
             <div class="flex items-center gap-6">
                 <!-- Icons -->
                 
-                <!-- Wishlist -->
+               
+<!-- Wishlist -->
 <a href="{% url 'wishlist' %}" class="relative text-xl hover:text-accent-hover transition">
     <i class="bi bi-heart"></i>
     {% if wishlist_count > 0 %}
-    <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+    <span id="wishlistBadge" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+        {{ wishlist_count }}
+    </span>
+    {% else %}
+    <span id="wishlistBadge" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full items-center justify-center font-bold {% if wishlist_count > 0 %}flex{% else %}hidden{% endif %}">
         {{ wishlist_count }}
     </span>
     {% endif %}
 </a>
 
-<!-- Cart -->
 
+<!-- Cart -->
 <a href="{% url 'cart' %}" class="relative text-xl hover:text-accent-hover transition">
     <i class="bi bi-bag"></i>
-    {% if cart_count > 0 %}
-    <span class="absolute -top-2 -right-2 bg-accent-hover text-site-bg text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+    <span id="cartBadge"
+          class="absolute -top-2 -right-2 bg-accent-hover text-site-bg text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold {% if not cart_count %}hidden{% endif %}">
         {{ cart_count }}
     </span>
-    {% endif %}
 </a>
 
                 <!-- PROFILE BUTTON -->

@@ -388,6 +388,18 @@
 
       <div class="section-divider"></div>
 
+      {% if from_wishlist %}
+<div class="mb-5 flex items-center gap-3 px-4 py-3 rounded-xl"
+     style="background:rgba(251,191,36,0.08); border:1.5px solid rgba(251,191,36,0.25);">
+  <span class="text-xl">👋</span>
+  <p class="text-sm font-semibold text-yellow-300">
+    Select your colour, model and case type below, then add to cart.
+  </p>
+</div>
+{% endif %}
+
+
+
       <!-- ══════════════════════════════════════════
            VARIANT SELECTOR FORM
            ══════════════════════════════════════════ -->
@@ -507,6 +519,8 @@
         </div>
 
       </form>
+
+      
 
       <!-- Trust highlights -->
       <div class="mt-6 flex gap-5 flex-wrap">
@@ -684,6 +698,13 @@ const ALL_VARIANTS = JSON.parse(
   document.getElementById('variantsJson').textContent
 );
 
+
+// ← ADD THIS RIGHT HERE
+const WISHLISTED_VARIANT_IDS = [
+  {% for item in request.user.wishlist.items.all %}
+    {{ item.variant.pk }},
+  {% endfor %}
+];
 const state = {
   deviceModelId : null,
   caseType      : null,
@@ -931,6 +952,14 @@ function applyVariant(v) {
   }
 
   updateGallery(v.images, v.primary_image);
+  const wishBtn  = document.getElementById('wishBtn');
+  const wishIcon = document.getElementById('wishIcon');
+  if (wishBtn && wishIcon) {
+    const isWishlisted = WISHLISTED_VARIANT_IDS.includes(v.id);
+    wishBtn.classList.toggle('wishlisted', isWishlisted);
+    wishIcon.className = isWishlisted ? 'bi bi-heart-fill' : 'bi bi-heart';
+    wishBtn.title = isWishlisted ? 'Remove from wishlist' : 'Add to wishlist';
+  }
 }
 
 // ══════════════════════════════════════════
@@ -1145,7 +1174,10 @@ async function ajaxToggleWishlist(productId, btn) {
         'X-Requested-With': 'XMLHttpRequest',
         'X-CSRFToken':      getCsrfToken(),
       },
-      body: new URLSearchParams({ next: window.location.pathname }),
+      body: new URLSearchParams({ 
+    next: window.location.pathname,
+    variant_id: state.variantId,  // ← sends current selected variant
+}),
     });
     const data = await res.json();
 
@@ -1154,6 +1186,7 @@ async function ajaxToggleWishlist(productId, btn) {
       if (icon) icon.className = data.in_wishlist ? 'bi bi-heart-fill' : 'bi bi-heart';
       btn.title = data.in_wishlist ? 'Remove from wishlist' : 'Add to wishlist';
       showToast(data.message, data.in_wishlist ? 'success' : 'info');
+      if (data.wishlist_count !== undefined) updateWishlistBadge(data.wishlist_count);
     } else {
       // Revert on failure
       btn.classList.toggle('wishlisted', wasWishlisted);

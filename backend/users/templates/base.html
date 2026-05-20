@@ -83,6 +83,28 @@
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         }
-    </script>
+        function updateCartBadge(count) {
+    const badge = document.getElementById('cartBadge');
+    if (!badge) return;
+    badge.textContent = count;
+    if (count > 0) {
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
+function updateWishlistBadge(count) {
+    const badge = document.getElementById('wishlistBadge');
+    if (!badge) return;
+    badge.textContent = count;
+    if (count > 0) {
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+</script>
+    
 </body>
 </html>

@@ -4,7 +4,7 @@ from django.utils.text import slugify
 import random, string
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-
+from django.core.exceptions import ValidationError
 
 
 # BRAND CHOICES
@@ -254,9 +254,30 @@ COLOR_CHOICES = [
 class ProductVariant(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name='variants'
+
+
     )
 
-    # FK to DeviceModel — always required for all categories.
+    
+    def clean(self):
+    # Price validation
+        if self.price is not None and self.price <= 0:
+            raise ValidationError({'price': 'Price must be greater than 0.'})
+
+    # Discount validation
+        if self.discount_percentage is not None:
+            if self.discount_percentage < 0:
+                raise ValidationError({'discount_percentage': 'Discount cannot be negative.'})
+            if self.discount_percentage > 90:
+                raise ValidationError({'discount_percentage': 'Discount cannot exceed 90%.'})
+
+        # Only check discounted price if price is also valid
+            if self.price is not None and self.price > 0:
+                discounted = self.price - (self.price * self.discount_percentage / 100)
+                if discounted <= 0:
+                    raise ValidationError({
+                        'discount_percentage': 'Discount makes the final price ₹0 or less. Reduce the discount.'
+                    })
    
     device_model = models.ForeignKey(
         DeviceModel,
@@ -286,6 +307,8 @@ class ProductVariant(models.Model):
         ordering = ['-created_at']
 
     def save(self, *args, **kwargs):
+    # Don't call full_clean() here — it breaks update_fields calls
+    # from services.py. Django admin calls full_clean() automatically.
         if not self.sku:
             from django.db import IntegrityError
             for _ in range(10):

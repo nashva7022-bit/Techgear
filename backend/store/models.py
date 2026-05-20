@@ -175,39 +175,40 @@ class WishlistItem(models.Model):
         on_delete=models.CASCADE,
         related_name='items'
     )
-    product  = models.ForeignKey(
-        Product,
+    variant  = models.ForeignKey(          # ← changed from product to variant
+        ProductVariant,
         on_delete=models.CASCADE,
-        related_name='wishlist_items'
+        related_name='wishlist_items',
     )
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ['wishlist', 'product']
+        unique_together = ['wishlist', 'variant']  # ← was ['wishlist', 'product']
         ordering        = ['-added_at']
 
     def __str__(self):
-        return f"{self.product.name} in {self.wishlist.user.email}'s wishlist"
+        return f"{self.variant} in {self.wishlist.user.email}'s wishlist"
 
     @property
     def is_available(self):
-        """Product and category must both be active."""
         return (
-            self.product.is_active and
-            self.product.category.is_active
+            self.variant.is_active and
+            self.variant.product.is_active and
+            self.variant.product.category.is_active
         )
 
     @property
     def primary_image(self):
-        first_variant = self.product.variants.filter(is_active=True).first()
-        if first_variant:
-            return first_variant.images.filter(is_primary=True).first() or first_variant.images.first()
-        return None
+        return self.variant.images.filter(is_primary=True).first() or self.variant.images.first()
+
+    @property
+    def product(self):
+        # Convenience property so templates can still do item.product.name
+        return self.variant.product
 
     @property
     def min_price(self):
-        return self.product.min_price
-    
+        return self.variant.discounted_price
 
 
 

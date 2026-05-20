@@ -6,6 +6,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
+from django.conf import settings
 
 from .forms import CategoryForm, ProductForm, ProductVariantForm, ProductSpecificationForm
 from .models import (
@@ -40,7 +41,8 @@ def category_list(request):
             Q(id__icontains=search)
         )
 
-    paginator   = Paginator(categories, 4)
+    
+    paginator = Paginator(categories, settings.CATEGORIES_PER_PAGE)
     page_number = request.GET.get('page')
     page_obj    = paginator.get_page(page_number)
 
@@ -402,6 +404,20 @@ def _handle_existing_variants(request, post_data, files, existing_variants):
         variant.color_code   = color_code
         variant.case_type    = case_type
         variant.is_active    = is_active  # ← always saved now
+        if variant.discount_percentage > 0 and variant.price > 0:
+            discounted = variant.price - (variant.price * variant.discount_percentage / 100)
+            if discounted <= 0:
+                messages.error(
+                    request,
+                    f'Variant "{variant}": Discount makes final price ₹0 or less.'
+                )
+                has_errors = True
+                continue
+
+        if variant.discount_percentage > 90:
+            messages.error(request, f'Variant "{variant}": Discount cannot exceed 90%.')
+            has_errors = True
+            continue
 
         # Use queryset update() to bypass SKU logic in save()
         ProductVariant.objects.filter(pk=variant.pk).update(
@@ -462,9 +478,8 @@ def _handle_existing_variants(request, post_data, files, existing_variants):
 
     return not has_errors
 
-
 def _save_new_variants(product, post_data, files):
-    
+
     errors = []
 
     device_model_ids = post_data.getlist('new_variant_device_model')
@@ -501,12 +516,31 @@ def _save_new_variants(product, post_data, files):
 
         sku = skus[i].strip() if i < len(skus) else ''
         try:
-            price = float(prices[i]) if i < len(prices) else 0
-            stock = int(stocks[i])   if i < len(stocks) else 0
+            price     = float(prices[i]) if i < len(prices) else 0
+            stock     = int(stocks[i])   if i < len(stocks) else 0
+            discount_pct = int(discounts[i]) if i < len(discounts) and discounts[i] else 0
         except (ValueError, TypeError):
             errors.append(f'New variant {i + 1}: Invalid price or stock.')
             continue
 
+        # ── DISCOUNT VALIDATION — before saving ──
+        if discount_pct < 0:
+            errors.append(f'New variant {i + 1}: Discount cannot be negative.')
+            continue
+
+        if discount_pct > 90:
+            errors.append(f'New variant {i + 1}: Discount cannot exceed 90%.')
+            continue
+
+        if price > 0 and discount_pct > 0:
+            discounted = price - (price * discount_pct / 100)
+            if discounted <= 0:
+                errors.append(
+                    f'New variant {i + 1}: Discount makes final price ₹0 or less.'
+                )
+                continue
+
+        # ── SAVE — only after validation passes ──
         variant = ProductVariant(
             product      = product,
             device_model = device_model,
@@ -516,7 +550,7 @@ def _save_new_variants(product, post_data, files):
             sku          = sku or None,
             price        = price,
             stock        = stock,
-            discount_percentage = int(discounts[i]) if i < len(discounts) and discounts[i] else 0,
+            discount_percentage = discount_pct,
         )
         variant.save()
 

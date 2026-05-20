@@ -1,0 +1,381 @@
+{% extends 'admin_panel/admin_base.html' %}
+{% block content %}
+
+<!-- Header -->
+<div class="flex items-start justify-between mb-8">
+  <div>
+    <h1 class="text-2xl font-black text-gray-900 tracking-tight">Inventory & Stock</h1>
+    <p class="text-sm text-gray-500 mt-1 font-medium">Monitor and update stock levels for all product variants.</p>
+  </div>
+  <a href="{% url 'admin_orders:order_list' %}"
+     class="inline-flex items-center gap-2 bg-black text-white px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition shadow-sm">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+    </svg>
+    Orders
+  </a>
+</div>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+  <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Variants</p>
+    <p class="text-3xl font-black text-gray-900 leading-none">{{ total_variants }}</p>
+  </div>
+  <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">In Stock</p>
+    <p class="text-3xl font-black text-green-600 leading-none">{{ in_stock_count }}</p>
+    <p class="text-[10px] text-gray-400 mt-1">More than 10 units</p>
+  </div>
+  <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Low Stock</p>
+    <p class="text-3xl font-black text-yellow-500 leading-none">{{ low_stock_count }}</p>
+    <p class="text-[10px] text-gray-400 mt-1">1–10 units remaining</p>
+  </div>
+  <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Out of Stock</p>
+    <p class="text-3xl font-black text-red-500 leading-none">{{ out_of_stock }}</p>
+    <p class="text-[10px] text-gray-400 mt-1">0 units — needs restocking</p>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
+  <form method="GET" action="{% url 'admin_orders:inventory_list' %}"
+        class="flex flex-wrap items-center gap-3">
+
+    <!-- Search -->
+    <div class="relative flex-1 min-w-[200px]">
+      <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+           fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+      </svg>
+      <input type="text" name="search" value="{{ search }}"
+             placeholder="Search product, SKU, device model..."
+             class="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black transition-all">
+    </div>
+
+    <!-- Category Filter -->
+    <div class="relative">
+      <select name="category"
+              class="appearance-none bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold px-4 py-2.5 pr-8 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer">
+        <option value="">All Categories</option>
+        {% for cat in categories %}
+        <option value="{{ cat.pk }}" {% if category_id == cat.pk|stringformat:"s" %}selected{% endif %}>
+          {{ cat.name }}
+        </option>
+        {% endfor %}
+      </select>
+      <svg class="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+           fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </div>
+
+    <!-- Stock Filter -->
+    <div class="relative">
+      <select name="stock"
+              class="appearance-none bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold px-4 py-2.5 pr-8 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer">
+        <option value="">All Stock Levels</option>
+        <option value="out_of_stock" {% if stock_filter == 'out_of_stock' %}selected{% endif %}>Out of Stock</option>
+        <option value="low_stock"    {% if stock_filter == 'low_stock'    %}selected{% endif %}>Low Stock (1–10)</option>
+        <option value="in_stock"     {% if stock_filter == 'in_stock'     %}selected{% endif %}>In Stock (10+)</option>
+      </select>
+      <svg class="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+           fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </div>
+
+    <!-- Sort -->
+    <div class="relative">
+      <select name="sort"
+              class="appearance-none bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold px-4 py-2.5 pr-8 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer">
+        <option value="low_stock"  {% if sort_by == 'low_stock'  %}selected{% endif %}>Stock: Low → High</option>
+        <option value="high_stock" {% if sort_by == 'high_stock' %}selected{% endif %}>Stock: High → Low</option>
+        <option value="name_asc"   {% if sort_by == 'name_asc'   %}selected{% endif %}>Name A → Z</option>
+        <option value="name_desc"  {% if sort_by == 'name_desc'  %}selected{% endif %}>Name Z → A</option>
+      </select>
+      <svg class="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+           fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </div>
+
+    <button type="submit"
+            class="px-5 py-2.5 bg-black text-white text-xs font-bold rounded-xl hover:bg-gray-800 transition">
+      Apply
+    </button>
+
+    {% if has_filters %}
+    <a href="{% url 'admin_orders:inventory_list' %}"
+       class="px-4 py-2.5 border border-gray-200 text-xs font-bold text-gray-500 rounded-xl hover:border-gray-400 hover:text-gray-900 transition">
+      Clear
+    </a>
+    {% endif %}
+
+  </form>
+</div>
+
+<!-- Inventory Table -->
+{% if page_obj.object_list %}
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
+  <table class="w-full">
+    <thead>
+      <tr class="border-b border-gray-100 bg-gray-50">
+        <th class="text-left px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Product</th>
+        <th class="text-left px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Variant</th>
+        <th class="text-left px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">SKU</th>
+        <th class="text-left px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Price</th>
+        <th class="text-left px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Stock</th>
+        <th class="text-left px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+        <th class="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Update</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-50" id="inventoryTable">
+      {% for variant in page_obj %}
+      <tr class="hover:bg-gray-50 transition" id="row_{{ variant.pk }}">
+
+        <!-- Product -->
+        <td class="px-6 py-4">
+          <p class="text-xs font-bold text-gray-900 leading-tight">
+            {{ variant.product.name }}
+          </p>
+          <p class="text-[10px] text-gray-400 mt-0.5">
+            {{ variant.product.category.name|default:"—" }}
+          </p>
+        </td>
+
+        <!-- Variant details -->
+        <td class="px-6 py-4">
+          <div class="flex flex-wrap gap-1">
+            {% if variant.device_model %}
+            <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100">
+              {{ variant.device_model.name }}
+            </span>
+            {% endif %}
+            {% if variant.color %}
+            <span class="flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100">
+              <span class="w-2 h-2 rounded-full inline-block border border-gray-200"
+                    style="background:{{ variant.color_code }}"></span>
+              {{ variant.get_color_display }}
+            </span>
+            {% endif %}
+          </div>
+        </td>
+
+        <!-- SKU -->
+        <td class="px-6 py-4">
+          <p class="text-[10px] text-gray-400 font-mono">{{ variant.sku|default:"—" }}</p>
+        </td>
+
+        <!-- Price -->
+        <td class="px-6 py-4">
+          <p class="text-xs font-bold text-gray-900">₹{{ variant.price }}</p>
+          {% if variant.discount_percentage > 0 %}
+          <p class="text-[10px] text-green-600 font-semibold">{{ variant.discount_percentage }}% off</p>
+          {% endif %}
+        </td>
+
+        <!-- Current Stock -->
+        <td class="px-6 py-4">
+          <p class="text-sm font-black
+             {% if variant.stock == 0 %}text-red-500
+             {% elif variant.stock <= 10 %}text-yellow-500
+             {% else %}text-green-600{% endif %}"
+             id="stockDisplay_{{ variant.pk }}">
+            {{ variant.stock }}
+          </p>
+        </td>
+
+        <!-- Stock Status Badge -->
+        <td class="px-6 py-4">
+          <span id="stockBadge_{{ variant.pk }}"
+                class="text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest
+                {% if variant.stock == 0 %}bg-red-50 text-red-500 border border-red-100
+                {% elif variant.stock <= 10 %}bg-yellow-50 text-yellow-600 border border-yellow-100
+                {% else %}bg-green-50 text-green-600 border border-green-100{% endif %}">
+            {% if variant.stock == 0 %}Out of Stock
+            {% elif variant.stock <= 10 %}Low Stock
+            {% else %}In Stock{% endif %}
+          </span>
+        </td>
+
+        <!-- Update Stock Input -->
+        <td class="px-6 py-4">
+          <div class="flex items-center gap-2 justify-center">
+            <input type="number"
+                   id="stockInput_{{ variant.pk }}"
+                   value="{{ variant.stock }}"
+                   min="0"
+                   class="w-20 px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-center focus:outline-none focus:ring-2 focus:ring-black transition"
+                   onkeydown="if(event.key==='Enter') updateStock({{ variant.pk }})">
+            <button onclick="updateStock({{ variant.pk }})"
+                    id="updateBtn_{{ variant.pk }}"
+                    class="px-3 py-2 bg-black text-white text-[9px] font-bold rounded-xl hover:bg-gray-800 transition uppercase tracking-wider whitespace-nowrap">
+              Save
+            </button>
+          </div>
+          <!-- Feedback message per row -->
+          <p id="stockMsg_{{ variant.pk }}"
+             class="text-[9px] font-bold text-center mt-1 hidden"></p>
+        </td>
+
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+<div class="flex items-center justify-between border-t border-gray-100 pt-6">
+  <p class="text-xs text-gray-400 font-medium">
+    Showing <span class="text-black font-bold">{{ page_obj.start_index }}</span>–<span class="text-black font-bold">{{ page_obj.end_index }}</span>
+    of <span class="text-black font-bold">{{ page_obj.paginator.count }}</span> variants
+  </p>
+  <div class="flex items-center gap-1.5">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if stock_filter %}&stock={{ stock_filter }}{% endif %}&sort={{ sort_by }}"
+       class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-black hover:text-black transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </a>
+    {% endif %}
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}
+      <span class="w-9 h-9 flex items-center justify-center rounded-lg bg-black text-white text-xs font-bold shadow-sm">{{ num }}</span>
+      {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+      <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if stock_filter %}&stock={{ stock_filter }}{% endif %}&sort={{ sort_by }}"
+         class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-black hover:text-black transition text-xs font-semibold">
+        {{ num }}
+      </a>
+      {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if stock_filter %}&stock={{ stock_filter }}{% endif %}&sort={{ sort_by }}"
+       class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-black hover:text-black transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+{% else %}
+<!-- Empty State -->
+<div class="bg-white rounded-3xl border border-gray-100 p-16 text-center shadow-sm">
+  <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+    <svg class="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+    </svg>
+  </div>
+  <h3 class="text-xl font-bold text-gray-900 mb-2">
+    {% if has_filters %}No variants match your filters{% else %}No variants found{% endif %}
+  </h3>
+  <p class="text-gray-400 text-sm mb-8 max-w-xs mx-auto">
+    {% if has_filters %}
+      Try adjusting your search or filter criteria.
+    {% else %}
+      Add products and variants first to manage inventory.
+    {% endif %}
+  </p>
+  {% if has_filters %}
+  <a href="{% url 'admin_orders:inventory_list' %}"
+     class="inline-flex items-center gap-2 bg-black text-white px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition">
+    Clear Filters
+  </a>
+  {% endif %}
+</div>
+{% endif %}
+
+
+<script>
+// ── UPDATE STOCK VIA AJAX ─────────────────────────────────────────────────────
+// Each row has its own Save button and input.
+// When Save is clicked, sends new stock value to the server via AJAX.
+// Updates the display number and badge colour immediately — no page reload.
+
+async function updateStock(variantId) {
+  const input  = document.getElementById(`stockInput_${variantId}`);
+  const btn    = document.getElementById(`updateBtn_${variantId}`);
+  const msgEl  = document.getElementById(`stockMsg_${variantId}`);
+  const newStock = parseInt(input.value);
+
+  // Basic client-side validation before hitting the server
+  if (isNaN(newStock) || newStock < 0) {
+    showRowMsg(msgEl, 'Invalid value', 'error');
+    return;
+  }
+
+  btn.disabled    = true;
+  btn.textContent = '…';
+
+  const formData = new FormData();
+  formData.append('stock', newStock);
+  formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+  try {
+    const resp = await fetch(`/manage/orders/inventory/${variantId}/update-stock/`, {
+      method:  'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      body:    formData,
+    });
+    const data = await resp.json();
+
+    if (data.ok) {
+      // Update the displayed stock number
+      const displayEl = document.getElementById(`stockDisplay_${variantId}`);
+      if (displayEl) {
+        displayEl.textContent = data.new_stock;
+        // Update colour based on new stock level
+        displayEl.className = 'text-sm font-black ' + getStockColour(data.new_stock);
+      }
+
+      // Update the status badge
+      const badgeEl = document.getElementById(`stockBadge_${variantId}`);
+      if (badgeEl) {
+        const { text, cls } = getStockBadge(data.new_stock);
+        badgeEl.textContent = text;
+        badgeEl.className   = `text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest ${cls}`;
+      }
+
+      showRowMsg(msgEl, 'Saved!', 'success');
+    } else {
+      showRowMsg(msgEl, data.error || 'Failed', 'error');
+    }
+
+  } catch {
+    showRowMsg(msgEl, 'Network error', 'error');
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'Save';
+  }
+}
+
+function getStockColour(stock) {
+  if (stock === 0)   return 'text-red-500';
+  if (stock <= 10)   return 'text-yellow-500';
+  return 'text-green-600';
+}
+
+function getStockBadge(stock) {
+  if (stock === 0)  return { text: 'Out of Stock', cls: 'bg-red-50 text-red-500 border border-red-100' };
+  if (stock <= 10)  return { text: 'Low Stock',    cls: 'bg-yellow-50 text-yellow-600 border border-yellow-100' };
+  return             { text: 'In Stock',      cls: 'bg-green-50 text-green-600 border border-green-100' };
+}
+
+function showRowMsg(el, text, type) {
+  el.textContent = text;
+  el.className   = type === 'success'
+    ? 'text-[9px] font-bold text-center mt-1 text-green-600'
+    : 'text-[9px] font-bold text-center mt-1 text-red-500';
+  el.classList.remove('hidden');
+  // Auto-hide after 2 seconds
+  setTimeout(() => el.classList.add('hidden'), 2000);
+}
+</script>
+
+{% endblock %}

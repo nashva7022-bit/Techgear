@@ -1279,6 +1279,26 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
       if (stock) stock.classList.add('error');
       valid = false;
     }
+
+    // Discount validation for new variants
+const discountEl = card.querySelector('input[name="new_variant_discount_percentage"]');
+const priceEl    = document.getElementById(`nPrice_${idx}`);
+const priceVal   = parseFloat(priceEl?.value || 0);
+const discVal    = parseFloat(discountEl?.value || 0);
+
+if (discVal < 0 || discVal > 90) {
+    errs.push(`New variant ${n}: Discount must be between 0% and 90%.`);
+    if (discountEl) discountEl.classList.add('error');
+    valid = false;
+}
+if (priceVal > 0 && discVal > 0) {
+    const discounted = priceVal - (priceVal * discVal / 100);
+    if (discounted <= 0) {
+        errs.push(`New variant ${n}: Discount makes final price ₹0 or less.`);
+        if (discountEl) discountEl.classList.add('error');
+        valid = false;
+    }
+}
     if (cnt < 3) {
       errs.push(`New variant ${n}: Upload at least 3 images.`);
       const errEl = document.getElementById(`nImgError_${idx}`);
@@ -1288,8 +1308,10 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
   });
 
   // Existing variants image count check
+ // ── Existing variants: image count + discount validation ──
   {% for variant in existing_variants %}
   (function() {
+    // Image count check
     const grid    = document.getElementById('eImgGrid_{{ variant.pk }}');
     const total   = grid ? grid.querySelectorAll('.img-thumb-wrap').length : 0;
     const deleted = existingDeletedIds[{{ variant.pk }}] ? existingDeletedIds[{{ variant.pk }}].size : 0;
@@ -1302,6 +1324,27 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
       valid = false;
     } else {
       if (errEl) errEl.style.display = 'none';
+    }
+
+    // Discount validation — inside same IIFE so variant context is correct
+    const prefix        = 'existing_variant_{{ variant.pk }}';
+    const priceInput    = document.querySelector(`input[name="${prefix}_price"]`);
+    const discountInput = document.querySelector(`input[name="${prefix}_discount_percentage"]`);
+    const priceVal      = parseFloat(priceInput?.value || 0);
+    const discVal       = parseFloat(discountInput?.value || 0);
+
+    if (discVal < 0 || discVal > 90) {
+      errs.push('Variant "{{ variant.device_model.name|default:"No Device"|escapejs }}": Discount must be 0–90%.');
+      if (discountInput) discountInput.classList.add('error');
+      valid = false;
+    }
+    if (priceVal > 0 && discVal > 0) {
+      const discounted = priceVal - (priceVal * discVal / 100);
+      if (discounted <= 0) {
+        errs.push('Variant "{{ variant.device_model.name|default:"No Device"|escapejs }}": Discount makes final price ₹0 or less.');
+        if (discountInput) discountInput.classList.add('error');
+        valid = false;
+      }
     }
   })();
   {% endfor %}
@@ -1316,7 +1359,6 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     ).join('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
-});
 
 // ── INIT ──
 // FIX: Load device models properly on page load without calling onBrandChange()

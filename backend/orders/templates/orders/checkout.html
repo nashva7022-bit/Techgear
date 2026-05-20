@@ -41,7 +41,6 @@
     border: 1px solid rgba(255,255,255,0.15); letter-spacing: 0.08em; text-transform: uppercase;
   }
 
-  /* Edit button — bottom right of each address card */
   .addr-edit-btn {
     position: absolute; bottom: 14px; right: 14px;
     font-size: 10px; font-weight: 700;
@@ -115,7 +114,7 @@
 
   <div class="flex flex-col lg:flex-row gap-8 items-start">
 
-    <!-- LEFT -->
+    <!-- ── LEFT ── -->
     <div class="flex-1 min-w-0">
 
       <!-- STEP 1: ADDRESS -->
@@ -135,10 +134,14 @@
         <div class="space-y-3" id="addressList">
           {% for address in addresses %}
           <div class="addr-card {% if address.is_default %}selected{% endif %}"
-               id="addrCard_{{ address.pk }}"
-               onclick="selectAddress({{ address.pk }}, this)">
+     id="addrCard_{{ address.pk }}"
+     onclick="handleCardClick(event, '{{ address.pk }}', this)">
+            <!-- FIX: direct onclick on the card for selection.
+                 No delegated listener — avoids interference from other clicks. -->
 
-            <input type="radio" name="selected_address_radio" value="{{ address.pk }}" {% if address.is_default %}checked{% endif %}>
+            <input type="radio" name="selected_address_radio"
+                   value="{{ address.pk }}"
+                   {% if address.is_default %}checked{% endif %}>
             <div class="addr-tick"><i class="bi bi-check2"></i></div>
 
             <div class="flex items-start gap-3 pr-8">
@@ -150,15 +153,22 @@
                   <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-green-400/15 text-green-400 border border-green-400/20 uppercase">Default</span>
                   {% endif %}
                 </div>
-                <p class="text-xs text-white/55 leading-relaxed">{{ address.address_line_1 }}{% if address.address_line_2 %}, {{ address.address_line_2 }}{% endif %}</p>
-                <p class="text-xs text-white/55">{{ address.city }}, {{ address.state }} — {{ address.postal_code }}</p>
-                <p class="text-xs text-white/40 mt-1"><i class="bi bi-telephone mr-1"></i>{{ address.phone }}</p>
+                <p class="text-xs text-white/55 leading-relaxed">
+                  {{ address.address_line_1 }}{% if address.address_line_2 %}, {{ address.address_line_2 }}{% endif %}
+                </p>
+                <p class="text-xs text-white/55">
+                  {{ address.city }}, {{ address.state }} — {{ address.postal_code }}
+                </p>
+                <p class="text-xs text-white/40 mt-1">
+                  <i class="bi bi-telephone mr-1"></i>{{ address.phone }}
+                </p>
               </div>
             </div>
 
-            <!-- Edit button — event.stopPropagation() prevents card selection when edit is clicked -->
-            <!-- New — uses data attributes, no quote issues -->
-<button type="button" class="addr-edit-btn edit-trigger"
+            <!-- FIX: direct onclick on edit button with event.stopPropagation()
+                 stopPropagation stops the click from reaching the card's onclick above.
+                 This is why edit works independently of card selection. -->
+            <button type="button" class="addr-edit-btn js-edit-btn"
         data-id="{{ address.pk }}"
         data-name="{{ address.full_name|escapejs }}"
         data-phone="{{ address.phone|escapejs }}"
@@ -207,34 +217,52 @@
         <div class="flex items-center gap-3 mb-4">
           <span class="w-7 h-7 rounded-full bg-white text-[var(--teal)] text-xs font-black flex items-center justify-center flex-shrink-0">3</span>
           <h2 class="text-base font-bold text-white uppercase tracking-wider">
-            Order Items <span class="text-white/30 font-normal normal-case text-sm ml-1">({{ cart_items|length }} item{{ cart_items|length|pluralize }})</span>
+            Order Items
+            <span class="text-white/30 font-normal normal-case text-sm ml-1">
+              ({{ cart_items|length }} item{{ cart_items|length|pluralize }})
+            </span>
           </h2>
         </div>
         <div class="bg-white/5 border border-white/8 rounded-2xl overflow-hidden">
           {% for item in cart_items %}
           <div class="checkout-item px-5 flex items-center gap-4">
             {% if item.primary_image %}
-            <img src="{{ item.primary_image.image.url }}" alt="{{ item.product_name }}" class="checkout-item-img">
+            <img src="{{ item.primary_image.image.url }}"
+                 alt="{{ item.product_name }}"
+                 class="checkout-item-img">
             {% else %}
-            <div class="checkout-item-img-placeholder"><i class="bi bi-image text-white/20"></i></div>
+            <div class="checkout-item-img-placeholder">
+              <i class="bi bi-image text-white/20"></i>
+            </div>
             {% endif %}
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-bold text-white leading-snug line-clamp-1">{{ item.product_name }}</p>
+              <p class="text-sm font-bold text-white leading-snug line-clamp-1">
+                {{ item.product_name }}
+              </p>
               <div class="flex flex-wrap items-center gap-1.5 mt-1">
-                {% if item.device_model %}<span class="text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">{{ item.device_model }}</span>{% endif %}
-                {% if item.case_type %}<span class="text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">{{ item.case_type }}</span>{% endif %}
+                {% if item.device_model %}
+                <span class="text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">{{ item.device_model }}</span>
+                {% endif %}
+                {% if item.case_type %}
+                <span class="text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">{{ item.case_type }}</span>
+                {% endif %}
                 <span class="flex items-center gap-1 text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
-                  <span class="w-2.5 h-2.5 rounded-full inline-block border border-white/20" style="background:{{ item.colour_code }}"></span>
+                  <span class="w-2.5 h-2.5 rounded-full inline-block border border-white/20"
+                        style="background:{{ item.colour_code }}"></span>
                   {{ item.colour }}
                 </span>
               </div>
               {% if item.custom_text %}
-              <p class="text-[10px] text-purple-400/70 mt-1 italic"><i class="bi bi-palette2 mr-1"></i>"{{ item.custom_text }}"</p>
+              <p class="text-[10px] text-purple-400/70 mt-1 italic">
+                <i class="bi bi-palette2 mr-1"></i>"{{ item.custom_text }}"
+              </p>
               {% endif %}
             </div>
             <div class="text-right flex-shrink-0">
               <p class="text-sm font-black text-white">₹{{ item.subtotal }}</p>
-              <p class="text-[10px] text-white/35 mt-0.5">₹{{ item.variant.discounted_price }} × {{ item.quantity }}</p>
+              <p class="text-[10px] text-white/35 mt-0.5">
+                ₹{{ item.variant.discounted_price }} × {{ item.quantity }}
+              </p>
             </div>
           </div>
           {% endfor %}
@@ -243,19 +271,25 @@
 
     </div>
 
-    <!-- RIGHT: SUMMARY -->
+    <!-- ── RIGHT: SUMMARY ── -->
     <div class="w-full lg:w-80 flex-shrink-0">
       <div class="summary-card">
         <h2 class="text-xs font-bold text-white uppercase tracking-widest mb-5">Order Summary</h2>
+
         <div class="space-y-3 mb-2">
           {% for item in cart_items %}
           <div class="flex items-start justify-between gap-3">
-            <span class="text-xs text-white/50 flex-1 leading-relaxed line-clamp-2">{{ item.product_name }} <span class="text-white/25">× {{ item.quantity }}</span></span>
+            <span class="text-xs text-white/50 flex-1 leading-relaxed line-clamp-2">
+              {{ item.product_name }}
+              <span class="text-white/25"> × {{ item.quantity }}</span>
+            </span>
             <span class="text-xs font-semibold text-white flex-shrink-0">₹{{ item.subtotal }}</span>
           </div>
           {% endfor %}
         </div>
+
         <div class="divider"></div>
+
         <div class="space-y-2 mb-2">
           <div class="flex justify-between items-center">
             <span class="text-xs text-white/50">Subtotal</span>
@@ -269,14 +303,19 @@
           {% endif %}
           <div class="flex justify-between items-center">
             <span class="text-xs text-white/50">Shipping</span>
-            <span class="text-xs font-semibold text-green-400">{% if shipping_charge == 0 %}Free{% else %}₹{{ shipping_charge }}{% endif %}</span>
+            <span class="text-xs font-semibold text-green-400">
+              {% if shipping_charge == 0 %}Free{% else %}₹{{ shipping_charge }}{% endif %}
+            </span>
           </div>
         </div>
+
         <div class="divider"></div>
+
         <div class="flex justify-between items-center mb-6">
           <span class="text-sm font-bold text-white">Total</span>
           <span class="text-xl font-black text-white">₹{{ total_amount }}</span>
         </div>
+
         {% if discount_amount > 0 %}
         <div class="flex items-center gap-2 mb-4 px-3 py-2.5 rounded-xl bg-green-400/8 border border-green-400/15">
           <i class="bi bi-tag-fill text-green-400 text-sm"></i>
@@ -284,24 +323,34 @@
         </div>
         {% endif %}
 
+        <!-- Place Order form -->
         <form method="POST" action="{% url 'orders:checkout' %}" id="placeOrderForm">
           {% csrf_token %}
           <input type="hidden" name="action" value="place_order">
           <input type="hidden" name="selected_address" id="selectedAddressInput"
                  value="{% for a in addresses %}{% if a.is_default %}{{ a.pk }}{% endif %}{% endfor %}">
-          <button type="submit" class="place-btn" id="placeOrderBtn" {% if not addresses %}disabled{% endif %}>
+          <button type="submit" class="place-btn" id="placeOrderBtn"
+                  {% if not addresses %}disabled{% endif %}>
             <i class="bi bi-lock-fill text-xs"></i> Place Order — COD
           </button>
         </form>
 
         {% if not addresses %}
-        <p class="text-[11px] text-white/30 text-center mt-3 leading-relaxed">Add a delivery address to place your order.</p>
+        <p class="text-[11px] text-white/30 text-center mt-3 leading-relaxed">
+          Add a delivery address to place your order.
+        </p>
         {% endif %}
 
         <div class="mt-5 space-y-2.5">
-          <div class="flex items-center gap-2 text-white/30 text-[11px]"><i class="bi bi-shield-check text-green-400"></i> Secure checkout</div>
-          <div class="flex items-center gap-2 text-white/30 text-[11px]"><i class="bi bi-truck text-blue-400"></i> Dispatched within 48 hours</div>
-          <div class="flex items-center gap-2 text-white/30 text-[11px]"><i class="bi bi-arrow-counterclockwise text-yellow-400"></i> Easy 7-day returns</div>
+          <div class="flex items-center gap-2 text-white/30 text-[11px]">
+            <i class="bi bi-shield-check text-green-400"></i> Secure checkout
+          </div>
+          <div class="flex items-center gap-2 text-white/30 text-[11px]">
+            <i class="bi bi-truck text-blue-400"></i> Dispatched within 48 hours
+          </div>
+          <div class="flex items-center gap-2 text-white/30 text-[11px]">
+            <i class="bi bi-arrow-counterclockwise text-yellow-400"></i> Easy 7-day returns
+          </div>
         </div>
       </div>
     </div>
@@ -310,19 +359,29 @@
 </div>
 
 
-<!-- ══ ADDRESS MODAL — ADD & EDIT ══ -->
+<!-- ══════════════════════════════════════════════════════
+     ADDRESS MODAL — shared for both ADD and EDIT
+     Mode is controlled by JS:
+       openAddModal()  → clears form, action='add_address'
+       openEditModal() → prefills form, action='edit_address'
+════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="addressModal" onclick="handleModalBackdrop(event)">
   <div class="modal-box">
+
     <div class="flex items-center justify-between mb-6">
       <div>
         <h3 class="text-base font-bold text-white" id="modalTitle">Add New Address</h3>
-        <p class="text-[11px] text-white/35 mt-0.5" id="modalSubtitle">This address will be saved to your account</p>
+        <p class="text-[11px] text-white/35 mt-0.5" id="modalSubtitle">
+          This address will be saved to your account
+        </p>
       </div>
-      <button onclick="closeAddressModal()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/12 flex items-center justify-center text-white/40 hover:text-white transition">
+      <button onclick="closeAddressModal()"
+              class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/12 flex items-center justify-center text-white/40 hover:text-white transition">
         <i class="bi bi-x text-lg"></i>
       </button>
     </div>
 
+    <!-- General error banner -->
     <div id="modalErrors" class="hidden mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
       <p class="text-xs text-red-400 font-semibold" id="modalErrorText"></p>
     </div>
@@ -336,49 +395,60 @@
 
         <div class="modal-field col-span-2">
           <label class="modal-label">Full Name *</label>
-          <input type="text" name="full_name" id="af_full_name" placeholder="Your full name" class="modal-input">
+          <input type="text" name="full_name" id="af_full_name"
+                 placeholder="Your full name" class="modal-input">
           <p class="field-error hidden" id="err_full_name"></p>
         </div>
 
         <div class="modal-field col-span-2">
           <label class="modal-label">Phone Number *</label>
-          <input type="text" name="phone" id="af_phone" placeholder="10-digit mobile number" class="modal-input" maxlength="10">
+          <input type="text" name="phone" id="af_phone"
+                 placeholder="10-digit mobile number" class="modal-input" maxlength="10">
           <p class="field-error hidden" id="err_phone"></p>
         </div>
 
         <div class="modal-field col-span-2">
           <label class="modal-label">Address Line 1 *</label>
-          <input type="text" name="address_line_1" id="af_address_line_1" placeholder="House no, street, area" class="modal-input">
+          <input type="text" name="address_line_1" id="af_address_line_1"
+                 placeholder="House no, street, area" class="modal-input">
           <p class="field-error hidden" id="err_address_line_1"></p>
         </div>
 
         <div class="modal-field col-span-2">
-          <label class="modal-label">Address Line 2 <span class="normal-case text-white/20 font-normal">(optional)</span></label>
-          <input type="text" name="address_line_2" id="af_address_line_2" placeholder="Landmark, flat no." class="modal-input">
+          <label class="modal-label">
+            Address Line 2
+            <span class="normal-case text-white/20 font-normal">(optional)</span>
+          </label>
+          <input type="text" name="address_line_2" id="af_address_line_2"
+                 placeholder="Landmark, flat no." class="modal-input">
         </div>
 
         <div class="modal-field">
           <label class="modal-label">City *</label>
-          <input type="text" name="city" id="af_city" placeholder="City" class="modal-input">
+          <input type="text" name="city" id="af_city"
+                 placeholder="City" class="modal-input">
           <p class="field-error hidden" id="err_city"></p>
         </div>
 
         <div class="modal-field">
           <label class="modal-label">State *</label>
-          <input type="text" name="state" id="af_state" placeholder="State" class="modal-input">
+          <input type="text" name="state" id="af_state"
+                 placeholder="State" class="modal-input">
           <p class="field-error hidden" id="err_state"></p>
         </div>
 
         <div class="modal-field">
           <label class="modal-label">Postal Code *</label>
-          <input type="text" name="postal_code" id="af_postal_code" placeholder="6-digit pincode" class="modal-input" maxlength="6">
+          <input type="text" name="postal_code" id="af_postal_code"
+                 placeholder="6-digit pincode" class="modal-input" maxlength="6">
           <p class="field-error hidden" id="err_postal_code"></p>
         </div>
 
         <div class="modal-field">
           <label class="modal-label">Country *</label>
-          <!-- FIX: This field was missing before — caused "This field is required" error on form submit -->
-          <input type="text" name="country" id="af_country" placeholder="Country" class="modal-input" value="India">
+          <!-- This field was missing before — caused "country required" error -->
+          <input type="text" name="country" id="af_country"
+                 placeholder="Country" class="modal-input" value="India">
           <p class="field-error hidden" id="err_country"></p>
         </div>
 
@@ -396,7 +466,8 @@
 
         <div class="modal-field col-span-2">
           <label class="flex items-center gap-3 cursor-pointer">
-            <input type="checkbox" name="is_default" id="af_is_default" value="1" class="w-4 h-4 rounded accent-white cursor-pointer">
+            <input type="checkbox" name="is_default" id="af_is_default" value="1"
+                   class="w-4 h-4 rounded accent-white cursor-pointer">
             <span class="text-xs font-semibold text-white/60">Set as default address</span>
           </label>
         </div>
@@ -408,38 +479,32 @@
           <i class="bi bi-plus-circle text-sm" id="saveBtnIcon"></i>
           <span id="saveBtnText">Save Address</span>
         </button>
-        <button type="button" onclick="closeAddressModal()" class="modal-cancel-btn">Cancel</button>
+        <button type="button" onclick="closeAddressModal()" class="modal-cancel-btn">
+          Cancel
+        </button>
       </div>
     </form>
+
   </div>
 </div>
 
 
 <script>
 
-  // Single delegated listener handles ALL edit buttons
-// — both server-rendered and dynamically added ones
-document.getElementById('addressList').addEventListener('click', function(e) {
-  const btn = e.target.closest('.edit-trigger');
-  if (!btn) return;
-  e.stopPropagation(); // prevent card selection
 
-  openEditModal(
-    btn.dataset.id,
-    btn.dataset.name,
-    btn.dataset.phone,
-    btn.dataset.line1,
-    btn.dataset.line2,
-    btn.dataset.city,
-    btn.dataset.state,
-    btn.dataset.postal,
-    btn.dataset.country,
-    btn.dataset.label,
-    btn.dataset.default === 'true'
-  );
-});
+// ── STATE ─────────────────────────────────────────────────────────────────────
 let selectedAddressId = document.getElementById('selectedAddressInput').value || null;
-let modalMode = 'add'; // switches between 'add' and 'edit'
+let modalMode = 'add'; // 'add' or 'edit'
+function handleCardClick(event, pk, card) {
+  // If the click came from the edit button, do nothing
+  if (event.target.closest('.addr-edit-btn')) return;
+  selectAddress(pk, card);
+}
+
+// ── SELECT ADDRESS ────────────────────────────────────────────────────────────
+// Called by direct onclick on each address card.
+// Removes 'selected' from all cards, adds it to the clicked one,
+// and updates the hidden input for the place-order form.
 
 function selectAddress(pk, card) {
   document.querySelectorAll('.addr-card').forEach(c => c.classList.remove('selected'));
@@ -450,31 +515,46 @@ function selectAddress(pk, card) {
   if (btn) btn.disabled = false;
 }
 
+
+// ── OPEN ADD MODAL ────────────────────────────────────────────────────────────
+// Clears the form and sets it up for adding a brand new address.
+
 function openAddModal() {
   modalMode = 'add';
-  document.getElementById('formAction').value       = 'add_address';
-  document.getElementById('editingAddressId').value = '';
+  document.getElementById('formAction').value          = 'add_address';
+  document.getElementById('editingAddressId').value    = '';
   document.getElementById('modalTitle').textContent    = 'Add New Address';
   document.getElementById('modalSubtitle').textContent = 'This address will be saved to your account';
-  document.getElementById('saveBtnIcon').className   = 'bi bi-plus-circle text-sm';
-  document.getElementById('saveBtnText').textContent = 'Save Address';
+  document.getElementById('saveBtnIcon').className     = 'bi bi-plus-circle text-sm';
+  document.getElementById('saveBtnText').textContent   = 'Save Address';
   document.getElementById('addressForm').reset();
-  // reset() clears everything — restore country default
+  // reset() clears all inputs including country — restore default
   document.getElementById('af_country').value = 'India';
   clearModalErrors();
   document.getElementById('addressModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 
+// Attach edit listeners to all server-rendered cards on page load
+document.querySelectorAll('.addr-card').forEach(card => attachEditListener(card));
+
+
+// ── OPEN EDIT MODAL ───────────────────────────────────────────────────────────
+// Called by direct onclick on each card's Edit button.
+// Pre-fills the form with the existing address data.
+// event.stopPropagation() in the button's onclick prevents the card's
+// selectAddress from also firing.
+
 function openEditModal(id, fullName, phone, line1, line2, city, state, postal, country, label, isDefault) {
   modalMode = 'edit';
-  document.getElementById('formAction').value       = 'edit_address';
-  document.getElementById('editingAddressId').value = id;
+  document.getElementById('formAction').value          = 'edit_address';
+  document.getElementById('editingAddressId').value    = id;
   document.getElementById('modalTitle').textContent    = 'Edit Address';
   document.getElementById('modalSubtitle').textContent = 'Changes will update your saved address';
-  document.getElementById('saveBtnIcon').className   = 'bi bi-pencil text-sm';
-  document.getElementById('saveBtnText').textContent = 'Update Address';
-  // Pre-fill with existing address data
+  document.getElementById('saveBtnIcon').className     = 'bi bi-pencil text-sm';
+  document.getElementById('saveBtnText').textContent   = 'Update Address';
+
+  // Pre-fill all fields with current address values
   document.getElementById('af_full_name').value      = fullName;
   document.getElementById('af_phone').value          = phone;
   document.getElementById('af_address_line_1').value = line1;
@@ -485,38 +565,61 @@ function openEditModal(id, fullName, phone, line1, line2, city, state, postal, c
   document.getElementById('af_country').value        = country || 'India';
   document.getElementById('af_address_label').value  = label;
   document.getElementById('af_is_default').checked   = isDefault;
+
   clearModalErrors();
   document.getElementById('addressModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
+
+
+// ── CLOSE MODAL ───────────────────────────────────────────────────────────────
 
 function closeAddressModal() {
   document.getElementById('addressModal').classList.remove('open');
   document.body.style.overflow = '';
   clearModalErrors();
 }
+
 function handleModalBackdrop(e) {
   if (e.target === document.getElementById('addressModal')) closeAddressModal();
 }
 
+
+// ── ERROR HELPERS ─────────────────────────────────────────────────────────────
+
 function clearModalErrors() {
-  document.querySelectorAll('.field-error').forEach(el => { el.textContent = ''; el.classList.add('hidden'); });
+  document.querySelectorAll('.field-error').forEach(el => {
+    el.textContent = '';
+    el.classList.add('hidden');
+  });
   const errBox = document.getElementById('modalErrors');
   if (errBox) errBox.classList.add('hidden');
 }
+
 function showFieldErrors(errors) {
   clearModalErrors();
   let hasFieldErrors = false;
   for (const [field, msgs] of Object.entries(errors)) {
     const el = document.getElementById(`err_${field}`);
-    if (el) { el.textContent = Array.isArray(msgs) ? msgs[0] : msgs; el.classList.remove('hidden'); hasFieldErrors = true; }
+    if (el) {
+      el.textContent = Array.isArray(msgs) ? msgs[0] : msgs;
+      el.classList.remove('hidden');
+      hasFieldErrors = true;
+    }
   }
   if (!hasFieldErrors) {
-    const errBox = document.getElementById('modalErrors');
+    const errBox  = document.getElementById('modalErrors');
     const errText = document.getElementById('modalErrorText');
-    if (errBox && errText) { errText.textContent = 'Please fix the errors and try again.'; errBox.classList.remove('hidden'); }
+    if (errBox && errText) {
+      errText.textContent = 'Please fix the errors and try again.';
+      errBox.classList.remove('hidden');
+    }
   }
 }
+
+
+// ── SUBMIT FORM (add or edit) ─────────────────────────────────────────────────
+// Single function handles both modes — modalMode tells us which one.
 
 async function submitAddressForm() {
   const form     = document.getElementById('addressForm');
@@ -524,7 +627,7 @@ async function submitAddressForm() {
   const isEdit   = modalMode === 'edit';
   const formData = new FormData(form);
 
-  btn.disabled = true;
+  btn.disabled  = true;
   btn.innerHTML = '<i class="bi bi-hourglass-split text-sm"></i> Saving…';
 
   try {
@@ -537,13 +640,17 @@ async function submitAddressForm() {
 
     if (data.ok) {
       if (isEdit) {
-        updateAddressCard(data.address); // update card in DOM, no reload
+        updateAddressCard(data.address);
+        // Update card in DOM with new data — no page reload
       } else {
-        addAddressCard(data.address);    // add new card to DOM
+        addAddressCard(data.address);
+        // Auto-select the newly added address
         const newCard = document.getElementById(`addrCard_${data.address.id}`);
         if (newCard) selectAddress(data.address.id, newCard);
+        // Enable place order button
         const placeBtn = document.getElementById('placeOrderBtn');
         if (placeBtn) placeBtn.disabled = false;
+        // Remove no-address warning
         const warn = document.querySelector('.warn-banner');
         if (warn) warn.remove();
       }
@@ -551,18 +658,43 @@ async function submitAddressForm() {
     } else {
       showFieldErrors(data.errors || {});
     }
+
   } catch {
-    const errBox = document.getElementById('modalErrors');
+    const errBox  = document.getElementById('modalErrors');
     const errText = document.getElementById('modalErrorText');
-    if (errBox && errText) { errText.textContent = 'Something went wrong. Please try again.'; errBox.classList.remove('hidden'); }
+    if (errBox && errText) {
+      errText.textContent = 'Something went wrong. Please try again.';
+      errBox.classList.remove('hidden');
+    }
   } finally {
-    btn.disabled = false;
+    btn.disabled  = false;
     btn.innerHTML = `<i class="bi bi-${isEdit ? 'pencil' : 'plus-circle'} text-sm"></i> ${isEdit ? 'Update Address' : 'Save Address'}`;
   }
 }
 
+
+// ── BUILD CARD HTML ───────────────────────────────────────────────────────────
+// Shared by both addAddressCard and updateAddressCard.
+// Uses data-* attributes on the edit button — safe for any string values,
+// no quote-escaping issues inside inline onclick strings.
+
+function escAttr(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 function buildCardHTML(addr) {
-  // Store all address data in data attributes — no quote escaping issues
+  // The edit button uses data-* attributes to pass values to openEditModal.
+  // This avoids any quoting/escaping issues that come with inline onclick strings
+  // when address fields contain apostrophes or special characters.
   return `
     <input type="radio" name="selected_address_radio" value="${addr.id}">
     <div class="addr-tick"><i class="bi bi-check2"></i></div>
@@ -571,14 +703,16 @@ function buildCardHTML(addr) {
         <div class="flex items-center gap-2 mb-1 flex-wrap">
           <span class="text-sm font-bold text-white">${escHtml(addr.name)}</span>
           <span class="default-badge">${escHtml(addr.label)}</span>
-          ${addr.is_default ? '<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-green-400/15 text-green-400 border border-green-400/20 uppercase">Default</span>' : ''}
+          ${addr.is_default
+            ? '<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-green-400/15 text-green-400 border border-green-400/20 uppercase">Default</span>'
+            : ''}
         </div>
         <p class="text-xs text-white/55 leading-relaxed">${escHtml(addr.line1)}</p>
         <p class="text-xs text-white/55">${escHtml(addr.city)}, ${escHtml(addr.state)} — ${escHtml(addr.postal)}</p>
         <p class="text-xs text-white/40 mt-1"><i class="bi bi-telephone mr-1"></i>${escHtml(addr.phone)}</p>
       </div>
     </div>
-    <button type="button" class="addr-edit-btn edit-trigger"
+    <button type="button" class="addr-edit-btn js-edit-btn"
             data-id="${addr.id}"
             data-name="${escAttr(addr.name)}"
             data-phone="${escAttr(addr.phone)}"
@@ -595,35 +729,70 @@ function buildCardHTML(addr) {
   `;
 }
 
-// Escape HTML special chars for display
-function escHtml(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
 
-// Escape for use inside HTML attributes
-function escAttr(str) {
-  return String(str || '').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
+// ── ADD NEW ADDRESS CARD TO DOM ───────────────────────────────────────────────
 
 function addAddressCard(addr) {
   const list = document.getElementById('addressList');
   const card = document.createElement('div');
   card.className = 'addr-card';
-  card.id = `addrCard_${addr.id}`;
-  card.setAttribute('onclick', `selectAddress(${addr.id}, this)`);
+  card.id        = `addrCard_${addr.id}`;
+  // Direct onclick for card selection — same pattern as server-rendered cards
+  card.setAttribute('onclick', `selectAddress('${addr.id}', this)`);
   card.innerHTML = buildCardHTML(addr);
   list.appendChild(card);
+  // Attach edit button listener to the newly created card
+  attachEditListener(card);
 }
+
+
+// ── UPDATE EXISTING ADDRESS CARD IN DOM ──────────────────────────────────────
 
 function updateAddressCard(addr) {
   const card = document.getElementById(`addrCard_${addr.id}`);
-  if (card) card.innerHTML = buildCardHTML(addr);
-  card.setAttribute('onclick', `selectAddress(${addr.id}, this)`);
-  
+  if (!card) return;
+  card.innerHTML = buildCardHTML(addr);
+  // Re-attach edit listener since innerHTML was replaced
+  attachEditListener(card);
 }
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAddressModal(); });
-document.getElementById('addressForm').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submitAddressForm(); } });
+
+// ── ATTACH EDIT BUTTON LISTENER ───────────────────────────────────────────────
+// Used for dynamically created cards (add/update).
+// Server-rendered cards use inline onclick directly in the template.
+// Dynamic cards use this function to attach the same behavior.
+
+function attachEditListener(card) {
+  const editBtn = card.querySelector('.js-edit-btn');
+  if (!editBtn) return;
+  editBtn.addEventListener('click', function(e) {
+    e.stopPropagation(); // prevent card selectAddress from firing
+    openEditModal(
+      this.dataset.id,
+      this.dataset.name,
+      this.dataset.phone,
+      this.dataset.line1,
+      this.dataset.line2,
+      this.dataset.city,
+      this.dataset.state,
+      this.dataset.postal,
+      this.dataset.country,
+      this.dataset.label,
+      this.dataset.default === 'true'
+    );
+  });
+}
+
+
+// ── KEYBOARD ──────────────────────────────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeAddressModal();
+});
+
+document.getElementById('addressForm').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); submitAddressForm(); }
+});
 </script>
 
 {% endblock %}

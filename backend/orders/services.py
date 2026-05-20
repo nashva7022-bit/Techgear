@@ -5,7 +5,7 @@
 # This separation means if we add Razorpay later, we just add a new
 # function here. The view stays clean and simple.
 
-from django.db import transaction
+from django.db import transaction,IntegrityError
 # transaction.atomic() means "do all of this together or not at all".
 # Example: if saving the order succeeds but clearing the cart fails,
 # transaction.atomic() rolls EVERYTHING back. No half-saved orders.
@@ -153,17 +153,22 @@ def place_cod_order(user, cart, address):
     with transaction.atomic():
 
         # 6a: Create the Order record.
-        order = Order.objects.create(
-            user           = user,
-            payment_method = 'cod',
-            status         = 'pending',
-            **address_data,
-            # **address_data unpacks the dictionary into keyword arguments.
-            # It's the same as writing shipping_full_name=..., shipping_city=... etc.
-            # Much cleaner than listing every field manually.
-            **totals,
-            # Same for totals — unpacks subtotal, discount_amount, etc.
-        )
+        order = None
+        for _ in range(5):
+            try:
+                order = Order.objects.create(
+                    user           = user,
+                payment_method = 'cod',
+                status         = 'pending',
+                **address_data,
+                **totals,
+            )
+                break
+            except IntegrityError:
+                continue
+
+        if not order:
+            raise ValueError("Could not generate a unique order number. Please try again.")
 
         # 6b: Create one OrderItem for each cart item.
         for cart_item in cart_items:
@@ -223,11 +228,15 @@ def cancel_order(order, cancelled_by, reason=''):
     # If order is already shipped, this raises an error — customer can't cancel.
 
     with transaction.atomic():
+        old_status = order.status 
 
-        old_status   = order.status
-        order.status = 'cancelled'
-        order.save(update_fields=['status', 'updated_at'])
-
+        
+        order.status        = 'cancelled'
+        order.subtotal      = 0
+        order.discount_amount = 0
+        order.total_amount  = 0
+        order.save(update_fields=['status', 'subtotal', 'discount_amount', 'total_amount', 'updated_at'])
+        
         # Cancel all active items.
         active_items = order.items.filter(item_status='active')
         for item in active_items:
@@ -243,11 +252,12 @@ def cancel_order(order, cancelled_by, reason=''):
             # This is what your mentor mentioned — stock must go back up on cancellation.
 
         # Log the status change.
+       
         OrderStatusLog.objects.create(
             order      = order,
             changed_by = cancelled_by,
-            old_status = old_status,
-            new_status = 'cancelled',
+            old_status = old_status,       # ← what it WAS
+            new_status = 'cancelled',      # ← what it became
             note       = reason or 'Order cancelled.',
         )
 
@@ -298,38 +308,74 @@ def cancel_order_item(order_item, cancelled_by, reason=''):
 # ── RETURN SINGLE ITEM ────────────────────────────────────────────────────────
 
 def return_order_item(order_item, returned_by, reason):
-    # Returns one item from a delivered order.
-    # reason is MANDATORY here — we enforce it in the view too.
-
     if not reason or not reason.strip():
         raise ValueError("A reason is required to return an item.")
-    # Double safety — view will also check this, but we check here too.
 
     if not order_item.is_returnable:
         raise ValueError("This item cannot be returned at this stage.")
 
     with transaction.atomic():
-
-        order_item.item_status  = 'returned'
+        # Don't restore stock yet — wait for admin approval
+        order_item.item_status   = 'return_requested'  # ← changed
         order_item.return_reason = reason.strip()
         order_item.save(update_fields=['item_status', 'return_reason'])
 
-        # Restore stock when item is returned.
-        if order_item.variant:
-            order_item.variant.stock += order_item.quantity
-            order_item.variant.save(update_fields=['stock'])
-        # Returned product goes back to inventory — stock increases.
-
-        # Recalculate order total.
-        _recalculate_order_total(order_item.order)
-
-        # Log it.
+        # Log the request
         OrderStatusLog.objects.create(
             order      = order_item.order,
             changed_by = returned_by,
             old_status = order_item.order.status,
             new_status = order_item.order.status,
-            note       = f'Item "{order_item.product_name}" returned. Reason: {reason}',
+            note       = f'Return requested for "{order_item.product_name}". Reason: {reason}',
+        )
+
+    return order_item
+
+
+# ADD these two new functions
+
+def approve_return(order_item, approved_by):
+    if order_item.item_status != 'return_requested':
+        raise ValueError("This item does not have a pending return request.")
+
+    with transaction.atomic():
+        order_item.item_status = 'returned'
+        order_item.save(update_fields=['item_status'])
+
+        # NOW restore stock — item is physically back
+        if order_item.variant:
+            order_item.variant.stock += order_item.quantity
+            order_item.variant.save(update_fields=['stock'])
+
+        _recalculate_order_total(order_item.order)
+
+        OrderStatusLog.objects.create(
+            order      = order_item.order,
+            changed_by = approved_by,
+            old_status = order_item.order.status,
+            new_status = order_item.order.status,
+            note       = f'Return approved for "{order_item.product_name}". Stock restored.',
+        )
+
+    return order_item
+
+
+def reject_return(order_item, rejected_by, reason=''):
+    if order_item.item_status != 'return_requested':
+        raise ValueError("This item does not have a pending return request.")
+
+    with transaction.atomic():
+        # Set to return_rejected — permanently blocks re-requesting
+        order_item.item_status          = 'return_rejected'
+        order_item.return_rejected_reason = reason.strip()
+        order_item.save(update_fields=['item_status', 'return_rejected_reason'])
+
+        OrderStatusLog.objects.create(
+            order      = order_item.order,
+            changed_by = rejected_by,
+            old_status = order_item.order.status,
+            new_status = order_item.order.status,
+            note       = f'Return rejected for "{order_item.product_name}". Reason: {reason or "Not provided"}',
         )
 
     return order_item
@@ -338,26 +384,16 @@ def return_order_item(order_item, returned_by, reason):
 # ── HELPER: RECALCULATE ORDER TOTAL ──────────────────────────────────────────
 
 def _recalculate_order_total(order):
-    # After cancelling or returning an item, the order total must be updated.
-    # We only count items that are still 'active' — not cancelled or returned.
-
-    active_items = order.items.filter(item_status='active')
-    # Gets only the items that are still valid in the order.
-
+    active_items = list(order.items.filter(item_status='active'))
     new_subtotal = sum(item.subtotal for item in active_items)
-    # Adds up subtotals of only active items.
+    new_total    = max(0, new_subtotal + order.shipping_charge)
 
-    new_total = max(0, new_subtotal + order.shipping_charge)
-    # Keeps the original shipping and discount, just recalculates the base.
-    # We use max(0, ...) below to make sure total never goes negative.
-    new_total = max(0, new_total)
-
-    order.subtotal     = new_subtotal
-    order.total_amount = new_total
+    order.subtotal        = new_subtotal
+    order.total_amount    = new_total
+    # discount_amount stays as original — it was set at order creation
+    # and reflects total savings, not recalculated per item
     order.save(update_fields=['subtotal', 'total_amount', 'updated_at'])
-    # Only saves these three fields — fast and safe.
-
-
+    
 # ── ADMIN: CHANGE ORDER STATUS ────────────────────────────────────────────────
 
 def change_order_status(order, new_status, changed_by, note=''):

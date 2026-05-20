@@ -56,7 +56,9 @@ VALID_TRANSITIONS = {
 ITEM_STATUS_CHOICES = [
     ('active',     'Active'),
     ('cancelled',  'Cancelled'),
+    ('return_requested',  'Return Requested'),
     ('returned',   'Returned'),
+    ('return_rejected',  'Return Rejected'), 
 ]
 # Each individual item inside an order has its own status.
 # This is needed because a user can cancel or return ONE product
@@ -341,6 +343,7 @@ class OrderItem(models.Model):
 
     created_at = models.DateTimeField(default=timezone.now)
     # When this item was added to the order. Useful for audit purposes.
+    return_rejected_reason = models.TextField(blank=True, default='')
 
     class Meta:
         ordering = ['created_at']
@@ -369,7 +372,13 @@ class OrderItem(models.Model):
     # Item can only be returned after the order is delivered
     # and if the item hasn't already been cancelled or returned.
 
-
+    @property
+    def is_return_pending(self):
+        return self.item_status == 'return_requested'
+    
+    @property
+    def is_return_rejected(self):
+        return self.item_status == 'return_rejected'
 # ── ORDER STATUS LOG (ACTIVITY LOG) ──────────────────────────────────────────
 
 class OrderStatusLog(models.Model):

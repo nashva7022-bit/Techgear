@@ -386,15 +386,13 @@
 
 
 
-            <!-- Wishlist heart -->
-            <form method="POST" action="{% url 'toggle_wishlist' product.pk %}"
-                  class="absolute top-3 right-3">
-              {% csrf_token %}
-              <input type="hidden" name="next" value="{{ request.get_full_path }}">
-              <button type="submit" class="wish-btn">
-                <i class="bi {% if product.pk in wishlist_ids %}bi-heart-fill text-red-500{% else %}bi-heart text-[#557373]{% endif %} text-sm"></i>
-              </button>
-            </form>
+            
+            <!-- Wishlist heart — goes to product detail to pick variant first -->
+<a href="{% url 'product_detail' product.slug %}"
+   class="wish-btn absolute top-3 right-3"
+   title="Add to wishlist">
+  <i class="bi {% if product.pk in wishlist_ids %}bi-heart-fill text-red-500{% else %}bi-heart text-[#557373]{% endif %} text-sm"></i>
+</a>
           </div>
 
           <!-- Card body -->

@@ -7,13 +7,13 @@ from django.db.models import Q, Min,Avg
 from django.core.paginator import Paginator
 from django.http import JsonResponse   # add this if not already there
 import json
-
-
+from django.conf import settings
+from orders.models import OrderItem
 from products.models import (
     Category, Product, ProductVariant,
     BRAND_CHOICES, CASE_TYPE_CHOICES
 )
-from .models import Cart, CartItem, Wishlist, WishlistItem
+from .models import Cart, CartItem, Wishlist, WishlistItem,Review
 
 
 # HELPER
@@ -27,7 +27,11 @@ def get_or_create_wishlist(user):
     wishlist, _ = Wishlist.objects.get_or_create(user=user)
     return wishlist
 
-
+def _cart_count(user):
+    try:
+        return user.cart.total_items
+    except Exception:
+        return 0
 
 # PRODUCT LIST
 
@@ -99,10 +103,12 @@ def product_list(request):
     # Get user wishlist product ids for heart icon state
     wishlist     = get_or_create_wishlist(request.user)
     wishlist_ids = set(
-        wishlist.items.values_list('product_id', flat=True)
+        wishlist.items.values_list('variant__product_id', flat=True)
     )
+    
 
-    paginator   = Paginator(products, 4)
+    
+    paginator = Paginator(products, settings.PRODUCTS_PER_PAGE)
     page_number = request.GET.get('page')
     page_obj    = paginator.get_page(page_number)
 
@@ -188,7 +194,7 @@ def product_detail(request, slug):
     ).exclude(pk=product.pk).prefetch_related('variants__images')[:4]
 #checks if the user is already hearted this product
     wishlist    = get_or_create_wishlist(request.user)
-    in_wishlist = wishlist.items.filter(product=product).exists()
+    in_wishlist = wishlist.items.filter(variant=selected_variant).exists()
 
     case_type_choices = CASE_TYPE_CHOICES if product.is_customizable else []
 
@@ -209,6 +215,8 @@ def product_detail(request, slug):
         'user_review':       user_review,
         'avg_rating':        round(avg_rating, 1) if avg_rating else None,
         'review_count':      reviews.count(),
+        # in product_detail view context:
+        'from_wishlist': request.GET.get('from_wishlist', False),
         'breadcrumbs': [
             {'name': 'Home',     'url': 'home'},
             {'name': 'Products', 'url': 'product_list'},
@@ -242,6 +250,7 @@ def cart_view(request):
 @require_POST
 def add_to_cart(request):
     variant_id = request.POST.get('variant_id')
+    print("ADD TO CART CALLED — variant_id:", variant_id, "is_ajax:", request.headers.get('X-Requested-With'))
     quantity   = int(request.POST.get('quantity', 1))
     is_ajax    = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
  #searches for the item and makes sure it is active
@@ -270,7 +279,12 @@ def add_to_cart(request):
  
     existing_item = None
     
-    existing_item = CartItem.objects.filter(cart=cart, variant=variant).first()
+    existing_item = CartItem.objects.filter(
+    cart=cart,
+    variant=variant,
+    custom_text='',
+    custom_image=None,
+).first() if not (custom_text or custom_image) else None
  #adds the new amount with old
     if existing_item:
         new_qty = existing_item.quantity + quantity
@@ -286,8 +300,10 @@ def add_to_cart(request):
             return redirect('product_detail', slug=variant.product.slug)
         existing_item.quantity = new_qty
         existing_item.save()
+        wishlist = get_or_create_wishlist(request.user)
+        wishlist.items.filter(variant__product=variant.product).delete()
         if is_ajax:
-            return JsonResponse({'ok': True, 'message': 'Cart updated!', 'cart_count': _cart_count(request.user)})
+            return JsonResponse({'ok': True, 'message': 'Cart updated!', 'cart_count': _cart_count(request.user), 'wishlist_count': wishlist.items.count()})
         messages.success(request, "Cart updated.")
     else:
         quantity = min(quantity, 5)
@@ -307,10 +323,10 @@ def add_to_cart(request):
  
         # Remove from wishlist when added to cart
         wishlist = get_or_create_wishlist(request.user)
-        wishlist.items.filter(product=variant.product).delete()
+        wishlist.items.filter(variant__product=variant.product).delete()
  
         if is_ajax:
-            return JsonResponse({'ok': True, 'message': 'Item added to cart!', 'cart_count': _cart_count(request.user)})
+            return JsonResponse({'ok': True, 'message': 'Item added to cart!', 'cart_count': _cart_count(request.user), 'wishlist_count': wishlist.items.count(),})
         messages.success(request, "Item added to cart!")
  
     return redirect('cart')
@@ -424,10 +440,9 @@ def update_cart_customisation(request, item_id):
 def wishlist_view(request):
     wishlist = get_or_create_wishlist(request.user)
     items    = wishlist.items.select_related(
-        'product__category'
-    ).prefetch_related(
-        'product__variants__images'
-    )
+        'variant__product__category',
+        'variant__device_model',
+    ).prefetch_related('variant__images')
     context = {
         'wishlist': wishlist,
         'items':    items,
@@ -438,85 +453,91 @@ def wishlist_view(request):
 @login_required
 @require_POST
 def toggle_wishlist(request, product_id):
-    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
- #finds the product being hearted
+    is_ajax    = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    variant_id = request.POST.get('variant_id')
+
     product = get_object_or_404(
         Product,
         pk=product_id,
         is_active=True,
         category__is_active=True
     )
+
+    # Get the specific variant being wishlisted
+    variant = ProductVariant.objects.filter(
+        pk=variant_id,
+        is_active=True,
+        product=product,
+    ).first()
+
+    # Fallback to first active variant if no variant_id passed
+    if not variant:
+        variant = product.variants.filter(is_active=True).first()
+
+    if not variant:
+        if is_ajax:
+            return JsonResponse({'ok': False, 'error': 'No active variant found.'})
+        messages.error(request, 'No active variant found.')
+        return redirect('product_list')
+
     wishlist = get_or_create_wishlist(request.user)
- 
-    item, created = WishlistItem.objects.get_or_create(
-        wishlist=wishlist,
-        product=product
-    )
-    if not created:
+
+    item = wishlist.items.filter(variant=variant).first()
+    if item:
         item.delete()
         in_wishlist = False
         msg = f'"{product.name}" removed from wishlist.'
     else:
+        WishlistItem.objects.create(wishlist=wishlist, variant=variant)
         in_wishlist = True
         msg = f'"{product.name}" added to wishlist.'
- 
+
     if is_ajax:
         return JsonResponse({
             'ok':          True,
             'in_wishlist': in_wishlist,
             'message':     msg,
+            'wishlist_count': wishlist.items.count(),
         })
- 
+
     messages.success(request, msg)
     next_url = request.POST.get('next') or request.META.get('HTTP_REFERER', 'wishlist')
     return redirect(next_url)
- 
- 
-# ── Small helper — total item count for cart badge ──
-def _cart_count(user):
-    try:
-        cart = Cart.objects.get(user=user)
-        return cart.items.count()
-    except Cart.DoesNotExist:
-        return 0
+
 
 @login_required
 @require_POST
 def move_to_cart(request, item_id):
-    
     wishlist_item = get_object_or_404(
         WishlistItem,
         pk=item_id,
         wishlist__user=request.user
     )
-    product = wishlist_item.product
+    variant = wishlist_item.variant
+    product = variant.product
 
-    # Check product still available
-    if not product.is_active or not product.category.is_active:
+    # Check still available
+    if not product.is_active or not product.category.is_active or not variant.is_active:
         messages.error(request, "This product is no longer available.")
         wishlist_item.delete()
         return redirect('wishlist')
 
-    # Get first active variant
-    variant = product.variants.filter(is_active=True, stock__gt=0).first()
-
-    if not variant:
-        messages.error(request, "This product is currently out of stock.")
+    # Check stock
+    if variant.stock <= 0:
+        messages.error(request, f'"{product.name}" is currently out of stock.')
         return redirect('wishlist')
 
-    # Add to cart
+    # Add exact variant to cart
     cart          = get_or_create_cart(request.user)
-    #checks if th item is existing
     existing_item = CartItem.objects.filter(cart=cart, variant=variant).first()
 
     if existing_item:
         new_qty = existing_item.quantity + 1
-        if new_qty <= min(5, variant.stock):
-            existing_item.quantity = new_qty
-            existing_item.save()
-        else:
+        if new_qty > min(5, variant.stock):
             messages.error(request, "Maximum quantity reached for this item.")
             return redirect('wishlist')
+        existing_item.quantity = new_qty
+        existing_item.save()
     else:
         CartItem.objects.create(cart=cart, variant=variant, quantity=1)
 
@@ -524,7 +545,6 @@ def move_to_cart(request, item_id):
     wishlist_item.delete()
     messages.success(request, f'"{product.name}" moved to cart.')
     return redirect('wishlist')
-
 
 @login_required
 @require_POST
@@ -539,3 +559,43 @@ def remove_from_wishlist(request, item_id):
     wishlist_item.delete()
     messages.success(request, f'"{name}" removed from wishlist.')
     return redirect('wishlist')
+
+from .models import Cart, CartItem, Wishlist, WishlistItem, Review
+from orders.models import Order, OrderItem
+
+@login_required
+@require_POST
+def submit_review(request, product_id):
+    product = get_object_or_404(Product, pk=product_id, is_active=True)
+
+    # Security — only allow review if user has a delivered order with this product
+    has_delivered = OrderItem.objects.filter(
+        order__user    = request.user,
+        order__status  = 'delivered',
+        variant__product = product,
+        item_status    = 'active',
+    ).exists()
+
+    if not has_delivered:
+        messages.error(request, "You can only review products you have purchased and received.")
+        return redirect('product_detail', slug=product.slug)
+
+    rating  = request.POST.get('rating', '').strip()
+    comment = request.POST.get('comment', '').strip()
+
+    if not rating or not rating.isdigit() or not (1 <= int(rating) <= 5):
+        messages.error(request, "Please select a rating between 1 and 5.")
+        return redirect('product_detail', slug=product.slug)
+
+    # Update if exists, create if not
+    Review.objects.update_or_create(
+        product = product,
+        user    = request.user,
+        defaults = {
+            'rating':  int(rating),
+            'comment': comment,
+        }
+    )
+
+    messages.success(request, "Your review has been submitted!")
+    return redirect('product_detail', slug=product.slug)
