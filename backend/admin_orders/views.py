@@ -7,11 +7,13 @@ from django.db.models import Q
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.conf import settings
+from orders.services import approve_return, reject_return
 
 from orders.models import Order, OrderItem, OrderStatusLog, VALID_TRANSITIONS
 from orders.services import change_order_status
 from products.models import ProductVariant, Category
 from admin_orders.models import ActivityLog, log_activity
+from orders.services import cancel_order_item
 
 
 
@@ -27,7 +29,7 @@ def order_list(request):
     date_from  = request.GET.get('date_from', '').strip()
     date_to    = request.GET.get('date_to', '').strip()
 
-    orders = Order.objects.select_related('user').prefetch_related('items')
+    orders = Order.objects.select_related('user').prefetch_related('items')#reverse
 
     if search:
         orders = orders.filter(
@@ -37,7 +39,7 @@ def order_list(request):
             Q(user__last_name__icontains=search) |
             Q(items__product_name__icontains=search) |
             Q(shipping_full_name__icontains=search)
-        ).distinct()
+        ).distinct()#Duplicate orders may appear.
 
     if status:
         orders = orders.filter(status=status)
@@ -53,7 +55,7 @@ def order_list(request):
 
     if date_to:
         try:
-            from datetime import datetime
+            
             orders = orders.filter(
                 created_at__date__lte=datetime.strptime(date_to, '%Y-%m-%d').date()
             )
@@ -66,7 +68,7 @@ def order_list(request):
         'amount_high': '-total_amount',
         'amount_low':  'total_amount',
     }
-    orders = orders.order_by(sort_options.get(sort_by, '-created_at'))
+    orders = orders.order_by(sort_options.get(sort_by, '-created_at'))#applies sorting
 
     status_counts = {
         'all':              Order.objects.count(),
@@ -78,9 +80,9 @@ def order_list(request):
     }
 
   
-    paginator = Paginator(orders, settings.ORDERS_PER_PAGE)
-    page_number = request.GET.get('page')
-    page_obj    = paginator.get_page(page_number)
+    paginator = Paginator(orders, settings.ORDERS_PER_PAGE)#splits
+    page_number = request.GET.get('page')#current
+    page_obj    = paginator.get_page(page_number)#orders belonging to that page
 
     context = {
         'page_obj':      page_obj,
@@ -103,7 +105,7 @@ def order_list(request):
 def order_detail(request, order_number):
     order       = get_object_or_404(Order, order_number=order_number)
     items       = order.items.select_related('variant').prefetch_related('variant__images')
-    status_logs = order.status_logs.select_related('changed_by').all()
+    status_logs = order.status_logs.select_related('changed_by').all()#to get the admin
     allowed_next = VALID_TRANSITIONS.get(order.status, [])
 
     status_labels = dict([
@@ -115,7 +117,8 @@ def order_detail(request, order_number):
     ])
 
     next_statuses = [
-        {'value': s, 'label': status_labels.get(s, s)}
+        #dropdown
+        {'value': s, 'label': status_labels.get(s, s)}#if label exists use it or use og
         for s in allowed_next
     ]
 
@@ -139,9 +142,10 @@ def change_status(request, order_number):
     order      = get_object_or_404(Order, order_number=order_number)
     new_status = request.POST.get('new_status', '').strip()
     note       = request.POST.get('note', '').strip()
+    
     is_ajax    = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
-    if not new_status:
+    if not new_status:#empty
         if is_ajax:
             return JsonResponse({'ok': False, 'error': 'No status provided.'}, status=400)
         messages.error(request, 'Please select a status.')
@@ -155,7 +159,7 @@ def change_status(request, order_number):
             note       = note,
         )
 
-        # Log this action to the activity log so there's an audit trail
+        
         log_activity(
             admin        = request.user,
             action       = 'order_status_change',
@@ -273,7 +277,7 @@ def update_stock(request, variant_id):
     variant.stock = new_stock
     variant.save(update_fields=['stock'])
 
-    # Log stock update to activity log
+   
     log_activity(
         admin       = request.user,
         action      = 'stock_update',
@@ -299,12 +303,9 @@ def update_stock(request, variant_id):
 @staff_member_required(login_url='admin_login')
 @never_cache
 def activity_log(request):
-    # Shows all admin actions — status changes, stock updates etc.
-    # Newest first. Paginated at 20 per page.
+   
     logs = ActivityLog.objects.select_related('admin').all()
-    # select_related('admin') loads the admin user in one query
-    # so showing their name doesn't trigger extra DB hits per row.
-
+   
     paginator   = Paginator(logs, 20)
     page_number = request.GET.get('page')
     page_obj    = paginator.get_page(page_number)
@@ -312,7 +313,7 @@ def activity_log(request):
     context = {'page_obj': page_obj}
     return render(request, 'admin_orders/activity_log.html', context)
 
-from orders.services import approve_return, reject_return
+
 
 
 @staff_member_required(login_url='admin_login')
@@ -345,13 +346,14 @@ def return_requests(request):
         'sort_by':        sort_by,
         'total_pending':  OrderItem.objects.filter(item_status='return_requested').count(),
         'total_approved': OrderItem.objects.filter(item_status='returned').count(),
-        # CORRECT
+        
         'total_rejected': OrderItem.objects.filter(
             item_status='return_rejected'
         ).count(),
     }
     return render(request, 'admin_orders/return_requests.html', context)
 
+#approve return
 @staff_member_required(login_url='admin_login')
 @require_POST
 def approve_return_view(request, order_number, item_id):
@@ -371,6 +373,7 @@ def approve_return_view(request, order_number, item_id):
         messages.error(request, str(e))
         return redirect('admin_orders:order_detail', order_number=order_number)
 
+#rejuct return
 
 @staff_member_required(login_url='admin_login')
 @require_POST
@@ -392,7 +395,7 @@ def reject_return_view(request, order_number, item_id):
         messages.error(request, str(e))
         return redirect('admin_orders:order_detail', order_number=order_number)
     
-from orders.services import cancel_order_item
+#cancel single item
 
 @staff_member_required(login_url='admin_login')
 @require_POST
