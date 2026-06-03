@@ -2,13 +2,7 @@ from django.db import models
 from django.conf import settings
 from products.models import ProductVariant, Product
 from django.core.validators import MinValueValidator, MaxValueValidator
-
-
 from cloudinary.models import CloudinaryField
-
-# CART
-# One cart per user.
-
 
 class Cart(models.Model):
     user = models.OneToOneField(
@@ -24,12 +18,12 @@ class Cart(models.Model):
 
     @property
     def total_items(self):
-        """Total quantity of all items in cart."""
+        
         return sum(item.quantity for item in self.items.all())
 
     @property
     def total_price(self):
-        """Sum of all item subtotals. Only counts available items."""
+      
         return sum(
             item.subtotal
             for item in self.items.all()
@@ -38,12 +32,12 @@ class Cart(models.Model):
 
     @property
     def has_out_of_stock(self):
-        """True if ANY item in cart is out of stock."""
+       
         return any(not item.is_in_stock for item in self.items.all())
 
     @property
     def has_unavailable(self):
-        """True if ANY item's product/category was deactivated after adding to cart."""
+        
         return any(not item.is_available for item in self.items.all())
 
 
@@ -55,7 +49,7 @@ class CartItem(models.Model):
     variant  = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='cart_items')
     quantity = models.PositiveIntegerField(default=1)
 
-    # Customization fields — only for Phone Cases and Laptop Skins
+   
     custom_text  = models.CharField(max_length=100, blank=True, default='')
     custom_image = CloudinaryField('custom_image', blank=True, null=True)
 
@@ -175,7 +169,7 @@ class WishlistItem(models.Model):
         on_delete=models.CASCADE,
         related_name='items'
     )
-    variant  = models.ForeignKey(          # ← changed from product to variant
+    variant  = models.ForeignKey(        
         ProductVariant,
         on_delete=models.CASCADE,
         related_name='wishlist_items',
@@ -183,7 +177,7 @@ class WishlistItem(models.Model):
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ['wishlist', 'variant']  # ← was ['wishlist', 'product']
+        unique_together = ['wishlist', 'variant']
         ordering        = ['-added_at']
 
     def __str__(self):
@@ -203,7 +197,7 @@ class WishlistItem(models.Model):
 
     @property
     def product(self):
-        # Convenience property so templates can still do item.product.name
+        
         return self.variant.product
 
     @property
@@ -231,7 +225,7 @@ class Review(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ['product', 'user']  # one review per user per product
+        unique_together = ['product', 'user']  
         ordering        = ['-created_at']
 
     def __str__(self):

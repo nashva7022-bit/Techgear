@@ -15,7 +15,7 @@ from products.models import ProductVariant, Category
 from admin_orders.models import ActivityLog, log_activity
 from orders.services import cancel_order_item
 
-
+from datetime import datetime
 
 # ADMIN ORDER LIST
 
@@ -39,14 +39,14 @@ def order_list(request):
             Q(user__last_name__icontains=search) |
             Q(items__product_name__icontains=search) |
             Q(shipping_full_name__icontains=search)
-        ).distinct()#Duplicate orders may appear.
+        ).distinct()
 
     if status:
         orders = orders.filter(status=status)
 
     if date_from:
         try:
-            from datetime import datetime
+            
             orders = orders.filter(
                 created_at__date__gte=datetime.strptime(date_from, '%Y-%m-%d').date()
             )
@@ -68,7 +68,7 @@ def order_list(request):
         'amount_high': '-total_amount',
         'amount_low':  'total_amount',
     }
-    orders = orders.order_by(sort_options.get(sort_by, '-created_at'))#applies sorting
+    orders = orders.order_by(sort_options.get(sort_by, '-created_at'))
 
     status_counts = {
         'all':              Order.objects.count(),
@@ -118,7 +118,7 @@ def order_detail(request, order_number):
 
     next_statuses = [
         #dropdown
-        {'value': s, 'label': status_labels.get(s, s)}#if label exists use it or use og
+        {'value': s, 'label': status_labels.get(s, s)}
         for s in allowed_next
     ]
 
@@ -145,7 +145,7 @@ def change_status(request, order_number):
     
     is_ajax    = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
-    if not new_status:#empty
+    if not new_status:
         if is_ajax:
             return JsonResponse({'ok': False, 'error': 'No status provided.'}, status=400)
         messages.error(request, 'Please select a status.')
@@ -185,7 +185,7 @@ def change_status(request, order_number):
 
 
 
-# ADMIN INVENTORY / STOCK MANAGEMENT
+# ADMIN INVENTORY
 @staff_member_required(login_url='admin_login')
 @never_cache
 def inventory_list(request):
@@ -253,7 +253,7 @@ def inventory_list(request):
 
 
 
-# ADMIN UPDATE STOCK (AJAX)
+# ADMIN UPDATE STOCk
 
 
 @staff_member_required(login_url='admin_login')

@@ -54,7 +54,7 @@ from users.forms import AddressForm
 @login_required
 @never_cache
 def checkout(request):
-    #cart validation
+    
     cart = Cart.objects.filter(user=request.user).first()
 
     if not cart or not cart.items.exists():
@@ -72,7 +72,6 @@ def checkout(request):
     addresses    = request.user.addresses.all().order_by('-is_default', '-created_at')
     address_form = AddressForm()
 
-    #  POST 
     if request.method == 'POST':
         action = request.POST.get('action')
 
@@ -85,7 +84,7 @@ def checkout(request):
                 if request.user.addresses.count() == 1:
                     new_address.is_default = True
                     new_address.save(update_fields=['is_default'])
-                    #“We use JSON because frontend JavaScript needs structured data to dynamically update the page without refresh.”
+                   
                 return JsonResponse({
                     'ok':      True,
                     'message': 'Address added successfully.',
@@ -172,6 +171,7 @@ def checkout(request):
     return render(request, 'orders/checkout.html', context)
 
 # ORDER SUCCESS VIEW
+
 @login_required
 @never_cache
 def order_success(request, order_number):
@@ -183,7 +183,6 @@ def order_success(request, order_number):
         user         = request.user,
     )
     
-
     context = {
         'order': order,
     }
@@ -286,7 +285,6 @@ def cancel_order_view(request, order_number):
         return redirect('orders:order_detail', order_number=order_number)
 
     except ValueError as e:
-        # cancel_order raises ValueError if cancellation is not allowed
         
         if is_ajax:
             return JsonResponse({'ok': False, 'error': str(e)}, status=400)
