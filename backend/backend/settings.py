@@ -29,7 +29,7 @@ cloudinary.config(
     api_key=os.getenv('CLOUDINARY_API_KEY'),
     api_secret=os.getenv('CLOUDINARY_API_SECRET'),
 )
-ORDERS_PER_PAGE = 15
+ORDERS_PER_PAGE = 10
 
 PRODUCTS_PER_PAGE = 4
 CATEGORIES_PER_PAGE = 5
@@ -63,6 +63,8 @@ INSTALLED_APPS = [
     'store',
     'orders',
     'admin_orders',
+    'wallet',
+    'offers',
 
     
 

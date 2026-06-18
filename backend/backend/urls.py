@@ -35,6 +35,10 @@ urlpatterns = [
 
     path('orders/', include('orders.urls', namespace='orders')),
     path('manage/orders/', include('admin_orders.urls', namespace='admin_orders')),
+
+    path('wallet/', include('wallet.urls', namespace='wallet')),
+
+    path('manage/offers/', include('offers.urls', namespace='offers')),
    
 ]
 if settings.DEBUG:

@@ -8,10 +8,24 @@ from django.views.decorators.cache import never_cache
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Sum 
 from django.conf import settings
+from .models import SiteSettings
 
 from .forms import AdminLoginForm
 
+from django.contrib.auth.decorators import login_required
+
+from wallet.models import Wallet, WalletTransaction  #
 User = get_user_model()
+
+
+def get_or_create_wallet(user):
+    """
+    Gets the user's wallet, creating one with ₹0 balance if it doesn't exist.
+    Use this everywhere instead of Wallet.objects.get() or .first()
+    """
+    wallet, _ = Wallet.objects.get_or_create(user=user)
+    return wallet
+
 
 
 
@@ -156,3 +170,122 @@ def admin_logout(request):
     messages.success(request, "Logged out successfully.")
     return redirect('admin_login')
 
+@staff_member_required(login_url='admin_login')
+@never_cache
+def site_settings(request):
+    """
+    Admin page to configure site-wide settings.
+    Currently: customization fee.
+    Add more fields to SiteSettings model as needed.
+    """
+    settings_obj = SiteSettings.get()
+
+    if request.method == 'POST':
+        fee = request.POST.get('customization_fee', '').strip()
+        try:
+            fee = float(fee)
+            if fee < 0:
+                raise ValueError()
+            settings_obj.customization_fee = fee
+            settings_obj.save()
+            messages.success(request, 'Settings saved successfully.')
+            return redirect('admin_site_settings')
+        except (ValueError, TypeError):
+            messages.error(request, 'Please enter a valid fee amount (0 or more).')
+
+    return render(request, 'admin_panel/site_settings.html', {
+        'settings': settings_obj,
+    })
+
+
+    # ── ADMIN WALLET VIEW ─────────────────────────────────────────────────────────
+
+@staff_member_required(login_url='admin_login')
+@never_cache
+def admin_wallet_list(request):
+    """
+    Admin page — shows all user wallets with their balances.
+    Useful for support — admin can see any user's wallet.
+    """
+    from django.db.models import Q
+    search = request.GET.get('search', '').strip()
+
+    wallets = Wallet.objects.select_related('user').order_by('-balance')
+
+    if search:
+        wallets = wallets.filter(
+            Q(user__email__icontains=search) |
+            Q(user__first_name__icontains=search) |
+            Q(user__last_name__icontains=search)
+        )
+
+    paginator   = Paginator(wallets, 20)
+    page_number = request.GET.get('page')
+    page_obj    = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'search':   search,
+    }
+    return render(request, 'admin_panel/wallet_list.html', context)
+
+
+@staff_member_required(login_url='admin_login')
+@never_cache
+def admin_wallet_detail(request, user_id):
+    """
+    Admin page — shows one user's wallet and full transaction history.
+    """
+    from django.contrib.auth import get_user_model
+    User   = get_user_model()
+    user   = get_object_or_404(User, pk=user_id)
+    wallet = get_or_create_wallet(user)
+
+    transactions = wallet.transactions.select_related('order').all()
+    paginator    = Paginator(transactions, 15)
+    page_obj     = paginator.get_page(request.GET.get('page'))
+
+    context = {
+        'wallet_user': user,
+        'wallet':      wallet,
+        'page_obj':    page_obj,
+    }
+    return render(request, 'admin_panel/wallet_detail.html', context)
+
+
+@staff_member_required(login_url='admin_login')
+@never_cache
+def admin_wallet_credit(request, user_id):
+    """
+    Admin manually credits a user's wallet.
+    Used for compensation, promotional credits, referral rewards etc.
+    """
+    User   = get_user_model()
+    user   = get_object_or_404(User, pk=user_id)
+    wallet = get_or_create_wallet(user)
+
+    if request.method == 'POST':
+        amount_str = request.POST.get('amount', '').strip()
+        reason     = request.POST.get('reason', '').strip()
+
+        try:
+            from decimal import Decimal
+            amount = Decimal(amount_str)
+            if amount <= 0:
+                raise ValueError()
+        except (ValueError, TypeError):
+            messages.error(request, 'Enter a valid amount greater than 0.')
+            return redirect('admin_wallet_detail', user_id=user_id)
+
+        if not reason:
+            messages.error(request, 'A reason is required.')
+            return redirect('admin_wallet_detail', user_id=user_id)
+
+        wallet.credit(amount=amount, reason=reason, order=None)
+        messages.success(request, f'₹{amount} credited to {user.email}\'s wallet.')
+        return redirect('admin_wallet_detail', user_id=user_id)
+
+    return render(request, 'admin_panel/wallet_credit.html', {
+        'wallet_user': user,
+        'wallet':      wallet,
+    })

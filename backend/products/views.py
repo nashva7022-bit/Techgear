@@ -15,8 +15,7 @@ from .models import (
 )
 
 
-# CATEGORY VIEWS
-
+#  CATEGORY VIEWS 
 
 @staff_member_required(login_url='admin_login')
 @never_cache
@@ -31,7 +30,6 @@ def category_list(request):
         'name_desc': '-name',
     }
     order_field = sort_options.get(sort_by, '-created_at')
-    #  Pull all categories from the database, ordered by our choice
     categories  = Category.objects.all().order_by(order_field)
 
     if search:
@@ -41,12 +39,9 @@ def category_list(request):
             Q(id__icontains=search)
         )
 
-    
-    paginator = Paginator(categories, settings.CATEGORIES_PER_PAGE)
+    paginator   = Paginator(categories, settings.CATEGORIES_PER_PAGE)
     page_number = request.GET.get('page')
     page_obj    = paginator.get_page(page_number)
-
-    #data we send to the html template
 
     context = {
         'page_obj': page_obj,
@@ -96,7 +91,6 @@ def category_edit(request, pk):
 @staff_member_required(login_url='admin_login')
 @require_POST
 def category_toggle_status(request, pk):
-   
     category = get_object_or_404(Category, pk=pk)
     if category.is_active:
         category.is_active = False
@@ -127,9 +121,7 @@ def category_detail(request, pk):
     })
 
 
-
-# AJAX — CATEGORY META
-
+# AJAX — CATEGORY 
 
 @staff_member_required(login_url='admin_login')
 def category_meta(request, pk):
@@ -145,18 +137,16 @@ def category_meta(request, pk):
     })
 
 
-# AJAX — DEVICE MODELS BY BRAND
-
+#  AJAX — DEVICE MODELS BY BRAND
 
 def device_models_by_brand(request):
     brand       = request.GET.get('brand', '').strip()
     device_type = request.GET.get('device_type', '').strip()
 
     devices = DeviceModel.objects.filter(is_active=True)
-#if admin choses a brand allother brands gone ,only that brand will stay
+
     if brand:
         devices = devices.filter(brand=brand)
-
     if device_type:
         devices = devices.filter(device_type=device_type)
 
@@ -165,7 +155,6 @@ def device_models_by_brand(request):
 
 
 # PRODUCT VIEWS
-
 
 @staff_member_required(login_url='admin_login')
 @never_cache
@@ -182,7 +171,7 @@ def product_list(request):
         'name_desc': '-name',
     }
     order_field = sort_options.get(sort_by, '-created_at')
-#fetch products and preload their category and images
+
     products = Product.objects.select_related('category').prefetch_related(
         'variants__images'
     ).order_by(order_field)
@@ -250,15 +239,12 @@ def product_toggle_trending(request, pk):
     return redirect('admin_product_list')
 
 
-# IMAGE / VARIANT HELPERS
-
-
+# IMAGE 
 ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
-MAX_IMAGE_SIZE      = 5 * 1024 * 1024   # 5 MB
+MAX_IMAGE_SIZE      = 5 * 1024 * 1024
 
 
 def _validate_image(img):
-    
     if img.content_type not in ALLOWED_IMAGE_TYPES:
         return f'"{img.name}" is not a valid image type (JPEG, PNG, WebP only).'
     if img.size > MAX_IMAGE_SIZE:
@@ -267,8 +253,7 @@ def _validate_image(img):
 
 
 def _save_specs(product, post_data):
-   
-    product.specifications.all().delete()#to revent duplicates
+    product.specifications.all().delete()
     names  = post_data.getlist('spec_name')
     values = post_data.getlist('spec_value')
     specs  = []
@@ -284,7 +269,6 @@ def _save_specs(product, post_data):
 
 
 def _resolve_device_model(device_model_id):
-    #safely connects a products variant to device model
     try:
         return DeviceModel.objects.get(pk=int(device_model_id), is_active=True)
     except (DeviceModel.DoesNotExist, ValueError, TypeError):
@@ -292,7 +276,6 @@ def _resolve_device_model(device_model_id):
 
 
 def _save_variants(product, post_data, files):
-    
     errors = []
 
     device_model_ids = post_data.getlist('variant_device_model')
@@ -306,8 +289,6 @@ def _save_variants(product, post_data, files):
     skus        = post_data.getlist('variant_sku')
     prices      = post_data.getlist('variant_price')
     stocks      = post_data.getlist('variant_stock')
-    discounts   = post_data.getlist('variant_discount_percentage')
-    #loop through each variant
 
     for i, dm_id in enumerate(device_model_ids):
         device_model = _resolve_device_model(dm_id)
@@ -337,6 +318,10 @@ def _save_variants(product, post_data, files):
             errors.append(f'Variant {i + 1}: Invalid price or stock value.')
             continue
 
+        if price <= 0:
+            errors.append(f'Variant {i + 1}: Price must be greater than 0.')
+            continue
+
         variant = ProductVariant(
             product      = product,
             device_model = device_model,
@@ -346,7 +331,6 @@ def _save_variants(product, post_data, files):
             sku          = sku or None,
             price        = price,
             stock        = stock,
-            discount_percentage = int(discounts[i]) if i < len(discounts) and discounts[i] else 0,
         )
         variant.save()
 
@@ -362,8 +346,8 @@ def _save_variants(product, post_data, files):
 
 
 def _handle_existing_variants(request, post_data, files, existing_variants):
-    
-    has_errors = False 
+    has_errors = False
+
     for variant in existing_variants:
         prefix = f'existing_variant_{variant.pk}'
 
@@ -372,13 +356,11 @@ def _handle_existing_variants(request, post_data, files, existing_variants):
         color      = post_data.get(f'{prefix}_color',      variant.color)
         color_code = post_data.get(f'{prefix}_color_code', variant.color_code)
         case_type  = post_data.get(f'{prefix}_case_type',  variant.case_type)
-        discount   = post_data.get(f'{prefix}_discount_percentage', '0').strip()
         is_active  = f'{prefix}_is_active' in post_data
 
         dm_id        = post_data.get(f'{prefix}_device_model')
         device_model = _resolve_device_model(dm_id) if dm_id else variant.device_model
 
-        # Parse price/stock/discount individually — never skip is_active
         if price_val:
             try:
                 variant.price = float(price_val)
@@ -393,42 +375,25 @@ def _handle_existing_variants(request, post_data, files, existing_variants):
                 messages.error(request, f'Variant "{variant}": Invalid stock.')
                 has_errors = True
 
-        try:
-            variant.discount_percentage = int(discount) if discount else 0
-        except (ValueError, TypeError):
-            variant.discount_percentage = 0
+        if variant.price is not None and variant.price <= 0:
+            messages.error(request, f'Variant "{variant}": Price must be greater than 0.')
+            has_errors = True
+            continue
 
-        # Always set these — is_active MUST always be saved
         variant.device_model = device_model
         variant.color        = color
         variant.color_code   = color_code
         variant.case_type    = case_type
-        variant.is_active    = is_active  # ← always saved now
-        if variant.discount_percentage > 0 and variant.price > 0:
-            discounted = variant.price - (variant.price * variant.discount_percentage / 100)
-            if discounted <= 0:
-                messages.error(
-                    request,
-                    f'Variant "{variant}": Discount makes final price ₹0 or less.'
-                )
-                has_errors = True
-                continue
+        variant.is_active    = is_active
 
-        if variant.discount_percentage > 90:
-            messages.error(request, f'Variant "{variant}": Discount cannot exceed 90%.')
-            has_errors = True
-            continue
-
-        # Use queryset update() to bypass SKU logic in save()
         ProductVariant.objects.filter(pk=variant.pk).update(
-            price               = variant.price,
-            stock               = variant.stock,
-            color               = variant.color,
-            color_code          = variant.color_code,
-            case_type           = variant.case_type,
-            is_active           = variant.is_active,
-            discount_percentage = variant.discount_percentage,
-            device_model        = variant.device_model,
+            price        = variant.price,
+            stock        = variant.stock,
+            color        = variant.color,
+            color_code   = variant.color_code,
+            case_type    = variant.case_type,
+            is_active    = variant.is_active,
+            device_model = variant.device_model,
         )
 
         # Image handling
@@ -478,8 +443,8 @@ def _handle_existing_variants(request, post_data, files, existing_variants):
 
     return not has_errors
 
-def _save_new_variants(product, post_data, files):
 
+def _save_new_variants(product, post_data, files):
     errors = []
 
     device_model_ids = post_data.getlist('new_variant_device_model')
@@ -492,7 +457,6 @@ def _save_new_variants(product, post_data, files):
     skus        = post_data.getlist('new_variant_sku')
     prices      = post_data.getlist('new_variant_price')
     stocks      = post_data.getlist('new_variant_stock')
-    discounts   = post_data.getlist('new_variant_discount_percentage')
 
     for i, dm_id in enumerate(device_model_ids):
         device_model = _resolve_device_model(dm_id)
@@ -516,31 +480,16 @@ def _save_new_variants(product, post_data, files):
 
         sku = skus[i].strip() if i < len(skus) else ''
         try:
-            price     = float(prices[i]) if i < len(prices) else 0
-            stock     = int(stocks[i])   if i < len(stocks) else 0
-            discount_pct = int(discounts[i]) if i < len(discounts) and discounts[i] else 0
+            price = float(prices[i]) if i < len(prices) else 0
+            stock = int(stocks[i])   if i < len(stocks) else 0
         except (ValueError, TypeError):
             errors.append(f'New variant {i + 1}: Invalid price or stock.')
             continue
 
-        # ── DISCOUNT VALIDATION — before saving ──
-        if discount_pct < 0:
-            errors.append(f'New variant {i + 1}: Discount cannot be negative.')
+        if price <= 0:
+            errors.append(f'New variant {i + 1}: Price must be greater than 0.')
             continue
 
-        if discount_pct > 90:
-            errors.append(f'New variant {i + 1}: Discount cannot exceed 90%.')
-            continue
-
-        if price > 0 and discount_pct > 0:
-            discounted = price - (price * discount_pct / 100)
-            if discounted <= 0:
-                errors.append(
-                    f'New variant {i + 1}: Discount makes final price ₹0 or less.'
-                )
-                continue
-
-        # ── SAVE — only after validation passes ──
         variant = ProductVariant(
             product      = product,
             device_model = device_model,
@@ -550,7 +499,6 @@ def _save_new_variants(product, post_data, files):
             sku          = sku or None,
             price        = price,
             stock        = stock,
-            discount_percentage = discount_pct,
         )
         variant.save()
 
@@ -565,9 +513,7 @@ def _save_new_variants(product, post_data, files):
     return errors
 
 
-# PRODUCT ADD
-
-
+# PRODUCT ADD 
 @staff_member_required(login_url='admin_login')
 @never_cache
 def product_add(request):
@@ -576,13 +522,12 @@ def product_add(request):
     if request.method == 'POST':
         form = ProductForm(request.POST)
         if form.is_valid():
-            #if the admin clicks save it first saves the main product info
             product        = form.save()
             _save_specs(product, request.POST)
             variant_errors = _save_variants(product, request.POST, request.FILES)
 
             if variant_errors:
-                product.delete()   # roll back
+                product.delete()
                 for err in variant_errors:
                     messages.error(request, err)
                 return render(request, 'admin_panel/product_add.html', {
@@ -602,15 +547,12 @@ def product_add(request):
     })
 
 
-
-# PRODUCT EDIT  
-
+#  PRODUCT EDIT
 
 @staff_member_required(login_url='admin_login')
 @never_cache
 def product_edit(request, pk):
     product           = get_object_or_404(Product, pk=pk)
-    #grabs all the existing versions  of that product
     existing_variants = product.variants.prefetch_related('images').select_related('device_model').all()
 
     if request.method == 'POST':
@@ -619,21 +561,17 @@ def product_edit(request, pk):
             product = form.save()
             _save_specs(product, request.POST)
 
-            # _handle_existing_variants returns False if any variant had errors
             existing_ok = _handle_existing_variants(
                 request, request.POST, request.FILES, existing_variants
             )
-            #if clicks add variant
             new_errors = _save_new_variants(product, request.POST, request.FILES)
             for err in new_errors:
                 messages.error(request, err)
 
-            # Only redirect on full success — stay on page if any errors occurred
             if existing_ok and not new_errors:
                 messages.success(request, f'"{product.name}" updated successfully.')
                 return redirect('admin_product_list')
             else:
-                # Re-fetch variants so the page reflects partial saves
                 existing_variants = product.variants.prefetch_related('images').select_related('device_model').all()
                 return render(request, 'admin_panel/product_edit.html', {
                     'form':              form,
@@ -659,9 +597,7 @@ def product_edit(request, pk):
     })
 
 
-
-# VARIANT AJAX
-
+#  VARIANT AJAX
 
 @staff_member_required(login_url='admin_login')
 @require_POST

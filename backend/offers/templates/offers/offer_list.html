@@ -1,0 +1,311 @@
+{% extends 'admin_panel/admin_base.html' %}
+{% block content %}
+
+<!-- Header -->
+ <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<div class="flex items-start justify-between mb-8">
+  <div>
+    <h1 class="text-2xl font-black text-gray-900 tracking-tight">Offers</h1>
+    <p class="text-sm text-gray-500 mt-1 font-medium">Manage product and category discounts.</p>
+  </div>
+  <div class="flex gap-3">
+    <a href="{% url 'offers:category_offer_create' %}"
+       class="inline-flex items-center gap-2 bg-white text-gray-700 border border-gray-200 px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-50 hover:border-gray-300 transition shadow-sm">
+      + Category Offer
+    </a>
+    <a href="{% url 'offers:product_offer_create' %}"
+       class="inline-flex items-center gap-2 bg-black text-white px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition shadow-sm">
+      + Product Offer
+    </a>
+  </div>
+</div>
+
+{% if messages %}
+<div class="mb-6 flex flex-col gap-2">
+  {% for message in messages %}
+  <div class="px-4 py-3 rounded-xl text-sm font-semibold
+              {% if message.tags == 'error' %}bg-red-50 border border-red-100 text-red-600
+              {% else %}bg-green-50 border border-green-100 text-green-600{% endif %}">
+    {{ message }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Stats -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Product Offers</p>
+    <p class="text-3xl font-black text-gray-900">{{ product_offers.count }}</p>
+  </div>
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Category Offers</p>
+    <p class="text-3xl font-black text-gray-900">{{ category_offers.count }}</p>
+  </div>
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Live Now</p>
+    <p class="text-3xl font-black text-green-600">{{ live_count }}</p>
+</div>
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Today</p>
+    <p class="text-sm font-black text-gray-500">{{ today|date:"d M Y" }}</p>
+  </div>
+</div>
+
+<!-- PRODUCT OFFERS TABLE -->
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-8">
+  <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+    <div>
+      <h2 class="text-sm font-black text-gray-900">Product Offers</h2>
+      <p class="text-[11px] text-gray-400 mt-0.5">Discounts applied to specific products</p>
+    </div>
+    <a href="{% url 'offers:product_offer_create' %}"
+       class="text-[10px] font-bold text-gray-400 hover:text-black transition uppercase tracking-widest">
+      + Add
+    </a>
+  </div>
+
+  {% if product_offers %}
+  <table class="w-full">
+    <thead>
+      <tr class="border-b border-gray-50">
+        <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Product</th>
+        <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Category</th>
+        <th class="px-6 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Discount</th>
+        <th class="px-6 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Period</th>
+        <th class="px-6 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+        <th class="px-6 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-50">
+      {% for offer in product_offers %}
+      <tr class="hover:bg-gray-50 transition">
+        <td class="px-6 py-4">
+          <p class="text-sm font-bold text-gray-900">{{ offer.product.name }}</p>
+        </td>
+        <td class="px-6 py-4">
+          <p class="text-xs text-gray-500">{{ offer.product.category.name|default:"—" }}</p>
+        </td>
+        <td class="px-6 py-4 text-center">
+          <span class="inline-flex items-center justify-center w-14 h-8 rounded-lg bg-red-50 text-red-600 text-sm font-black border border-red-100">
+            {{ offer.discount_percent }}%
+          </span>
+        </td>
+        <td class="px-6 py-4 text-center">
+          <p class="text-xs text-gray-500">{{ offer.start_date|date:"d M" }} → {{ offer.end_date|date:"d M Y" }}</p>
+        </td>
+        <td class="px-6 py-4 text-center">
+          {% if offer.is_active and offer.start_date <= today and offer.end_date >= today %}
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-green-600 text-[9px] font-bold uppercase border border-green-100">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Live
+            </span>
+          {% elif offer.is_active %}
+            <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[9px] font-bold uppercase border border-blue-100">Scheduled</span>
+          {% else %}
+            <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-400 text-[9px] font-bold uppercase">Inactive</span>
+          {% endif %}
+        </td>
+        <td class="px-6 py-4">
+          <div class="flex items-center justify-center gap-2">
+            <form method="POST" action="{% url 'offers:toggle_product_offer' offer.pk %}">
+              {% csrf_token %}
+              <button type="submit"
+                      class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide transition
+                             {% if offer.is_active %}bg-red-50 text-red-500 hover:bg-red-100 border border-red-100
+                             {% else %}bg-green-50 text-green-600 hover:bg-green-100 border border-green-100{% endif %}">
+                {% if offer.is_active %}Deactivate{% else %}Activate{% endif %}
+              </button>
+            </form>
+            <form method="POST" action="{% url 'offers:delete_product_offer' offer.pk %}"
+      class="delete-offer-form">
+  {% csrf_token %}
+  <button type="button"
+          onclick="confirmDelete(this)"
+          class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide
+                 bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500 border border-gray-100 hover:border-red-100 transition">
+    Delete
+  </button>
+</form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="py-16 text-center">
+    <div class="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-7 h-7 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+      </svg>
+    </div>
+    <p class="text-sm font-bold text-gray-300">No product offers yet</p>
+    <a href="{% url 'offers:product_offer_create' %}"
+       class="inline-flex items-center gap-2 mt-4 bg-black text-white px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition">
+      Create First Offer
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- CATEGORY OFFERS TABLE -->
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+  <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+    <div>
+      <h2 class="text-sm font-black text-gray-900">Category Offers</h2>
+      <p class="text-[11px] text-gray-400 mt-0.5">Discounts applied to all products in a category</p>
+    </div>
+    <a href="{% url 'offers:category_offer_create' %}"
+       class="text-[10px] font-bold text-gray-400 hover:text-black transition uppercase tracking-widest">
+      + Add
+    </a>
+  </div>
+
+  {% if category_offers %}
+  <table class="w-full">
+    <thead>
+      <tr class="border-b border-gray-50">
+        <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Category</th>
+        <th class="px-6 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Discount</th>
+        <th class="px-6 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Period</th>
+        <th class="px-6 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+        <th class="px-6 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-50">
+      {% for offer in category_offers %}
+      <tr class="hover:bg-gray-50 transition">
+        <td class="px-6 py-4">
+          <p class="text-sm font-bold text-gray-900">{{ offer.category.name }}</p>
+          <p class="text-[11px] text-gray-400 mt-0.5">{{ offer.category.product_count }} products</p>
+        </td>
+        <td class="px-6 py-4 text-center">
+          <span class="inline-flex items-center justify-center w-14 h-8 rounded-lg bg-red-50 text-red-600 text-sm font-black border border-red-100">
+            {{ offer.discount_percent }}%
+          </span>
+        </td>
+        <td class="px-6 py-4 text-center">
+          <p class="text-xs text-gray-500">{{ offer.start_date|date:"d M" }} → {{ offer.end_date|date:"d M Y" }}</p>
+        </td>
+        <td class="px-6 py-4 text-center">
+          {% if offer.is_active and offer.start_date <= today and offer.end_date >= today %}
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-green-600 text-[9px] font-bold uppercase border border-green-100">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Live
+            </span>
+          {% elif offer.is_active %}
+            <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[9px] font-bold uppercase border border-blue-100">Scheduled</span>
+          {% else %}
+            <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-400 text-[9px] font-bold uppercase">Inactive</span>
+          {% endif %}
+        </td>
+        <td class="px-6 py-4">
+  <div class="flex items-center justify-center gap-2">
+
+    <form method="POST" action="{% url 'offers:toggle_category_offer' offer.pk %}">
+      {% csrf_token %}
+      <button type="submit"
+              class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide transition
+                     {% if offer.is_active %}bg-red-50 text-red-500 hover:bg-red-100 border border-red-100
+                     {% else %}bg-green-50 text-green-600 hover:bg-green-100 border border-green-100{% endif %}">
+        {% if offer.is_active %}Deactivate{% else %}Activate{% endif %}
+      </button>
+    </form>
+
+    <form method="POST"
+          action="{% url 'offers:delete_category_offer' offer.pk %}"
+          class="delete-offer-form">
+
+      {% csrf_token %}
+
+      <button type="button"
+              onclick="confirmDelete(this)"
+              class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide
+                     bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500
+                     border border-gray-100 hover:border-red-100 transition">
+
+        Delete
+
+      </button>
+
+    </form>
+
+  </div>
+</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="py-16 text-center">
+    <div class="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-7 h-7 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+      </svg>
+    </div>
+    <p class="text-sm font-bold text-gray-300">No category offers yet</p>
+    <a href="{% url 'offers:category_offer_create' %}"
+       class="inline-flex items-center gap-2 mt-4 bg-black text-white px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition">
+      Create First Offer
+    </a>
+  </div>
+  {% endif %}
+</div>
+<script>
+function confirmDelete(button) {
+    const form = button.closest("form");
+
+    Swal.fire({
+        title: 'Delete Offer',
+        html: `
+            <p style="color:#6b7280; font-size:14px; margin-top:8px;">
+                This offer will be permanently removed.<br>
+                This action cannot be undone.
+            </p>
+        `,
+        icon: null,
+
+        showCancelButton: true,
+
+        confirmButtonText: 'Delete',
+        cancelButtonText: 'Keep Offer',
+
+        reverseButtons: true,
+
+        background: '#ffffff',
+
+        customClass: {
+            popup: 'rounded-3xl shadow-2xl',
+            title: 'text-gray-900 font-black text-xl',
+            confirmButton: 'rounded-xl px-5 py-3 text-sm font-bold',
+            cancelButton: 'rounded-xl px-5 py-3 text-sm font-bold'
+        },
+
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.submit();
+        }
+    });
+
+    // manual styling
+    setTimeout(() => {
+        const confirm = document.querySelector('.swal2-confirm');
+        const cancel = document.querySelector('.swal2-cancel');
+
+        if (confirm) {
+            confirm.style.background = '#111827';
+            confirm.style.color = 'white';
+            confirm.style.marginLeft = '10px';
+        }
+
+        if (cancel) {
+            cancel.style.background = '#f9fafb';
+            cancel.style.border = '1px solid #e5e7eb';
+            cancel.style.color = '#6b7280';
+        }
+
+    }, 10);
+}
+</script>
+
+{% endblock %}

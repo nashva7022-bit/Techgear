@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load offer_tags %}
 
 {% block title %}My Wishlist — TechGear{% endblock %}
 
@@ -255,18 +256,19 @@
         </div>
 
         <!-- Price — exact variant price -->
-        <div class="mb-3">
-          {% if item.variant.has_discount %}
-            <span class="text-white font-black text-base">₹{{ item.variant.discounted_price }}</span>
-            <span class="text-white/30 text-xs line-through ml-1.5">₹{{ item.variant.price }}</span>
-            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green-400/15 text-green-400 border border-green-400/20 ml-1">
-              {{ item.variant.discount_percentage }}% OFF
-            </span>
-          {% else %}
-            <span class="text-white font-black text-base">₹{{ item.variant.price }}</span>
-          {% endif %}
-        </div>
-
+<div class="mb-3">
+  {% effective_price item.variant as eff_price %}
+  {% discount_percent item.variant as disc_pct %}
+  {% if disc_pct > 0 %}
+    <span class="text-white font-black text-base">₹{{ eff_price }}</span>
+    <span class="text-white/30 text-xs line-through ml-1.5">₹{{ item.variant.price }}</span>
+    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green-400/15 text-green-400 border border-green-400/20 ml-1">
+      {{ disc_pct }}% OFF
+    </span>
+  {% else %}
+    <span class="text-white font-black text-base">₹{{ eff_price }}</span>
+  {% endif %}
+</div>
         <!-- Stock status — exact variant stock -->
         <div class="flex items-center gap-1.5 mb-4">
           {% if item.variant.stock > 10 %}

@@ -3,9 +3,7 @@ from django.core.exceptions import ValidationError
 from .models import Category, Product, ProductVariant, VariantImage, ProductSpecification
 
 
-# ──────────────────────────────────────────
-# CATEGORY FORM
-# ──────────────────────────────────────────
+# CATEGORY FORM 
 
 class CategoryForm(forms.ModelForm):
     class Meta:
@@ -24,21 +22,12 @@ class CategoryForm(forms.ModelForm):
         return name
 
 
-# ──────────────────────────────────────────
-# PRODUCT FORM
-# ──────────────────────────────────────────
+# PRODUCT FORM 
 
 class ProductForm(forms.ModelForm):
     class Meta:
         model  = Product
-        fields = [
-            'name',
-            'brand',
-            'category',
-            'is_active',
-            'description',
-            # is_customizable is NOT a product field anymore — it's on Category.
-        ]
+        fields = ['name', 'brand', 'category', 'is_active', 'description']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -57,9 +46,7 @@ class ProductForm(forms.ModelForm):
         return name
 
 
-# ──────────────────────────────────────────
-# PRODUCT SPECIFICATION FORM
-# ──────────────────────────────────────────
+# PRODUCT SPECIFICATION FORM 
 
 class ProductSpecificationForm(forms.ModelForm):
     class Meta:
@@ -79,9 +66,7 @@ class ProductSpecificationForm(forms.ModelForm):
         return value
 
 
-# ──────────────────────────────────────────
-# PRODUCT VARIANT FORM
-# ──────────────────────────────────────────
+# PRODUCT VARIANT FORM 
 
 class ProductVariantForm(forms.ModelForm):
     class Meta:
@@ -93,7 +78,6 @@ class ProductVariantForm(forms.ModelForm):
             'color_code',
             'sku',
             'price',
-            'discount_percentage',
             'stock',
             'is_active',
         ]
@@ -110,20 +94,6 @@ class ProductVariantForm(forms.ModelForm):
         if price <= 0:
             raise ValidationError('Price must be greater than 0.')
         return price
-    
-    def clean_discount_percentage(self):
-        discount = self.cleaned_data.get('discount_percentage')
-
-        if discount is None:
-            return 0
-
-        if discount < 0:
-            raise ValidationError('Discount cannot be negative.')
-
-        if discount >= 90:
-            raise ValidationError('Discount cannot exceed 90%.')
-
-        return discount
 
     def clean_stock(self):
         stock = self.cleaned_data.get('stock')

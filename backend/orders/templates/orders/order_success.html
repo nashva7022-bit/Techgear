@@ -209,18 +209,44 @@
       </div>
 
       <div class="divider"></div>
+<!-- Payment + status -->
+<div class="flex items-center justify-between">
+  <div class="flex items-center gap-2">
+    <i class="bi bi-cash-coin text-white/40 text-sm"></i>
+    <span class="text-xs text-white/50">{{ order.get_payment_method_display }}</span>
+  </div>
+  <span class="text-[10px] font-bold px-2.5 py-1 rounded-full
+               bg-yellow-400/15 text-yellow-400 border border-yellow-400/20 uppercase">
+    Pending
+  </span>
+</div>
 
-      <!-- Payment + status -->
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <i class="bi bi-cash-coin text-white/40 text-sm"></i>
-          <span class="text-xs text-white/50">Cash on Delivery</span>
-        </div>
-        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full
-                     bg-yellow-400/15 text-yellow-400 border border-yellow-400/20 uppercase">
-          Pending
-        </span>
-      </div>
+{% if order.wallet_amount > 0 %}
+<div class="mt-3 p-3 rounded-xl bg-emerald-400/8 border border-emerald-400/15 space-y-1.5">
+  <p class="text-[10px] font-bold text-emerald-400/70 uppercase tracking-widest mb-2">
+    Payment Breakdown
+  </p>
+  <div class="flex justify-between items-center">
+    <span class="text-xs text-white/50 flex items-center gap-1.5">
+      <i class="bi bi-wallet2 text-emerald-400 text-xs"></i> Paid from Wallet
+    </span>
+    <span class="text-xs font-bold text-emerald-400">₹{{ order.wallet_amount }}</span>
+  </div>
+  {% if order.paid_amount > 0 %}
+  <div class="flex justify-between items-center">
+    <span class="text-xs text-white/50 flex items-center gap-1.5">
+      <i class="bi bi-cash-coin text-white/40 text-xs"></i> Pay via COD
+    </span>
+    <span class="text-xs font-bold text-white">₹{{ order.paid_amount }}</span>
+  </div>
+  {% else %}
+  <p class="text-[10px] text-emerald-400/60 flex items-center gap-1 mt-1">
+    <i class="bi bi-check-circle-fill"></i>
+    Wallet covered the full amount — no cash needed!
+  </p>
+  {% endif %}
+</div>
+{% endif %}
 
       <!-- Delivery address -->
       <div class="mt-4 p-3 rounded-xl bg-white/5 border border-white/8 text-left">

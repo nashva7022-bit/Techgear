@@ -119,6 +119,16 @@ class Order(models.Model):
 
 
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # In orders/models.py — add to Order model
+    wallet_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0,
+        help_text='Amount paid from wallet'
+    )
+    paid_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0,
+        help_text='Amount paid via COD or Razorpay'
+    )
    
 
     # TIMESTAMPS 
@@ -160,6 +170,7 @@ class Order(models.Model):
 
 # ORDER ITEM MODEL 
 
+
 class OrderItem(models.Model):
 
     order = models.ForeignKey(
@@ -168,7 +179,6 @@ class OrderItem(models.Model):
         related_name='items',
     )
 
-
     variant = models.ForeignKey(
         'products.ProductVariant',
         on_delete=models.SET_NULL,
@@ -176,60 +186,41 @@ class OrderItem(models.Model):
         blank=True,
         related_name='order_items',
     )
-    product_name = models.CharField(max_length=150)
 
-
-    variant_sku = models.CharField(max_length=50, blank=True, default='')
- 
-    device_model = models.CharField(max_length=100, blank=True, default='')
-    
-
-    case_type = models.CharField(max_length=50, blank=True, default='')
-
-
-    color = models.CharField(max_length=50, blank=True, default='')
-
-
-    color_code = models.CharField(max_length=7, blank=True, default='')
-    
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
-   
-
-    quantity = models.PositiveIntegerField(default=1)
-    
-
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
- 
-
- 
-
-    custom_text = models.CharField(max_length=100, blank=True, default='')
-    
-
-   
-    custom_image = CloudinaryField('custom_image', blank=True, null=True)
-  
-
-    #ITEM STATUS
-
-    item_status = models.CharField(
-        max_length=20,
-        choices=ITEM_STATUS_CHOICES,
-        default='active',
+  # Snapshot fields
+    product_name   = models.CharField(max_length=150)
+    variant_sku    = models.CharField(max_length=50, blank=True, default='')
+    device_model   = models.CharField(max_length=100, blank=True, default='')
+    case_type      = models.CharField(max_length=50, blank=True, default='')
+    color          = models.CharField(max_length=50, blank=True, default='')
+    color_code     = models.CharField(max_length=7, blank=True, default='')
+    original_price = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0,
+        help_text='MRP per unit at time of purchase, before any offer discount'
     )
-    
-    cancellation_reason = models.TextField(blank=True, default='')
-   
+    unit_price     = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity       = models.PositiveIntegerField(default=1)
+    subtotal       = models.DecimalField(max_digits=10, decimal_places=2)
+    # Customization snapshot
+    custom_text  = models.CharField(max_length=100, blank=True, default='')
+    custom_image = CloudinaryField('custom_image', blank=True, null=True)
 
-    return_reason = models.TextField(blank=True, default='')
-   
-    created_at = models.DateTimeField(default=timezone.now)
-   
+    
+    customization_charge = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=0,
+    )
+
+    # Item status
+    item_status         = models.CharField(max_length=20, choices=ITEM_STATUS_CHOICES, default='active')
+    cancellation_reason = models.TextField(blank=True, default='')
+    return_reason       = models.TextField(blank=True, default='')
     return_rejected_reason = models.TextField(blank=True, default='')
+    created_at          = models.DateTimeField(default=timezone.now)
 
     class Meta:
         ordering = ['created_at']
-       
 
     def __str__(self):
         return f"{self.product_name} × {self.quantity} (Order: {self.order.order_number})"
@@ -240,7 +231,6 @@ class OrderItem(models.Model):
             self.item_status == 'active' and
             self.order.status == 'pending'
         )
-   
 
     @property
     def is_returnable(self):
@@ -248,15 +238,17 @@ class OrderItem(models.Model):
             self.item_status == 'active' and
             self.order.status == 'delivered'
         )
-   
 
     @property
     def is_return_pending(self):
         return self.item_status == 'return_requested'
-    
+
     @property
     def is_return_rejected(self):
-        return self.item_status == 'return_rejected'
+        return self.item_status == 'return_rejected' 
+    
+
+    
 # ORDER STATUS LOG (ACTIVITY LOG)
 
 class OrderStatusLog(models.Model):
@@ -295,3 +287,5 @@ class OrderStatusLog(models.Model):
             f"{self.order.order_number}: "
             f"{self.old_status or 'created'} → {self.new_status}"
         )
+    
+    

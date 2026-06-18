@@ -2,13 +2,11 @@ from django.db import models
 from cloudinary.models import CloudinaryField
 from django.utils.text import slugify
 import random, string
-from django.core.validators import MinValueValidator, MaxValueValidator
-
+from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 
 
-# BRAND CHOICES
-
+# BRAND CHOICES 
 BRAND_CHOICES = [
     ('apple',    'Apple'),
     ('samsung',  'Samsung'),
@@ -22,8 +20,6 @@ BRAND_CHOICES = [
     ('motorola', 'Motorola'),
     ('other',    'Other'),
 ]
-
-
 
 # CASE TYPE CHOICES
 
@@ -39,23 +35,20 @@ CASE_TYPE_CHOICES = [
     ('thin',     'Ultra Thin'),
     ('matte',    'Matte Finish'),
     ('other',    'Other'),
-    ('dell', 'Dell'),
-    ('hp', 'HP'),
+    ('dell',     'Dell'),
+    ('hp',       'HP'),
 ]
 
-
-
 # DEVICE MODEL
-
 class DeviceModel(models.Model):
     DEVICE_TYPE_CHOICES = [
         ('phone',  'Phone'),
         ('laptop', 'Laptop'),
     ]
-    brand     = models.CharField(max_length=50, choices=BRAND_CHOICES)
-    name      = models.CharField(max_length=100)   # e.g. "iPhone 15 Pro"
+    brand       = models.CharField(max_length=50, choices=BRAND_CHOICES)
+    name        = models.CharField(max_length=100)
     device_type = models.CharField(max_length=10, choices=DEVICE_TYPE_CHOICES, default='phone')
-    is_active = models.BooleanField(default=True)
+    is_active   = models.BooleanField(default=True)
 
     class Meta:
         ordering        = ['brand', 'name']
@@ -67,35 +60,22 @@ class DeviceModel(models.Model):
         return f"{self.get_brand_display()} — {self.name}"
 
 
-
-# CATEGORY
-
+# CATEGORY 
 
 class Category(models.Model):
     DEVICE_TYPE_CHOICES = [
-    ('phone', 'Phone'),
-    ('laptop', 'Laptop'),
-]
+        ('phone',  'Phone'),
+        ('laptop', 'Laptop'),
+    ]
 
-    device_type = models.CharField(
-        max_length=10,
-        choices=DEVICE_TYPE_CHOICES,
-        default='phone'
-    )
+    device_type     = models.CharField(max_length=10, choices=DEVICE_TYPE_CHOICES, default='phone')
     name            = models.CharField(max_length=100)
     slug            = models.SlugField(max_length=100, unique=True, blank=True)
     description     = models.TextField(blank=True)
     image           = CloudinaryField('image', blank=True, null=True)
-
-    # Phone cases and laptop skins are customizable; grips and screen protectors are not.
     is_customizable = models.BooleanField(default=False)
     is_active       = models.BooleanField(default=True)
-
-    # Controls whether the Case Type field is shown in product variants.
-    # True for: Phone Cases, Laptop Skins.
-    # False for: Grips, Screen Protectors, etc.
     has_case_type   = models.BooleanField(default=False)
-
     created_at      = models.DateTimeField(auto_now_add=True)
     updated_at      = models.DateTimeField(auto_now=True)
 
@@ -117,11 +97,9 @@ class Category(models.Model):
 
 
 class CategorySpecTemplate(models.Model):
-    """Defines which spec names belong to a category."""
-    category    = models.ForeignKey(Category, on_delete=models.CASCADE,
-                                    related_name='spec_templates')
-    name        = models.CharField(max_length=100)   # e.g. "Material"
-    placeholder = models.CharField(max_length=100, blank=True)  # hint text
+    category    = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='spec_templates')
+    name        = models.CharField(max_length=100)
+    placeholder = models.CharField(max_length=100, blank=True)
     order       = models.PositiveIntegerField(default=0)
     is_required = models.BooleanField(default=False)
 
@@ -132,8 +110,7 @@ class CategorySpecTemplate(models.Model):
         return f"{self.category.name} → {self.name}"
 
 
-# PRODUCT
-
+#  PRODUCT 
 
 class Product(models.Model):
     category    = models.ForeignKey(
@@ -145,13 +122,11 @@ class Product(models.Model):
     description = models.TextField(blank=True)
 
     is_active               = models.BooleanField(default=True)
-    
     deactivated_by_category = models.BooleanField(default=False)
-    created_at  = models.DateTimeField(auto_now_add=True)
-    updated_at  = models.DateTimeField(auto_now=True)
-    is_featured = models.BooleanField(default=False)
-    is_trending = models.BooleanField(default=False)
-
+    created_at              = models.DateTimeField(auto_now_add=True)
+    updated_at              = models.DateTimeField(auto_now=True)
+    is_featured             = models.BooleanField(default=False)
+    is_trending             = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-created_at']
@@ -172,7 +147,6 @@ class Product(models.Model):
 
     @property
     def is_customizable(self):
-        """Delegate to category. Safe even if category is null."""
         return bool(self.category and self.category.is_customizable)
 
     @property
@@ -188,39 +162,20 @@ class Product(models.Model):
 
     @property
     def min_price(self):
-        prices = list(
-        self.variants.filter(is_active=True).values_list('price', flat=True)
-    )
+        prices = list(self.variants.filter(is_active=True).values_list('price', flat=True))
         return min(prices) if prices else None
-
-    @property
-    def min_discounted_price(self):
-        variants = self.variants.filter(is_active=True)
-        prices = [v.discounted_price for v in variants]
-        return min(prices) if prices else None
-
-    @property
-    def has_discount(self):
-        return self.variants.filter(
-            is_active=True,
-            discount_percentage__gt=0
-        ).exists()
-
-    
 
     @property
     def active_variant(self):
         return self.variants.filter(is_active=True).first()
 
-# PRODUCT SPECIFICATION
 
+#PRODUCT SPECIFICATION 
 
 class ProductSpecification(models.Model):
-    product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name='specifications'
-    )
-    name    = models.CharField(max_length=100)   # e.g. "Material"
-    value   = models.CharField(max_length=255)   # e.g. "Polycarbonate"
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='specifications')
+    name    = models.CharField(max_length=100)
+    value   = models.CharField(max_length=255)
     order   = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -229,8 +184,8 @@ class ProductSpecification(models.Model):
     def __str__(self):
         return f"{self.product.name} — {self.name}: {self.value}"
 
-# PRODUCT VARIANT
 
+#COLOUR CHOICES 
 
 COLOR_CHOICES = [
     ('black',       'Black'),
@@ -251,54 +206,25 @@ COLOR_CHOICES = [
 ]
 
 
+# PRODUCT VARIANT
+
 class ProductVariant(models.Model):
-    product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name='variants'
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
 
-
-    )
-
-    
-    def clean(self):
-    # Price validation
-        if self.price is not None and self.price <= 0:
-            raise ValidationError({'price': 'Price must be greater than 0.'})
-
-    # Discount validation
-        if self.discount_percentage is not None:
-            if self.discount_percentage < 0:
-                raise ValidationError({'discount_percentage': 'Discount cannot be negative.'})
-            if self.discount_percentage > 90:
-                raise ValidationError({'discount_percentage': 'Discount cannot exceed 90%.'})
-
-        # Only check discounted price if price is also valid
-            if self.price is not None and self.price > 0:
-                discounted = self.price - (self.price * self.discount_percentage / 100)
-                if discounted <= 0:
-                    raise ValidationError({
-                        'discount_percentage': 'Discount makes the final price ₹0 or less. Reduce the discount.'
-                    })
-   
     device_model = models.ForeignKey(
         DeviceModel,
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='variants',
     )
-
-    # Choices — only meaningful when category.has_case_type is True.
-    # Blank for grips, screen protectors, etc.
-    case_type = models.CharField(
-        max_length=50,
-        choices=CASE_TYPE_CHOICES,
-        blank=True,
-        default='',
-    )
-
+    case_type  = models.CharField(max_length=50, choices=CASE_TYPE_CHOICES, blank=True, default='')
     color      = models.CharField(max_length=50, choices=COLOR_CHOICES, default='black')
-    color_code = models.CharField(max_length=7, default='#000000')   # hex
+    color_code = models.CharField(max_length=7, default='#000000')
     sku        = models.CharField(max_length=50, unique=True, blank=True, null=True)
+
+    # MRP — the one true price. Discounts come from offers, not this field.
     price      = models.DecimalField(max_digits=10, decimal_places=2)
+
     stock      = models.PositiveIntegerField(default=0)
     is_active  = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -306,9 +232,11 @@ class ProductVariant(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+    def clean(self):
+        if self.price is not None and self.price <= 0:
+            raise ValidationError({'price': 'Price must be greater than 0.'})
+
     def save(self, *args, **kwargs):
-    # Don't call full_clean() here — it breaks update_fields calls
-    # from services.py. Django admin calls full_clean() automatically.
         if not self.sku:
             from django.db import IntegrityError
             for _ in range(10):
@@ -331,33 +259,12 @@ class ProductVariant(models.Model):
     @property
     def primary_image(self):
         return self.images.first()
-    
-
-    discount_percentage = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0),MaxValueValidator(90)] , # max 90% discount
-         help_text='Discount percentage 0-90%'
-    )
-
-    @property
-    def discounted_price(self):
-        if self.discount_percentage:
-            discount = (self.price * self.discount_percentage) / 100
-            return round(self.price - discount, 2)
-        return self.price
-
-    @property
-    def has_discount(self):
-        return self.discount_percentage > 0
 
 
-# VARIANT IMAGE
-
+#  VARIANT IMAGE 
 
 class VariantImage(models.Model):
-    variant    = models.ForeignKey(
-        ProductVariant, on_delete=models.CASCADE, related_name='images'
-    )
+    variant    = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='images')
     image      = CloudinaryField('image')
     is_primary = models.BooleanField(default=False)
     order      = models.PositiveIntegerField(default=0)

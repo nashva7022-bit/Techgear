@@ -1,7 +1,7 @@
-html
 
 {% extends 'base.html' %}
 {% load static %}
+{% load offer_tags %}
 
 {% block content %}
 
@@ -132,16 +132,23 @@ html
                 {% endif %}
 
                 <div class="flex justify-between items-center mt-auto pt-3">
-                    <div>
-                        {% if product.has_discount and product.min_discounted_price %}
-                        <span class="font-bold text-lg text-site-bg">₹{{ product.min_discounted_price }}</span>
-                        <span class="text-xs text-site-bg/40 line-through ml-1">₹{{ product.min_price }}</span>
-                        {% else %}
-                        <span class="font-bold text-lg text-site-bg">
-                            {% if product.min_price %}₹{{ product.min_price }}{% else %}—{% endif %}
-                        </span>
-                        {% endif %}
-                    </div>
+    <div>
+        {% if variant %}
+            {% effective_price variant as eff_price %}
+            {% discount_percent variant as disc_pct %}
+            {% if disc_pct > 0 %}
+                <span class="font-bold text-lg text-site-bg">₹{{ eff_price }}</span>
+                <span class="text-xs text-site-bg/40 line-through ml-1">₹{{ variant.price }}</span>
+                <span class="text-[9px] font-bold text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full ml-1">{{ disc_pct }}% OFF</span>
+            {% else %}
+                <span class="font-bold text-lg text-site-bg">₹{{ eff_price }}</span>
+            {% endif %}
+        {% else %}
+            <span class="font-bold text-lg text-site-bg">
+                {% if product.min_price %}₹{{ product.min_price }}{% else %}—{% endif %}
+            </span>
+        {% endif %}
+    </div>
                     <a href="{% url 'product_detail' product.slug %}"
                        class="bg-site-bg text-white p-3 rounded-full hover:bg-black transition"
                        title="View product">
@@ -210,17 +217,24 @@ html
                 </div>
                 {% endif %}
 
-                <div class="flex justify-between items-center mt-auto pt-3">
-                    <div>
-                        {% if product.has_discount and product.min_discounted_price %}
-                        <span class="font-bold text-lg text-site-bg">₹{{ product.min_discounted_price }}</span>
-                        <span class="text-xs text-site-bg/40 line-through ml-1">₹{{ product.min_price }}</span>
-                        {% else %}
-                        <span class="font-bold text-lg text-site-bg">
-                            {% if product.min_price %}₹{{ product.min_price }}{% else %}—{% endif %}
-                        </span>
-                        {% endif %}
-                    </div>
+               <div class="flex justify-between items-center mt-auto pt-3">
+    <div>
+        {% if variant %}
+            {% effective_price variant as eff_price %}
+            {% discount_percent variant as disc_pct %}
+            {% if disc_pct > 0 %}
+                <span class="font-bold text-lg text-site-bg">₹{{ eff_price }}</span>
+                <span class="text-xs text-site-bg/40 line-through ml-1">₹{{ variant.price }}</span>
+                <span class="text-[9px] font-bold text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full ml-1">{{ disc_pct }}% OFF</span>
+            {% else %}
+                <span class="font-bold text-lg text-site-bg">₹{{ eff_price }}</span>
+            {% endif %}
+        {% else %}
+            <span class="font-bold text-lg text-site-bg">
+                {% if product.min_price %}₹{{ product.min_price }}{% else %}—{% endif %}
+            </span>
+        {% endif %}
+    </div>
                     <a href="{% url 'product_detail' product.slug %}"
                        class="bg-site-bg text-white p-3 rounded-full hover:bg-black transition"
                        title="View product">

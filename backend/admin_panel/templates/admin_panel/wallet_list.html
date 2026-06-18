@@ -1,0 +1,103 @@
+{% extends 'admin_panel/admin_base.html' %}
+{% block content %}
+
+<div style="margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+  <div>
+    <h1 style="font-size:24px;font-weight:900;color:#111;letter-spacing:-0.02em;">Wallets</h1>
+    <p style="font-size:13px;color:#9ca3af;font-weight:500;margin-top:4px;">All user wallet balances</p>
+  </div>
+</div>
+
+<!-- Search -->
+<form method="GET" style="margin-bottom:20px;">
+  <input type="text" name="search" value="{{ search }}"
+         placeholder="Search by name or email…"
+         style="padding:10px 14px;border:1.5px solid #efefef;border-radius:10px;
+                font-size:13px;width:300px;outline:none;">
+  <button type="submit"
+          style="padding:10px 20px;background:#111;color:#fff;border:none;
+                 border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;margin-left:8px;">
+    Search
+  </button>
+  {% if search %}
+  <a href="{% url 'admin_wallet_list' %}"
+     style="padding:10px 16px;border:1.5px solid #e5e7eb;border-radius:10px;
+            font-size:11px;font-weight:700;color:#6b7280;text-decoration:none;margin-left:8px;">
+    Clear
+  </a>
+  {% endif %}
+</form>
+
+<!-- Table -->
+<div style="background:#fff;border:1px solid #e8e8e8;border-radius:16px;overflow:hidden;">
+  <table style="width:100%;border-collapse:collapse;">
+    <thead>
+      <tr style="background:#fafafa;border-bottom:1px solid #f0f0f0;">
+        <th style="padding:12px 20px;text-align:left;font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;">User</th>
+        <th style="padding:12px 20px;text-align:left;font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;">Email</th>
+        <th style="padding:12px 20px;text-align:right;font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;">Balance</th>
+        <th style="padding:12px 20px;text-align:center;font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for wallet in page_obj %}
+      <tr style="border-bottom:1px solid #f9fafb;transition:background 0.15s;"
+          onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
+        <td style="padding:14px 20px;font-size:13px;font-weight:700;color:#111;">
+          {{ wallet.user.get_full_name|default:wallet.user.email }}
+        </td>
+        <td style="padding:14px 20px;font-size:12px;color:#6b7280;">
+          {{ wallet.user.email }}
+        </td>
+        <td style="padding:14px 20px;text-align:right;">
+          <span style="font-size:14px;font-weight:900;color:{% if wallet.balance > 0 %}#16a34a{% else %}#9ca3af{% endif %};">
+            ₹{{ wallet.balance }}
+          </span>
+        </td>
+        <td style="padding:14px 20px;text-align:center;">
+          <a href="{% url 'admin_wallet_detail' wallet.user.pk %}"
+             style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;
+                    background:#111;color:#fff;border-radius:8px;font-size:10px;
+                    font-weight:700;text-decoration:none;text-transform:uppercase;letter-spacing:0.06em;">
+            View
+          </a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4" style="padding:40px;text-align:center;color:#d1d5db;font-size:13px;">
+          No wallets found.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.paginator.num_pages > 1 %}
+<div style="display:flex;justify-content:center;gap:8px;margin-top:24px;">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}"
+     style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+            border:1.5px solid #e5e7eb;color:#6b7280;text-decoration:none;font-size:13px;">‹</a>
+  {% endif %}
+  {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+    <span style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+                 background:#111;color:#fff;font-size:13px;font-weight:700;">{{ num }}</span>
+    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+    <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}"
+       style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+              border:1.5px solid #e5e7eb;color:#6b7280;text-decoration:none;font-size:13px;">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}"
+     style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+            border:1.5px solid #e5e7eb;color:#6b7280;text-decoration:none;font-size:13px;">›</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

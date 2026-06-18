@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load offer_tags %}
 
 {% block title %}Shop — TechGear{% endblock %}
 
@@ -399,7 +400,7 @@
           <div class="p-5 flex flex-col flex-1">
 
             <!-- Badges — on cream background so colors are always visible -->
-            {% if product.is_trending or product.is_featured or product.has_discount or product.is_customizable %}
+            {% if product.is_trending or product.is_featured or product.is_customizable %}
             <div class="flex flex-wrap gap-1.5 mb-2.5">
               {% if product.is_trending %}
               <span class="badge" style="background:#e8f0f0;color:#2F4F4F;border:1px solid #b8d0d0;">Trending</span>
@@ -407,9 +408,7 @@
               {% if product.is_featured %}
               <span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;">Featured</span>
               {% endif %}
-              {% if product.has_discount %}
-              <span class="badge" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;">Sale</span>
-              {% endif %}
+              
               {% if product.is_customizable %}
               <span class="badge" style="background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;">Custom</span>
               {% endif %}
@@ -431,18 +430,19 @@
             <!-- Price + CTA -->
             <div class="mt-auto flex items-center justify-between">
               <div>
-                {% if product.has_discount and product.min_discounted_price %}
-                <p class="text-site-bg font-black text-lg leading-none">
-                  ₹{{ product.min_discounted_price }}
-                </p>
-                <p class="text-site-bg/40 text-xs line-through mt-0.5">
-                  ₹{{ product.min_price }}
-                </p>
-                {% else %}
-                <p class="text-site-bg font-black text-lg leading-none">
-                  {% if product.min_price %}₹{{ product.min_price }}{% else %}—{% endif %}
-                </p>
-                {% endif %}
+               {% with rv=product.active_variant %}
+  {% if rv %}
+    {% effective_price rv as eff_price %}
+    {% discount_percent rv as disc_pct %}
+    <p class="text-site-bg font-black text-lg leading-none">₹{{ eff_price }}</p>
+    {% if disc_pct > 0 %}
+      <p class="text-site-bg/40 text-xs line-through leading-none mt-0.5">₹{{ rv.price }}</p>
+      <span class="text-[9px] font-bold text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full mt-1 inline-block">{{ disc_pct }}% OFF</span>
+    {% endif %}
+  {% else %}
+    <p class="text-site-bg font-black text-lg leading-none">—</p>
+  {% endif %}
+{% endwith %}
               </div>
               <a href="{% url 'product_detail' product.slug %}{% if variant %}?variant={{ variant.pk }}{% endif %}" class="view-btn" title="View Product">
                 

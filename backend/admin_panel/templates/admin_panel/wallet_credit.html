@@ -1,0 +1,74 @@
+{% extends 'admin_panel/admin_base.html' %}
+{% block content %}
+
+<div style="max-width:520px;margin:0 auto;">
+
+  <a href="{% url 'admin_wallet_detail' wallet_user.pk %}"
+     style="display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;
+            color:#9ca3af;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;
+            margin-bottom:20px;">
+    ← Back to Wallet
+  </a>
+
+  <div style="background:#fff;border:1px solid #e8e8e8;border-radius:16px;overflow:hidden;">
+    <div style="padding:16px 24px;border-bottom:1px solid #f0f0f0;background:#fafafa;">
+      <p style="font-size:11px;font-weight:900;color:#111;text-transform:uppercase;letter-spacing:0.1em;">
+        Manual Wallet Credit
+      </p>
+    </div>
+
+    <div style="padding:24px;">
+      <div style="background:#f9fafb;border:1px solid #f0f0f0;border-radius:12px;
+                  padding:14px 18px;margin-bottom:24px;">
+        <p style="font-size:11px;color:#9ca3af;font-weight:600;margin-bottom:2px;">Crediting to</p>
+        <p style="font-size:13px;font-weight:800;color:#111;">{{ wallet_user.email }}</p>
+        <p style="font-size:11px;color:#9ca3af;margin-top:4px;">
+          Current balance: <strong style="color:#111;">₹{{ wallet.balance }}</strong>
+        </p>
+      </div>
+
+      {% if messages %}
+        {% for message in messages %}
+        <div style="padding:10px 14px;border-radius:8px;margin-bottom:16px;
+                    {% if message.tags == 'error' %}background:#fef2f2;border:1px solid #fecaca;color:#dc2626;
+                    {% else %}background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;{% endif %}">
+          <p style="font-size:12px;font-weight:600;">{{ message }}</p>
+        </div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="POST">
+        {% csrf_token %}
+
+        <div style="margin-bottom:16px;">
+          <label style="display:block;font-size:10px;font-weight:700;color:#9ca3af;
+                        text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">
+            Amount (₹) *
+          </label>
+          <input type="number" name="amount" min="1" step="0.01" placeholder="e.g. 50"
+                 style="width:100%;padding:10px 14px;border:1.5px solid #efefef;border-radius:10px;
+                        font-size:13px;font-weight:500;outline:none;box-sizing:border-box;">
+        </div>
+
+        <div style="margin-bottom:24px;">
+          <label style="display:block;font-size:10px;font-weight:700;color:#9ca3af;
+                        text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">
+            Reason *
+          </label>
+          <input type="text" name="reason" placeholder="e.g. Compensation for delayed order"
+                 style="width:100%;padding:10px 14px;border:1.5px solid #efefef;border-radius:10px;
+                        font-size:13px;font-weight:500;outline:none;box-sizing:border-box;">
+        </div>
+
+        <button type="submit"
+                style="width:100%;padding:12px;background:#111;color:#fff;border:none;
+                       border-radius:10px;font-size:11px;font-weight:900;text-transform:uppercase;
+                       letter-spacing:0.08em;cursor:pointer;">
+          Credit Wallet
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

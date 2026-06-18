@@ -8,13 +8,13 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse   
 import json
 from django.conf import settings
+from offers.utils import get_effective_price
 from orders.models import OrderItem
 from products.models import (
     Category, Product, ProductVariant,
     BRAND_CHOICES, CASE_TYPE_CHOICES
 )
 from .models import Cart, CartItem, Wishlist, WishlistItem,Review
-
 
 def get_or_create_cart(user):
     cart, _ = Cart.objects.get_or_create(user=user)
@@ -152,29 +152,27 @@ def product_detail(request, slug):
         is_active=True
     ).select_related('device_model').prefetch_related('images')
 
-    
     variants_data = []
     for v in active_variants:
         images = [img.image.url for img in v.images.all()]
+        eff_price, disc_pct = get_effective_price(v)
         variants_data.append({
-            'id':               v.pk,
-            'device_model_id':  v.device_model.pk if v.device_model else None,
-            'device_model':     v.device_model.name if v.device_model else '',
-            'case_type':        v.case_type or '',
-            'case_type_label':  v.get_case_type_display() if v.case_type else '',
-            'color':            v.color,
-            'color_label':      v.get_color_display(),
-            'color_code':       v.color_code,
-            'price':            str(v.price),
-            'discounted_price': str(v.discounted_price),
-            'discount_pct':     v.discount_percentage,
-            'stock':            v.stock,
-            'sku':              v.sku or '',
-            'images':           images,
-            'primary_image':    images[0] if images else '',
+            'id': v.pk,
+            'device_model_id': v.device_model.pk if v.device_model else None,
+            'device_model': v.device_model.name if v.device_model else '',
+            'case_type': v.case_type or '',
+            'case_type_label': v.get_case_type_display() if v.case_type else '',
+            'color': v.color,
+            'color_label': v.get_color_display(),
+            'color_code': v.color_code,
+            'price': str(v.price),
+            'effective_price': str(eff_price),
+            'discount_pct': str(disc_pct),
+            'stock': v.stock,
+            'sku': v.sku or '',
+            'images': images,
+            'primary_image': images[0] if images else '',
         })
-
-    
     selected_variant_id = request.GET.get('variant')
     selected_variant    = None
 
@@ -212,7 +210,6 @@ def product_detail(request, slug):
         'user_review':       user_review,
         'avg_rating':        round(avg_rating, 1) if avg_rating else None,
         'review_count':      reviews.count(),
-       
         'from_wishlist': request.GET.get('from_wishlist', False),
         'breadcrumbs': [
             {'name': 'Home',     'url': 'home'},
@@ -245,53 +242,56 @@ def cart_view(request):
 
 @login_required
 @require_POST
+
 def add_to_cart(request):
     variant_id = request.POST.get('variant_id')
-    print("ADD TO CART CALLED — variant_id:", variant_id, "is_ajax:", request.headers.get('X-Requested-With'))
     try:
         quantity = int(request.POST.get('quantity', 1))
     except ValueError:
         quantity = 1
 
     quantity = max(1, quantity)
+    is_ajax  = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
-    is_ajax = request.headers.get(
-        'X-Requested-With'
-    )     == 'XMLHttpRequest'
-    
     variant = ProductVariant.objects.filter(
         pk=variant_id,
         is_active=True,
         product__is_active=True,
         product__category__is_active=True,
     ).select_related('product__category').first()
- 
+
     if not variant:
         if is_ajax:
             return JsonResponse({'ok': False, 'error': 'This product is no longer available.'})
         messages.error(request, "This product is no longer available.")
         return redirect('product_list')
 
-
-
     if variant.stock <= 0:
         if is_ajax:
             return JsonResponse({'ok': False, 'error': 'Sorry, this item is out of stock.'})
         messages.error(request, "Sorry, this item is out of stock.")
         return redirect('product_detail', slug=variant.product.slug)
- 
+
     cart         = get_or_create_cart(request.user)
     custom_text  = request.POST.get('custom_text', '').strip()
     custom_image = request.FILES.get('custom_image')
- 
-    existing_item = None
+
     
+    has_customization = bool(custom_text or custom_image)
+
+    
+    customization_charge = 0
+    if has_customization and variant.product.is_customizable:
+        from admin_panel.models import SiteSettings
+        customization_charge = SiteSettings.get().customization_fee
+
+   
     existing_item = CartItem.objects.filter(
-    cart=cart,
-    variant=variant,
-    custom_text='',
-    custom_image=None,
-).first() if not (custom_text or custom_image) else None
+        cart=cart,
+        variant=variant,
+        custom_text='',
+        custom_image=None,
+    ).first() if not has_customization else None
 
     if existing_item:
         new_qty = existing_item.quantity + quantity
@@ -300,22 +300,28 @@ def add_to_cart(request):
                 return JsonResponse({'ok': False, 'error': f'Only {variant.stock} units available in stock.'})
             messages.error(request, f"Only {variant.stock} units available in stock.")
             return redirect('product_detail', slug=variant.product.slug)
-        
 
         if new_qty > 5:
             if is_ajax:
                 return JsonResponse({'ok': False, 'error': 'Maximum 5 of the same item allowed in cart.'})
             messages.error(request, "Maximum 5 of the same item allowed in cart.")
             return redirect('product_detail', slug=variant.product.slug)
+
         existing_item.quantity = new_qty
         existing_item.save()
+
         wishlist = get_or_create_wishlist(request.user)
         wishlist.items.filter(variant__product=variant.product).delete()
-        
+
         if is_ajax:
-            return JsonResponse({'ok': True, 'message': 'Cart updated!', 'cart_count': _cart_count(request.user), 'wishlist_count': wishlist.items.count()})
+            return JsonResponse({
+                'ok':             True,
+                'message':        'Cart updated!',
+                'cart_count':     _cart_count(request.user),
+                'wishlist_count': wishlist.items.count(),
+            })
         messages.success(request, "Cart updated.")
-    
+
     else:
         quantity = min(quantity, 5)
         if quantity > variant.stock:
@@ -323,27 +329,39 @@ def add_to_cart(request):
                 return JsonResponse({'ok': False, 'error': f'Only {variant.stock} units available in stock.'})
             messages.error(request, f"Only {variant.stock} units available in stock.")
             return redirect('product_detail', slug=variant.product.slug)
- 
         
-        
-        cart_item = CartItem(cart=cart, variant=variant, quantity=quantity)
+        print("CUSTOM TEXT =", custom_text)
+        print("CUSTOM IMAGE =", custom_image)
+        print("HAS CUSTOMIZATION =", has_customization)
+        print("IS CUSTOMIZABLE =", variant.product.is_customizable)
+        print("CUSTOMIZATION CHARGE =", customization_charge)
+
+        cart_item = CartItem(
+            cart=cart,
+            variant=variant,
+            quantity=quantity,
+            customization_charge=customization_charge, 
+        )
         if variant.product.is_customizable:
             if custom_text:
                 cart_item.custom_text = custom_text
             if custom_image:
                 cart_item.custom_image = custom_image
         cart_item.save()
- 
-       
+
         wishlist = get_or_create_wishlist(request.user)
         wishlist.items.filter(variant__product=variant.product).delete()
- 
-        if is_ajax:
-            return JsonResponse({'ok': True, 'message': 'Item added to cart!', 'cart_count': _cart_count(request.user), 'wishlist_count': wishlist.items.count(),})
-        messages.success(request, "Item added to cart!")
- 
-    return redirect('cart')
 
+        if is_ajax:
+            return JsonResponse({
+                'ok':             True,
+                'message':        'Item added to cart!',
+                'cart_count':     _cart_count(request.user),
+                'wishlist_count': wishlist.items.count(),
+            })
+        messages.success(request, "Item added to cart!")
+
+    return redirect('cart')
 
 @login_required
 @require_POST
@@ -371,19 +389,20 @@ def update_cart(request, item_id):
 
     elif action == 'decrease':
         if cart_item.quantity <= 1:
-       
             if is_ajax:
                 return JsonResponse({'ok': False, 'error': 'Minimum quantity is 1. Remove item to delete.'})
             return redirect('cart')
         cart_item.quantity -= 1
         cart_item.save()
 
-    
     if is_ajax:
-        cart      = cart_item.cart
-        subtotal  = cart_item.variant.discounted_price * cart_item.quantity
-        all_items = cart.items.select_related('variant').all()
-        cart_total  = sum(i.variant.discounted_price * i.quantity for i in all_items)
+        cart        = cart_item.cart
+        
+        subtotal    = cart_item.subtotal
+        
+        all_items   = cart.items.select_related('variant').all()
+        
+        cart_total  = sum(i.subtotal for i in all_items)
         total_items = sum(i.quantity for i in all_items)
 
         return JsonResponse({

@@ -653,14 +653,7 @@ async function addVariant() {
         <label class="field-label">Stock <span class="req">*</span></label>
         <input type="number" name="variant_stock" min="0" placeholder="0" class="field-input">
       </div>
-      <div>
-  <label class="field-label">Discount <span style="font-size:9px;color:#d1d5db;font-weight:500;text-transform:none;letter-spacing:0;margin-left:4px;">0–90%</span></label>
-  <div style="position:relative;">
-    <input type="number" name="variant_discount_percentage" min="0" max="90"
-           placeholder="0" class="field-input" style="padding-right:30px;">
-    <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:800;color:#9ca3af;pointer-events:none;">%</span>
-  </div>
-</div>
+   
 
     </div>
     
@@ -902,24 +895,6 @@ document.getElementById('productForm').addEventListener('submit', function (e) {
       markError(stock);
     }
 
-    // Discount validation
-const discount = card.querySelector('input[name="variant_discount_percentage"]');
-const priceVal = parseFloat(price?.value || 0);
-const discVal  = parseFloat(discount?.value || 0);
-
-if (discVal < 0 || discVal > 90) {
-    errs.push(`Variant ${n}: Discount must be between 0% and 90%.`);
-    valid = false;
-    markError(discount);
-}
-if (priceVal > 0 && discVal > 0) {
-    const discounted = priceVal - (priceVal * discVal / 100);
-    if (discounted <= 0) {
-        errs.push(`Variant ${n}: Discount makes the final price ₹0 or less.`);
-        valid = false;
-        markError(discount);
-    }
-}
     if (imgCnt < 3) {
       errs.push(`Variant ${n}: Upload at least 3 images.`);
       const errEl = document.getElementById(`imgError_${idx}`);

@@ -1,0 +1,119 @@
+{% extends 'admin_panel/admin_base.html' %}
+{% block content %}
+
+<a href="{% url 'admin_wallet_list' %}"
+   style="display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;
+          color:#9ca3af;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;margin-bottom:20px;">
+  ← Back to Wallets
+</a>
+
+<!-- Header -->
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px;">
+  <div>
+    <h1 style="font-size:22px;font-weight:900;color:#111;">{{ wallet_user.get_full_name|default:wallet_user.email }}</h1>
+    <p style="font-size:12px;color:#9ca3af;margin-top:3px;">{{ wallet_user.email }}</p>
+  </div>
+  <a href="{% url 'admin_wallet_credit' wallet_user.pk %}"
+     style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;
+            background:#111;color:#fff;border-radius:10px;font-size:11px;
+            font-weight:800;text-decoration:none;text-transform:uppercase;letter-spacing:0.06em;">
+    + Credit Wallet
+  </a>
+</div>
+
+<!-- Balance card -->
+<div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:14px;
+            padding:20px 24px;margin-bottom:24px;display:flex;gap:40px;flex-wrap:wrap;">
+  <div>
+    <p style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Balance</p>
+    <p style="font-size:28px;font-weight:900;color:#111;">₹{{ wallet.balance }}</p>
+  </div>
+  <div>
+    <p style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Total Credited</p>
+    <p style="font-size:18px;font-weight:800;color:#16a34a;">+₹{{ wallet.total_credited }}</p>
+  </div>
+  <div>
+    <p style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Total Used</p>
+    <p style="font-size:18px;font-weight:800;color:#dc2626;">-₹{{ wallet.total_debited }}</p>
+  </div>
+</div>
+
+<!-- Transactions -->
+<div style="background:#fff;border:1px solid #e8e8e8;border-radius:16px;overflow:hidden;">
+  <div style="padding:14px 20px;border-bottom:1px solid #f0f0f0;background:#fafafa;">
+    <p style="font-size:11px;font-weight:900;color:#111;text-transform:uppercase;letter-spacing:0.1em;">
+      Transaction History
+    </p>
+  </div>
+  <table style="width:100%;border-collapse:collapse;">
+    <thead>
+      <tr style="border-bottom:1px solid #f0f0f0;">
+        <th style="padding:10px 20px;text-align:left;font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;">Date</th>
+        <th style="padding:10px 20px;text-align:left;font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;">Reason</th>
+        <th style="padding:10px 20px;text-align:left;font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;">Order</th>
+        <th style="padding:10px 20px;text-align:center;font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;">Type</th>
+        <th style="padding:10px 20px;text-align:right;font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for txn in page_obj %}
+      <tr style="border-bottom:1px solid #f9fafb;">
+        <td style="padding:12px 20px;font-size:11px;color:#6b7280;">
+          {{ txn.created_at|date:"d M Y, h:i A" }}
+        </td>
+        <td style="padding:12px 20px;font-size:12px;color:#374151;font-weight:500;max-width:260px;">
+          {{ txn.reason }}
+        </td>
+        <td style="padding:12px 20px;font-size:11px;font-family:monospace;color:#6b7280;">
+          {% if txn.order %}{{ txn.order.order_number }}{% else %}—{% endif %}
+        </td>
+        <td style="padding:12px 20px;text-align:center;">
+          <span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:99px;text-transform:uppercase;
+                       {% if txn.transaction_type == 'credit' %}background:#dcfce7;color:#16a34a;
+                       {% else %}background:#fef2f2;color:#dc2626;{% endif %}">
+            {{ txn.get_transaction_type_display }}
+          </span>
+        </td>
+        <td style="padding:12px 20px;text-align:right;font-size:13px;font-weight:800;
+                   {% if txn.transaction_type == 'credit' %}color:#16a34a;{% else %}color:#dc2626;{% endif %}">
+          {% if txn.transaction_type == 'credit' %}+{% else %}−{% endif %}₹{{ txn.amount }}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" style="padding:40px;text-align:center;color:#d1d5db;font-size:13px;">
+          No transactions yet.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.paginator.num_pages > 1 %}
+<div style="display:flex;justify-content:center;gap:8px;margin-top:24px;">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}"
+     style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+            border:1.5px solid #e5e7eb;color:#6b7280;text-decoration:none;">‹</a>
+  {% endif %}
+  {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+    <span style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+                 background:#111;color:#fff;font-size:13px;font-weight:700;">{{ num }}</span>
+    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+    <a href="?page={{ num }}"
+       style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+              border:1.5px solid #e5e7eb;color:#6b7280;text-decoration:none;">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}"
+     style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+            border:1.5px solid #e5e7eb;color:#6b7280;text-decoration:none;">›</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

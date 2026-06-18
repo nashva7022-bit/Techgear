@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load offer_tags %}
 
 {% block title %}Your Cart — TechGear{% endblock %}
 
@@ -150,8 +151,6 @@
     background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
     display:flex; align-items:center; justify-content:center; margin:0 auto 24px;
   }
-
-  /* Loading spinner on qty buttons */
   .qty-btn.loading { opacity:0.4; pointer-events:none; }
 </style>
 
@@ -172,7 +171,9 @@
     <div>
       <h1 class="text-3xl font-bold font-serif text-white">Your Cart</h1>
       {% if cart.total_items %}
-        <p class="text-white/40 text-sm mt-1" id="cartItemCount">{{ cart.total_items }} item{{ cart.total_items|pluralize }} in your bag</p>
+        <p class="text-white/40 text-sm mt-1" id="cartItemCount">
+          {{ cart.total_items }} item{{ cart.total_items|pluralize }} in your bag
+        </p>
       {% endif %}
     </div>
     <a href="{% url 'product_list' %}" class="shop-link">
@@ -246,9 +247,20 @@
             <!-- Price + qty + remove -->
             <div class="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <span class="text-white font-black text-lg">₹{{ item.variant.discounted_price }}</span>
-                {% if item.variant.has_discount %}
-                  <span class="text-white/30 text-xs line-through ml-1.5">₹{{ item.price }}</span>
+                
+{% effective_price item.variant as eff_price %}
+{% discount_percent item.variant as disc_pct %}
+{% if disc_pct > 0 %}
+  <span class="text-white font-black text-lg">₹{{ eff_price }}</span>
+  <span class="text-white/30 text-xs line-through ml-1">₹{{ item.variant.price }}</span>
+  <span class="text-[10px] font-bold text-green-400 ml-1">{{ disc_pct }}% OFF</span>
+{% else %}
+  <span class="text-white font-black text-lg">₹{{ eff_price }}</span>
+{% endif %}
+                {% if item.customization_charge > 0 %}
+                <p class="text-[10px] text-purple-300/80 mt-0.5">
+                  + ₹{{ item.customization_charge }} personalisation
+                </p>
                 {% endif %}
                 <p class="text-white/30 text-xs mt-0.5">
                   Subtotal: <span class="text-white/60 font-semibold" id="subtotal-{{ item.pk }}">₹{{ item.subtotal }}</span>
@@ -256,7 +268,6 @@
               </div>
 
               <div class="flex items-center gap-3">
-                <!-- ── QTY STEPPER — AJAX, no form submit, no history entry ── -->
                 <div class="qty-wrap">
                   <button type="button"
                           class="qty-btn"
@@ -274,7 +285,6 @@
                   <span class="text-white/25 text-[11px]" id="maxqty-{{ item.pk }}">Max {{ item.max_quantity }}</span>
                 {% endif %}
 
-                <!-- Remove still uses a form (full delete is fine as one-time action) -->
                 <form method="POST" action="{% url 'remove_from_cart' item.pk %}">
                   {% csrf_token %}
                   <button type="submit" class="remove-btn" title="Remove"><i class="bi bi-trash3"></i></button>
@@ -288,12 +298,18 @@
                 <div class="flex items-center gap-2">
                   <i class="bi bi-palette2 text-purple-400 text-sm"></i>
                   <span class="text-xs font-bold text-purple-300 uppercase tracking-wider">Personalisation</span>
+                  {% if item.customization_charge > 0 %}
+                  <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/20 uppercase tracking-widest">
+                    + ₹{{ item.customization_charge }} fee
+                  </span>
+                  {% endif %}
                 </div>
                 <button type="button" class="custom-edit-btn"
                         onclick="openEditModal({{ item.pk }}, '{{ item.custom_text|escapejs }}', '{% if item.custom_image %}{{ item.custom_image.url }}{% endif %}')">
                   <i class="bi bi-pencil text-[10px]"></i> Edit
                 </button>
               </div>
+
               <div class="mb-2">
                 <p class="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Text</p>
                 {% if item.custom_text %}
@@ -302,6 +318,7 @@
                   <p class="text-xs text-white/25 italic">None added — click Edit to add</p>
                 {% endif %}
               </div>
+
               <div>
                 <p class="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Image</p>
                 {% if item.custom_image %}
@@ -357,7 +374,7 @@
         </div>
 
         {% if cart.has_unavailable or cart.has_out_of_stock %}
-          <button class="checkout-btn">
+          <button class="checkout-btn" disabled>
             <i class="bi bi-exclamation-circle"></i> Resolve Issues First
           </button>
           <p class="text-[11px] text-white/30 text-center mt-3 leading-relaxed">
@@ -393,7 +410,7 @@
 </div>
 
 
-<!-- ══ PERSONALISATION EDIT MODAL ══ -->
+<!-- PERSONALISATION EDIT MODAL -->
 <div class="modal-overlay" id="editModal" onclick="handleBackdropClick(event)">
   <div class="modal-box">
     <div class="flex items-center justify-between mb-6">
@@ -465,24 +482,18 @@
 </div>
 
 <script>
-// ── CSRF helper ──
 function getCsrfToken() {
   return document.querySelector('[name=csrfmiddlewaretoken]').value;
 }
 
-// ══════════════════════════════════════════
-// AJAX QTY UPDATE
-// No form submit → no history entry → back button works in one click
-// ══════════════════════════════════════════
 async function updateQty(itemId, action, currentQty, maxQty) {
-  const minusBtn  = document.getElementById(`btn-decrease-${itemId}`);
-  const plusBtn   = document.getElementById(`btn-increase-${itemId}`);
-  const qtyEl     = document.getElementById(`qty-${itemId}`);
+  const minusBtn   = document.getElementById(`btn-decrease-${itemId}`);
+  const plusBtn    = document.getElementById(`btn-increase-${itemId}`);
+  const qtyEl      = document.getElementById(`qty-${itemId}`);
   const subtotalEl = document.getElementById(`subtotal-${itemId}`);
   const summaryQtyEl      = document.getElementById(`summary-qty-${itemId}`);
   const summarySubtotalEl = document.getElementById(`summary-subtotal-${itemId}`);
 
-  // Disable both buttons while the request is in flight
   if (minusBtn) minusBtn.classList.add('loading');
   if (plusBtn)  plusBtn.classList.add('loading');
 
@@ -491,7 +502,7 @@ async function updateQty(itemId, action, currentQty, maxQty) {
       method: 'POST',
       headers: {
         'Content-Type':     'application/x-www-form-urlencoded',
-        'X-Requested-With': 'XMLHttpRequest',   // ← tells view this is AJAX
+        'X-Requested-With': 'XMLHttpRequest',
         'X-CSRFToken':      getCsrfToken(),
       },
       body: `action=${action}`,
@@ -500,13 +511,11 @@ async function updateQty(itemId, action, currentQty, maxQty) {
     const data = await res.json();
 
     if (!data.ok) {
-      // Server rejected the change — show a brief inline error
       showToast(data.error || 'Could not update quantity.', 'error');
       return;
     }
 
     if (data.deleted) {
-      // Item was removed (qty decreased to 0)
       const card = document.getElementById(`cart-item-${itemId}`);
       if (card) {
         card.style.transition = 'opacity 0.25s, transform 0.25s';
@@ -514,37 +523,22 @@ async function updateQty(itemId, action, currentQty, maxQty) {
         card.style.transform  = 'translateX(-10px)';
         setTimeout(() => card.remove(), 250);
       }
-      // Also remove from summary panel
       const summaryLine = document.getElementById(`summary-line-${itemId}`);
       if (summaryLine) summaryLine.remove();
     } else {
       const newQty = data.quantity;
-
-      // Update qty display
-      if (qtyEl) qtyEl.textContent = newQty;
-
-      // Update subtotal on the card
-      if (subtotalEl) subtotalEl.textContent = `₹${data.subtotal.toFixed(2)}`;
-
-      // Update summary panel
+      if (qtyEl)      qtyEl.textContent      = newQty;
+      if (subtotalEl) subtotalEl.textContent  = `₹${data.subtotal.toFixed(2)}`;
       if (summaryQtyEl)      summaryQtyEl.textContent      = `× ${newQty}`;
       if (summarySubtotalEl) summarySubtotalEl.textContent = `₹${data.subtotal.toFixed(2)}`;
-
-      // Update button disabled states
       if (minusBtn) minusBtn.disabled = newQty <= 1;
       if (plusBtn)  plusBtn.disabled  = newQty >= maxQty;
     }
 
-    // Update cart totals in summary panel
-    const totalEls = [
-      document.getElementById('cartTotal'),
-      document.getElementById('cartTotalBig'),
-    ];
-    totalEls.forEach(el => {
+    [document.getElementById('cartTotal'), document.getElementById('cartTotalBig')].forEach(el => {
       if (el) el.textContent = `₹${data.cart_total.toFixed(2)}`;
     });
 
-    // Update "N items in your bag" header
     const countEl = document.getElementById('cartItemCount');
     if (countEl && data.total_items !== undefined) {
       countEl.textContent = `${data.total_items} item${data.total_items === 1 ? '' : 's'} in your bag`;
@@ -554,17 +548,14 @@ async function updateQty(itemId, action, currentQty, maxQty) {
     showToast('Something went wrong. Please refresh the page.', 'error');
     console.error('Cart update error:', err);
   } finally {
-    // Re-enable buttons
     if (minusBtn) minusBtn.classList.remove('loading');
     if (plusBtn)  plusBtn.classList.remove('loading');
   }
 }
 
-// ── Lightweight toast notification ──
 function showToast(message, type = 'info') {
   const existing = document.getElementById('cartToast');
   if (existing) existing.remove();
-
   const toast = document.createElement('div');
   toast.id = 'cartToast';
   toast.style.cssText = `
@@ -579,9 +570,6 @@ function showToast(message, type = 'info') {
   setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
 }
 
-// ══════════════════════════════════════════
-// PERSONALISATION MODAL
-// ══════════════════════════════════════════
 function openEditModal(itemId, currentText, currentImageUrl) {
   const modal     = document.getElementById('editModal');
   const form      = document.getElementById('editCustomForm');
@@ -590,7 +578,7 @@ function openEditModal(itemId, currentText, currentImageUrl) {
   const curThumb  = document.getElementById('currentImgThumb');
   const removeChk = document.getElementById('removeImgCheck');
 
-  form.action = `/store/cart/customise/${itemId}/`;
+  form.action  = `/store/cart/customise/${itemId}/`;
   textEl.value = currentText || '';
 
   if (currentImageUrl) {
@@ -603,7 +591,7 @@ function openEditModal(itemId, currentText, currentImageUrl) {
   }
 
   removeChk.checked = false;
-  document.getElementById('removeImgLabel').textContent = 'Remove this image';
+  document.getElementById('removeImgLabel').textContent   = 'Remove this image';
   document.getElementById('newImgPlaceholder').classList.remove('hidden');
   document.getElementById('newImgPreview').classList.add('hidden');
   document.getElementById('editCustomImage').value = '';

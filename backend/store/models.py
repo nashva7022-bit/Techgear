@@ -4,8 +4,10 @@ from products.models import ProductVariant, Product
 from django.core.validators import MinValueValidator, MaxValueValidator
 from cloudinary.models import CloudinaryField
 
+
+
 class Cart(models.Model):
-    user = models.OneToOneField(
+    user       = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='cart'
@@ -18,12 +20,10 @@ class Cart(models.Model):
 
     @property
     def total_items(self):
-        
         return sum(item.quantity for item in self.items.all())
 
     @property
     def total_price(self):
-      
         return sum(
             item.subtotal
             for item in self.items.all()
@@ -32,26 +32,29 @@ class Cart(models.Model):
 
     @property
     def has_out_of_stock(self):
-       
         return any(not item.is_in_stock for item in self.items.all())
 
     @property
     def has_unavailable(self):
-        
         return any(not item.is_available for item in self.items.all())
 
 
-# CART ITEM
-
+#  CART ITEM 
 
 class CartItem(models.Model):
     cart     = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
     variant  = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='cart_items')
     quantity = models.PositiveIntegerField(default=1)
 
-   
     custom_text  = models.CharField(max_length=100, blank=True, default='')
     custom_image = CloudinaryField('custom_image', blank=True, null=True)
+
+    
+    customization_charge = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=0,
+    )
 
     added_at = models.DateTimeField(auto_now_add=True)
 
@@ -75,7 +78,10 @@ class CartItem(models.Model):
 
     @property
     def subtotal(self):
-        return self.variant.discounted_price * self.quantity
+        from offers.utils import get_effective_price
+    
+        effective_price, _ = get_effective_price(self.variant)
+        return (effective_price * self.quantity) + self.customization_charge
 
     @property
     def is_available(self):
@@ -140,9 +146,7 @@ class CartItem(models.Model):
         return ''
 
 
-
-# WISHLIST
-
+#  WISHLIST 
 
 class Wishlist(models.Model):
     user       = models.OneToOneField(
@@ -162,14 +166,9 @@ class Wishlist(models.Model):
 
 # WISHLIST ITEM
 
-
 class WishlistItem(models.Model):
-    wishlist = models.ForeignKey(
-        Wishlist,
-        on_delete=models.CASCADE,
-        related_name='items'
-    )
-    variant  = models.ForeignKey(        
+    wishlist = models.ForeignKey(Wishlist, on_delete=models.CASCADE, related_name='items')
+    variant  = models.ForeignKey(
         ProductVariant,
         on_delete=models.CASCADE,
         related_name='wishlist_items',
@@ -197,21 +196,17 @@ class WishlistItem(models.Model):
 
     @property
     def product(self):
-        
         return self.variant.product
 
     @property
     def min_price(self):
-        return self.variant.discounted_price
+        
+        return self.variant.price
 
 
-
+#  REVIEW 
 class Review(models.Model):
-    product    = models.ForeignKey(
-        Product,
-        on_delete=models.CASCADE,
-        related_name='reviews'
-    )
+    product    = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
     user       = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -225,7 +220,7 @@ class Review(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ['product', 'user']  
+        unique_together = ['product', 'user']
         ordering        = ['-created_at']
 
     def __str__(self):

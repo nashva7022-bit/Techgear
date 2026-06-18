@@ -47,7 +47,7 @@ class VariantImageInline(admin.TabularInline):
 class ProductVariantInline(admin.TabularInline):
     model  = ProductVariant
     extra  = 0
-    fields = ['device_model', 'case_type', 'color', 'sku', 'price','discount_percentage', 'stock', 'is_active']
+    fields = ['device_model', 'case_type', 'color', 'sku', 'price', 'stock', 'is_active']
     show_change_link = True
  
  
