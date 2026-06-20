@@ -48,10 +48,9 @@ ITEM_STATUS_CHOICES = [
 
 PAYMENT_METHOD_CHOICES = [
     ('cod', 'Cash on Delivery'),
-    # ('razorpay', 'Razorpay'), 
+    ('razorpay', 'Razorpay'),
+     
 ]
-
-
 
 
 
@@ -120,15 +119,19 @@ class Order(models.Model):
 
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
 
-    # In orders/models.py — add to Order model
     wallet_amount = models.DecimalField(
         max_digits=10, decimal_places=2, default=0,
         help_text='Amount paid from wallet'
     )
+    coupon_code     = models.CharField(max_length=30, blank=True, default='')
+    coupon_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
     paid_amount = models.DecimalField(
         max_digits=10, decimal_places=2, default=0,
         help_text='Amount paid via COD or Razorpay'
     )
+    razorpay_order_id   = models.CharField(max_length=100, blank=True, default='')
+    razorpay_payment_id = models.CharField(max_length=100, blank=True, default='')
    
 
     # TIMESTAMPS 

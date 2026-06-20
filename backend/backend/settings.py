@@ -43,6 +43,11 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
+RAZORPAY_KEY_ID     = os.environ.get('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
+
+# Add this to allow Razorpay's bank OTP/Verification popups to open
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
 
 # Application definition
 INSTALLED_APPS = [
@@ -65,6 +70,7 @@ INSTALLED_APPS = [
     'admin_orders',
     'wallet',
     'offers',
+    'coupons',
 
     
 

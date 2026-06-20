@@ -798,6 +798,7 @@ const variant = ALL_VARIANTS.find(v => v.id == state.variantId);
       }
     }
   }
+}
 function updateQtyButtons() {
   const max   = Math.min(state.stock, MAX_PER_ORDER);
   const minus = document.getElementById('qtyMinus');

@@ -29,7 +29,19 @@ class Cart(models.Model):
             for item in self.items.all()
             if item.is_available
         )
+    @property
+    def original_total(self):
+        return sum(
+            item.original_subtotal
+            for item in self.items.all()
+            if item.is_available
+        )
 
+    @property
+    def total_discount(self):
+        return self.original_total - self.total_price
+    
+    
     @property
     def has_out_of_stock(self):
         return any(not item.is_in_stock for item in self.items.all())
@@ -90,7 +102,14 @@ class CartItem(models.Model):
             self.variant.product.is_active and
             self.variant.product.category.is_active
         )
+    @property
+    def original_subtotal(self):
+        return (self.variant.price * self.quantity) + self.customization_charge
 
+    @property
+    def discount_amount(self):
+        return self.original_subtotal - self.subtotal
+    
     @property
     def is_in_stock(self):
         return self.variant.stock >= self.quantity

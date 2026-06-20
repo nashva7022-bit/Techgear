@@ -41,6 +41,11 @@
     border: 1px solid rgba(255,255,255,0.15); letter-spacing: 0.08em; text-transform: uppercase;
   }
 
+  .selected-payment {
+  border-color: rgba(255,255,255,0.4) !important;
+  background: rgba(255,255,255,0.09) !important;
+}
+
   .addr-edit-btn {
     position: absolute; bottom: 14px; right: 14px;
     font-size: 10px; font-weight: 700;
@@ -58,7 +63,31 @@
     display: flex; align-items: center; justify-content: center; gap: 10px;
     color: rgba(255,255,255,0.4); font-size: 13px; font-weight: 600;
   }
+
+  .addr-delete-btn {
+  position: absolute;
+  bottom: 14px;
+  right: 90px;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.addr-delete-btn:hover {
+  color: #f87171;
+  border-color: rgba(248,113,113,0.3);
+  background: rgba(248,113,113,0.08);
+}
   .add-addr-btn:hover { border-color: rgba(255,255,255,0.4); color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.04); }
+  
 
   .checkout-item { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
   .checkout-item:last-child { border-bottom: none; }
@@ -209,6 +238,11 @@
                     data-default="{{ address.is_default|yesno:'true,false' }}">
               <i class="bi bi-pencil mr-1"></i>Edit
             </button>
+           <button type="button"
+        class="addr-delete-btn"
+        onclick="openDeleteModal(event, '{{ address.pk }}')">
+  <i class="bi bi-trash3 mr-1"></i> Remove
+</button>
           </div>
           {% endfor %}
         </div>
@@ -219,23 +253,46 @@
       </div>
 
       <div class="mb-8">
-        <div class="flex items-center gap-3 mb-4">
-          <span class="w-7 h-7 rounded-full bg-white text-[var(--teal)] text-xs font-black flex items-center justify-center flex-shrink-0">2</span>
-          <h2 class="text-base font-bold text-white uppercase tracking-wider">Payment Method</h2>
-        </div>
-        <div class="cod-badge">
-          <div class="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center flex-shrink-0">
-            <i class="bi bi-cash-coin text-white text-lg"></i>
-          </div>
-          <div class="flex-1">
-            <p class="text-sm font-bold text-white">Cash on Delivery</p>
-            <p class="text-xs text-white/40 mt-0.5">Pay when your order arrives at your door</p>
-          </div>
-          <div class="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0">
-            <div class="w-2.5 h-2.5 rounded-full bg-[var(--teal)]"></div>
-          </div>
-        </div>
+  <div class="flex items-center gap-3 mb-4">
+    <span class="w-7 h-7 rounded-full bg-white text-[var(--teal)] text-xs font-black flex items-center justify-center flex-shrink-0">2</span>
+    <h2 class="text-base font-bold text-white uppercase tracking-wider">Payment Method</h2>
+  </div>
+  <div class="space-y-3" id="paymentMethods">
+
+    <!-- COD -->
+    <div class="cod-badge cursor-pointer payment-option selected-payment"
+         id="pm-cod"
+         onclick="selectPayment('cod')">
+      <div class="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center flex-shrink-0">
+        <i class="bi bi-cash-coin text-white text-lg"></i>
       </div>
+      <div class="flex-1">
+        <p class="text-sm font-bold text-white">Cash on Delivery</p>
+        <p class="text-xs text-white/40 mt-0.5">Pay when your order arrives at your door</p>
+      </div>
+      <div class="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0" id="pm-cod-tick">
+        <div class="w-2.5 h-2.5 rounded-full bg-[var(--teal)]"></div>
+      </div>
+    </div>
+
+    <!-- Razorpay -->
+    <div class="cod-badge cursor-pointer payment-option"
+         id="pm-razorpay"
+         onclick="selectPayment('razorpay')">
+      <div class="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center flex-shrink-0">
+        <i class="bi bi-credit-card text-white text-lg"></i>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm font-bold text-white">Pay Online</p>
+        <p class="text-xs text-white/40 mt-0.5">UPI, Cards, Net Banking via Razorpay</p>
+      </div>
+      <div class="w-5 h-5 rounded-full border-2 border-white/25 flex items-center justify-center flex-shrink-0" id="pm-razorpay-tick">
+        <div class="w-2.5 h-2.5 rounded-full bg-[var(--teal)] hidden"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
 
       <div class="mb-8">
         <div class="flex items-center gap-3 mb-4">
@@ -297,10 +354,115 @@
           {% endif %}
         </div>
       </div>
+      <!-- STEP 4: COUPON -->
+<div class="mb-8">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="w-7 h-7 rounded-full bg-white text-[var(--teal)] text-xs font-black flex items-center justify-center flex-shrink-0">4</span>
+    <h2 class="text-base font-bold text-white uppercase tracking-wider">Coupon</h2>
+  </div>
+
+  <!-- Applied state -->
+  <div id="couponAppliedBox"
+       class="{% if not coupon_code %}hidden{% endif %} flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+        <i class="bi bi-ticket-perforated-fill text-emerald-400 text-sm"></i>
+      </div>
+      <div>
+        <p class="text-sm font-black text-emerald-400 tracking-wider font-mono" id="appliedCodeLabel">
+          {% if coupon_code %}{{ coupon_code }}{% endif %}
+        </p>
+        <p class="text-[10px] text-emerald-400/70 mt-0.5">
+          ₹<span id="appliedDiscountLabel">{% if coupon_discount %}{{ coupon_discount }}{% endif %}</span> off applied
+        </p>
+      </div>
+    </div>
+    <button type="button" onclick="removeCoupon()"
+            class="text-[10px] font-bold text-white/40 hover:text-red-400 transition uppercase tracking-widest px-3 py-1.5 rounded-lg border border-white/10 hover:border-red-400/30">
+      Remove
+    </button>
+  </div>
+
+  <!-- Input state -->
+  <div id="couponInputBox" class="{% if coupon_code %}hidden{% endif %}">
+    <div class="flex gap-2">
+      <input type="text"
+             id="couponInput"
+             placeholder="Enter coupon code"
+             maxlength="30"
+             style="text-transform:uppercase"
+             class="flex-1 px-4 py-3 rounded-xl border border-white/15 bg-white/5 text-white text-sm font-mono font-bold placeholder-white/25 outline-none focus:border-white/35 transition tracking-widest">
+      <button type="button"
+              id="applyCouponBtn"
+              onclick="applyCoupon()"
+              class="px-5 py-3 rounded-xl bg-white text-[var(--teal)] text-xs font-black uppercase tracking-widest hover:bg-[var(--accent)] transition flex-shrink-0">
+        Apply
+      </button>
+      
+    </div>
+    {% if available_coupons %}
+    <div class="mt-4">
+      <p class="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3">
+        Available Offers
+      </p>
+      <div class="flex flex-col gap-2">
+        {% for coupon in available_coupons %}
+        <div class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border
+                    {% if coupon.applicable %}border-white/15 bg-white/4{% else %}border-white/5 bg-white/2 opacity-50{% endif %}">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2 flex-wrap mb-1">
+              <span class="text-xs font-black text-white font-mono tracking-wider">{{ coupon.code }}</span>
+              <span class="text-[9px] font-bold px-2 py-0.5 rounded-full
+                          {% if coupon.applicable %}bg-emerald-500/15 text-emerald-400 border border-emerald-500/20
+                          {% else %}bg-white/5 text-white/25 border border-white/10{% endif %}">
+                {% if coupon.discount_type == 'percentage' %}
+                  {{ coupon.discount_value }}% OFF{% if coupon.max_discount_cap %} · max ₹{{ coupon.max_discount_cap }}{% endif %}
+                {% else %}
+                  ₹{{ coupon.discount_value }} OFF
+                {% endif %}
+              </span>
+            </div>
+            {% if coupon.description %}
+            <p class="text-[10px] text-white/35 mb-1">{{ coupon.description }}</p>
+            {% endif %}
+            {% if coupon.applicable %}
+              {% if coupon.min_order_amount > 0 %}
+              <p class="text-[10px] text-white/25">Min order ₹{{ coupon.min_order_amount }} · Expires {{ coupon.end_date|date:"d M Y" }}</p>
+              {% else %}
+              <p class="text-[10px] text-white/25">Expires {{ coupon.end_date|date:"d M Y" }}</p>
+              {% endif %}
+            {% else %}
+              <p class="text-[10px] text-amber-400/70">
+                <i class="bi bi-lock-fill mr-1"></i>Add ₹{{ coupon.amount_needed }} more to unlock
+              </p>
+            {% endif %}
+          </div>
+          {% if coupon.applicable %}
+          <button type="button"
+                  onclick="fillCoupon('{{ coupon.code }}')"
+                  class="text-[10px] font-black text-[var(--teal)] bg-white px-3 py-1.5 rounded-lg hover:bg-[var(--accent)] transition flex-shrink-0">
+            Apply
+          </button>
+          {% else %}
+          <span class="text-[10px] text-white/20 font-semibold flex-shrink-0 whitespace-nowrap">
+            Locked
+          </span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    <p id="couponError" class="hidden mt-2 text-xs text-red-400 font-semibold flex items-center gap-1.5">
+      <i class="bi bi-exclamation-circle-fill"></i>
+      <span id="couponErrorText"></span>
+    </p>
+  </div>
+</div>
 
       <div>
         <div class="flex items-center gap-3 mb-4">
-          <span class="w-7 h-7 rounded-full bg-white text-[var(--teal)] text-xs font-black flex items-center justify-center flex-shrink-0">4</span>
+          <span class="w-7 h-7 rounded-full bg-white text-[var(--teal)] text-xs font-black flex items-center justify-center flex-shrink-0">5</span>
           <h2 class="text-base font-bold text-white uppercase tracking-wider">
             Order Items
             <span class="text-white/30 font-normal normal-case text-sm ml-1">
@@ -365,9 +527,11 @@
 
         <div class="space-y-2 mb-2">
           <div class="flex justify-between items-center">
-            <span class="text-xs text-white/50">Subtotal</span>
-            <span class="text-sm font-bold text-white">₹{{ subtotal }}</span>
-          </div>
+    <span class="text-xs text-white/50">Original Price</span>
+    <span class="text-sm font-bold text-white">
+        ₹{{ subtotal|add:total_offer_discount }}
+    </span>
+</div>
 
           {% if total_offer_discount > 0 %}
           <div class="flex justify-between items-center" id="summaryOfferDiscountRow">
@@ -377,6 +541,18 @@
             <span class="text-xs font-bold text-emerald-400">− ₹{{ total_offer_discount }}</span>
           </div>
           {% endif %}
+
+          <!-- add after the offer discount row -->
+<div class="flex justify-between items-center" id="summaryCouponRow"
+     {% if not coupon_discount %}style="display:none"{% endif %}>
+  <span class="text-xs text-emerald-400 flex items-center gap-1">
+    <i class="bi bi-ticket-perforated-fill"></i>
+    Coupon (<span id="summaryCouponCode">{{ coupon_code }}</span>)
+  </span>
+  <span class="text-xs font-bold text-emerald-400">
+    − ₹<span id="summaryCouponAmt">{{ coupon_discount }}</span>
+  </span>
+</div>
 
           {% if customization_total > 0 %}
           <div class="flex justify-between items-center">
@@ -404,9 +580,9 @@
 
         <div class="divider"></div>
 
-        <div class="flex justify-between items-center mb-2">
+       <div class="flex justify-between items-center mb-2">
           <span class="text-sm font-bold text-white">Total</span>
-          <span class="text-xl font-black text-white">₹{{ total_amount }}</span>
+          <span class="text-xl font-black text-white" id="summaryTotalAmt">₹{{ total_amount }}</span>
         </div>
 
         <div id="summaryCodRow" class="flex justify-between items-center mb-4" style="display:none !important;">
@@ -416,10 +592,11 @@
 
         <div class="mb-6"></div>
 
-        {% if total_offer_discount > 0 %}
+        {% if total_offer_discount > 0 or coupon_discount > 0 %}
         <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl mb-4 text-center">
           <p class="text-xs text-emerald-400 font-bold tracking-wide">
-            <i class="bi bi-sparkles mr-1"></i> You're saving ₹{{ total_offer_discount }} on this order!
+            <i class="bi bi-sparkles mr-1"></i>
+            You're saving ₹<span id="totalSavingsAmt">{{ total_offer_discount|add:coupon_discount }}</span> on this order!
           </p>
         </div>
         {% endif %}
@@ -430,6 +607,8 @@
           <input type="hidden" name="selected_address" id="selectedAddressInput"
                  value="{% for a in addresses %}{% if a.is_default %}{{ a.pk }}{% endif %}{% endfor %}">
           <input type="hidden" name="use_wallet" id="useWalletInput" value="0">
+          <input type="hidden" name="payment_method" id="paymentMethodInput" value="cod">
+          <input type="hidden" name="coupon_code" id="couponCodeInput" value="{{ coupon_code }}">
 
           <button type="submit" class="place-btn" id="placeOrderBtn"
                   {% if not addresses %}disabled{% endif %}>
@@ -554,12 +733,47 @@
     </form>
   </div>
 </div>
+<div class="modal-overlay" id="deleteModal">
+
+  <div class="modal-box max-w-sm">
+
+    <div class="text-center">
+
+      <div class="w-14 h-14 mx-auto rounded-full bg-red-500/10 flex items-center justify-center mb-4">
+        <i class="bi bi-trash3 text-red-400 text-xl"></i>
+      </div>
+
+      <h3 class="text-white font-bold text-lg">
+        Remove Address
+      </h3>
+
+      <p class="text-white/40 text-sm mt-2">
+        Are you sure you want to remove this saved address?
+      </p>
+
+      <div class="flex gap-3 mt-6">
+
+        <button onclick="closeDeleteModal()" class="modal-cancel-btn">
+          Cancel
+        </button>
+
+        <button onclick="confirmDelete()" class="modal-save-btn bg-red-500 text-white">
+          Remove
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
 
 
 <script>
 // ── CONSTANTS FROM DJANGO CONTEXT ─────────────────────────────────────────────
-const TOTAL_AMOUNT      = parseFloat("{{ total_amount }}");
-const WALLET_APPLICABLE = parseFloat("{{ wallet_applicable }}");
+let TOTAL_AMOUNT      = parseFloat("{{ total_amount }}");
+let WALLET_APPLICABLE = parseFloat("{{ wallet_applicable }}");
+const WALLET_BALANCE  = parseFloat("{{ wallet_balance }}");
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let selectedAddressId = document.getElementById('selectedAddressInput').value || null;
@@ -618,10 +832,24 @@ function handleCardClick(event, pk, card) {
 }
 
 function selectAddress(pk, card) {
-  document.querySelectorAll('.addr-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.addr-card').forEach(c => 
+      c.classList.remove('selected')
+  );
+
+  document.querySelectorAll('input[name="selected_address_radio"]').forEach(r =>
+      r.checked = false
+  );
+
   card.classList.add('selected');
+
+  const radio = card.querySelector('input[type="radio"]');
+  if (radio) {
+      radio.checked = true;
+  }
+
   selectedAddressId = pk;
   document.getElementById('selectedAddressInput').value = pk;
+
   const btn = document.getElementById('placeOrderBtn');
   if (btn) btn.disabled = false;
 }
@@ -677,7 +905,44 @@ function initEditButtons() {
     document.getElementById('addressModal').classList.add('open');
   });
 }
+function confirmDelete() {
+  event.stopPropagation();
 
+  
+
+  const fd = new FormData();
+  fd.append('action', 'delete_address');
+  fd.append('address_id', deletingAddressId);
+  fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+  fetch("{% url 'orders:checkout' %}", {
+    method: 'POST',
+    body: fd,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) {
+      window.location.reload();
+    } else {
+      alert(data.error);
+    }
+  });
+}
+
+let deletingAddressId = null;
+
+function openDeleteModal(event, addressId) {
+  event.stopPropagation();
+  deletingAddressId = addressId;
+  document.getElementById('deleteModal').classList.add('open');
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('open');
+}
 function closeAddressModal() {
   document.getElementById('addressModal').classList.remove('open');
 }
@@ -739,10 +1004,157 @@ function submitAddressForm() {
     console.error("Address sync failure:", err);
   });
 }
+// ── PAYMENT METHOD SELECTION ──────────────────────────────────────────────────
+function selectPayment(method) {
+  document.getElementById('paymentMethodInput').value = method;
+
+  // Reset both options
+  ['cod', 'razorpay'].forEach(m => {
+    const el   = document.getElementById(`pm-${m}`);
+    const tick = document.getElementById(`pm-${m}-tick`);
+    const dot  = tick.querySelector('div');
+    if (m === method) {
+      el.classList.add('selected-payment');
+      tick.classList.add('bg-white');
+      tick.classList.remove('border-2', 'border-white/25');
+      if (dot) dot.classList.remove('hidden');
+    } else {
+      el.classList.remove('selected-payment');
+      tick.classList.remove('bg-white');
+      tick.classList.add('border-2', 'border-white/25');
+      if (dot) dot.classList.add('hidden');
+    }
+  });
+
+  // Update button text
+  const btnText = document.getElementById('placeBtnText');
+  if (method === 'razorpay') {
+    btnText.textContent = 'Pay Online — Razorpay';
+  } else {
+    btnText.textContent = 'Place Order — COD';
+  }
+}
 
 // Initialize on document ready
 document.addEventListener('DOMContentLoaded', function() {
   initEditButtons();
 });
+
+// ── COUPON ─────────────────────────────────────────────────────────────────
+const OFFER_DISCOUNT = parseFloat("{{ total_offer_discount|default:0 }}");
+let   currentCouponDiscount = parseFloat("{{ coupon_discount|default:0 }}");
+
+function applyCoupon() {
+  const code    = document.getElementById('couponInput').value.trim().toUpperCase();
+  const btn     = document.getElementById('applyCouponBtn');
+
+  if (!code) { showCouponError('Please enter a coupon code.'); return; }
+
+  btn.disabled    = true;
+  btn.textContent = 'Applying...';
+  hideCouponError();
+
+  const fd = new FormData();
+  fd.append('code', code);
+  fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+  fetch("{% url 'orders:apply_coupon' %}", {
+    method: 'POST', body: fd,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(r => r.json())
+  .then(data => {
+    btn.disabled    = false;
+    btn.textContent = 'Apply';
+    if (data.ok) {
+      const discount = parseFloat(data.discount);
+      currentCouponDiscount = discount;
+
+      // Show applied box
+      document.getElementById('couponInputBox').classList.add('hidden');
+      document.getElementById('couponAppliedBox').classList.remove('hidden');
+      document.getElementById('appliedCodeLabel').textContent     = data.code;
+      document.getElementById('appliedDiscountLabel').textContent = discount.toFixed(2);
+      document.getElementById('couponCodeInput').value            = data.code;
+
+      // Update summary coupon row
+      const couponRow = document.getElementById('summaryCouponRow');
+      couponRow.style.removeProperty('display');
+      document.getElementById('summaryCouponCode').textContent = data.code;
+      document.getElementById('summaryCouponAmt').textContent  = discount.toFixed(2);
+
+      // Update total
+    // AFTER
+const newTotal = Math.max(0, TOTAL_AMOUNT - discount);
+TOTAL_AMOUNT      = newTotal;                            // ← add this
+WALLET_APPLICABLE = Math.min(WALLET_BALANCE, newTotal); // ← add this
+document.getElementById('summaryTotalAmt').textContent = '₹' + newTotal.toFixed(2);
+
+      // Update savings
+      const savingsEl = document.getElementById('totalSavingsAmt');
+      if (savingsEl) savingsEl.textContent = (OFFER_DISCOUNT + discount).toFixed(2);
+
+      // Reset wallet if on
+      const wt = document.getElementById('walletToggle');
+      if (wt && wt.checked) { wt.checked = false; onWalletToggle(wt); }
+
+      document.getElementById('placeBtnText').textContent = 'Place Order — COD';
+    } else {
+      showCouponError(data.error);
+    }
+  })
+  .catch(() => {
+    btn.disabled    = false;
+    btn.textContent = 'Apply';
+    showCouponError('Network error. Please try again.');
+  });
+}
+
+function removeCoupon() {
+  const fd = new FormData();
+  fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+  fetch("{% url 'orders:remove_coupon' %}", {
+    method: 'POST', body: fd,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) {
+      // AFTER
+currentCouponDiscount = 0;
+TOTAL_AMOUNT      = parseFloat("{{ total_amount }}");       // ← reset to original
+WALLET_APPLICABLE = parseFloat("{{ wallet_applicable }}");  // ← reset to original
+document.getElementById('couponAppliedBox').classList.add('hidden');
+      document.getElementById('couponInputBox').classList.remove('hidden');
+      document.getElementById('couponInput').value    = '';
+      document.getElementById('couponCodeInput').value = '';
+
+      // Hide coupon row, reset total
+      document.getElementById('summaryCouponRow').style.setProperty('display', 'none', 'important');
+      document.getElementById('summaryTotalAmt').textContent = '₹' + TOTAL_AMOUNT.toFixed(2);
+
+      const savingsEl = document.getElementById('totalSavingsAmt');
+      if (savingsEl) savingsEl.textContent = OFFER_DISCOUNT.toFixed(2);
+
+      // Reset wallet
+      const wt = document.getElementById('walletToggle');
+      if (wt && wt.checked) { wt.checked = false; onWalletToggle(wt); }
+    }
+  });
+}
+
+function showCouponError(msg) {
+  document.getElementById('couponErrorText').textContent = msg;
+  document.getElementById('couponError').classList.remove('hidden');
+}
+
+function hideCouponError() {
+  document.getElementById('couponError').classList.add('hidden');
+}
+
+function fillCoupon(code){
+   document.getElementById('couponInput').value = code;
+}
 </script>
 {% endblock %}

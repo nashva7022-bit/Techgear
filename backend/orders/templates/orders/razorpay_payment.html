@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Complete Payment — TechGear{% endblock %}
+
+{% block content %}
+<style>
+  :root { --teal: #2F4F4F; --card: #DFE5F3; --accent: #F2EFEA; }
+  .pay-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 480px;
+    margin: 60px auto;
+    text-align: center;
+  }
+  .spinner {
+    width: 48px; height: 48px;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 24px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .amount-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 99px;
+    padding: 8px 20px;
+    font-size: 22px;
+    font-weight: 900;
+    color: #fff;
+    margin: 16px 0 24px;
+  }
+  .retry-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 28px; border-radius: 12px;
+    background: #fff; color: var(--teal);
+    font-size: 13px; font-weight: 800;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    border: none; cursor: pointer; 
+    /* Smooth transform animation curve for a lively pop-up feel */
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.15s ease;
+    margin-top: 16px;
+  }
+  /* Stunning scale pop-up action on hover */
+  .retry-btn:hover { 
+    background: var(--accent); 
+    transform: scale(1.05); 
+  }
+  .cancel-link {
+    display: block; margin-top: 14px;
+    font-size: 12px; color: rgba(255,255,255,0.35);
+    text-decoration: none; transition: color 0.15s;
+  }
+  .cancel-link:hover { color: rgba(255,255,255,0.6); }
+</style>
+
+<div class="container mx-auto px-6">
+  <div class="pay-card">
+    <div class="spinner" id="spinner"></div>
+    <h1 class="text-xl font-bold text-white mb-2">Completing Your Payment</h1>
+    <p class="text-white/40 text-sm mb-2">Please do not close this page</p>
+    <div class="amount-badge">₹{% widthratio amount 100 1 %}</div>
+    <p class="text-white/40 text-xs">Secure payment via Razorpay</p>
+
+    <button id="retryBtn" class="retry-btn hidden" onclick="openRazorpay()">
+      <i class="bi bi-arrow-clockwise"></i> Try Again
+    </button>
+    <a href="{% url 'orders:order_list' %}" class="cancel-link hidden" id="cancelLink">
+      Cancel and go to my orders
+    </a>
+  </div>
+</div>
+
+<form id="callbackForm" method="POST" action="{% url 'orders:razorpay_callback' %}">
+  {% csrf_token %}
+  <input type="hidden" name="razorpay_payment_id" id="rzp_payment_id">
+  <input type="hidden" name="razorpay_order_id"   id="rzp_order_id">
+  <input type="hidden" name="razorpay_signature"  id="rzp_signature">
+  <input type="hidden" name="order_number"        value="{{ order_number }}">
+</form>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+let paymentDone = false;
+
+// ─── UPDATE THIS CONFIGURATION INSIDE YOUR TEMPLATE SCRIPT ───
+
+const RZP_OPTIONS = {
+  key:         '{{ razorpay_key }}',
+  amount:      {{ amount }},
+  currency:    'INR',
+  name:        'TechGear',
+  description: 'Secure Checkout',
+  order_id:    '{{ order_number }}',
+  prefill: {
+    name:    "{{ user_name|escapejs }}",
+    email:   "{{ user_email|escapejs }}",
+    contact: "{{ user_phone|escapejs }}",
+  },
+  theme: { color: '#2F4F4F' },
+  handler: function(response) {
+    paymentDone = true;
+    document.getElementById('rzp_payment_id').value = response.razorpay_payment_id;
+    document.getElementById('rzp_order_id').value   = response.razorpay_order_id;
+    document.getElementById('rzp_signature').value  = response.razorpay_signature;
+    document.getElementById('callbackForm').submit();
+  },
+  modal: {
+    ondismiss: function() {
+      setTimeout(function() {
+        if (paymentDone) return;
+        
+        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('retryBtn').classList.remove('hidden');
+        document.getElementById('cancelLink').classList.remove('hidden');
+
+        // FIXED: Switched to Application/JSON string format to fit view design patterns
+        fetch("{% url 'orders:razorpay_payment_failed' %}", {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: 'dismissed' })
+        });
+      }, 1000); 
+    }
+  }
+};
+
+function openRazorpay() {
+  document.getElementById('spinner').style.display = 'block';
+  document.getElementById('retryBtn').classList.add('hidden');
+  document.getElementById('cancelLink').classList.add('hidden');
+
+  const rzp = new Razorpay(RZP_OPTIONS);
+
+  rzp.on('payment.failed', function(response) {
+    paymentDone = false;
+    console.error("Razorpay Payment Failed:", response.error.description);
+
+    // FIXED: Switched to Application/JSON matching properties
+    fetch("{% url 'orders:razorpay_payment_failed' %}", {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status: 'failed' })
+    }).then(function() {
+      window.location.href = "{% url 'orders:payment_failed' %}";
+    });
+  });
+
+  rzp.open();
+}
+
+window.addEventListener('load', function() {
+  setTimeout(openRazorpay, 300);
+});
+</script>
+{% endblock %}

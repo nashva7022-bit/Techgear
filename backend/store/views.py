@@ -400,19 +400,27 @@ def update_cart(request, item_id):
         
         subtotal    = cart_item.subtotal
         
-        all_items   = cart.items.select_related('variant').all()
-        
-        cart_total  = sum(i.subtotal for i in all_items)
+        all_items = cart.items.select_related('variant').all()
+
+        cart_total = sum(i.subtotal for i in all_items)
+
+        original_total = sum(i.original_subtotal for i in all_items)
+
+        discount_total = original_total - cart_total  
         total_items = sum(i.quantity for i in all_items)
 
         return JsonResponse({
-            'ok':          True,
-            'deleted':     False,
-            'quantity':    cart_item.quantity,
-            'subtotal':    float(subtotal),
-            'cart_total':  float(cart_total),
-            'total_items': total_items,
-        })
+    'ok': True,
+    'deleted': False,
+    'quantity': cart_item.quantity,
+    'subtotal': float(subtotal),
+    'cart_total': float(cart_total),
+
+    'original_total': float(original_total),      # add
+    'discount_total': float(discount_total),      # add
+
+    'total_items': total_items,
+})
 
     return redirect('cart')
 

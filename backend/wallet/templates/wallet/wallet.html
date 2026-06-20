@@ -192,6 +192,24 @@
         </div>
       </div>
     </div>
+    <form method="POST" action="{% url 'wallet:topup' %}">
+  {% csrf_token %}
+  <div class="flex gap-2">
+    <input type="number"
+           name="amount"
+           min="1"
+           max="100000"
+           step="1"
+           placeholder="Enter amount"
+           class="flex-1 px-4 py-3 rounded-xl border border-white/15 bg-white/5 
+                  text-white text-sm outline-none focus:border-white/35 transition">
+    <button type="submit"
+            class="px-5 py-3 rounded-xl bg-white text-[#2F4F4F] text-xs 
+                   font-black uppercase tracking-widest hover:bg-[#F2EFEA] transition">
+      Add Money
+    </button>
+  </div>
+</form>
 
     <!-- How it works -->
     <div class="stat-mini flex flex-col justify-between">

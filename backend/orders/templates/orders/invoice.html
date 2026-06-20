@@ -627,18 +627,24 @@
   <div class="totals-section">
     <div class="totals-box">
 
-      <div class="totals-row">
-        <span class="totals-label">Subtotal</span>
-        <span class="totals-value">₹{{ order.subtotal }}</span>
-      </div>
+     <div class="totals-row">
+  <span class="totals-label">Original Price</span>
+  <span class="totals-value" style="text-decoration:line-through; color:#9ca3af;">
+    ₹{{ original_subtotal }}
+  </span>
+</div>
 
-      {% if order.discount_amount > 0 %}
-      <div class="totals-row">
-        <span class="totals-label">Discount</span>
-        <span class="totals-value discount">− ₹{{ order.discount_amount }}</span>
-      </div>
-      {% endif %}
+{% if order.discount_amount > 0 %}
+<div class="totals-row">
+  <span class="totals-label">Discount</span>
+  <span class="totals-value discount">− ₹{{ order.discount_amount }}</span>
+</div>
+{% endif %}
 
+<div class="totals-row">
+  <span class="totals-label">Subtotal</span>
+  <span class="totals-value">₹{{ order.subtotal }}</span>
+</div>
       <div class="totals-row">
         <span class="totals-label">Shipping</span>
         {% if order.shipping_charge == 0 %}

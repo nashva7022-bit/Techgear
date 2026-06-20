@@ -757,16 +757,21 @@
           <div class="px-5 py-5 flex flex-col gap-3 text-sm">
 
             <div class="flex justify-between text-white/50">
-              <span>Subtotal</span>
-              <span class="font-bold text-white">₹{{ order.subtotal }}</span>
-            </div>
+  <span>Original Price</span>
+  <span class="font-bold text-white/40 line-through">₹{{ original_subtotal }}</span>
+</div>
 
-            {% if order.discount_amount > 0 %}
-            <div class="flex justify-between text-green-400">
-              <span>Discount</span>
-              <span class="font-bold">− ₹{{ order.discount_amount }}</span>
-            </div>
-            {% endif %}
+{% if order.discount_amount > 0 %}
+<div class="flex justify-between text-green-400">
+  <span>Discount</span>
+  <span class="font-bold">− ₹{{ order.discount_amount }}</span>
+</div>
+{% endif %}
+
+<div class="flex justify-between text-white/50">
+  <span>Subtotal</span>
+  <span class="font-bold text-white">₹{{ order.subtotal }}</span>
+</div>
 
             <div class="flex justify-between text-white/50">
               <span>Shipping</span>

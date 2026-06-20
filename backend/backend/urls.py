@@ -39,6 +39,7 @@ urlpatterns = [
     path('wallet/', include('wallet.urls', namespace='wallet')),
 
     path('manage/offers/', include('offers.urls', namespace='offers')),
+    path('manage/coupons/', include('coupons.urls', namespace='coupons')),
    
 ]
 if settings.DEBUG:

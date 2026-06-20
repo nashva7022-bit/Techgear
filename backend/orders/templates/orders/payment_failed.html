@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment Failed — TechGear{% endblock %}
+
+{% block content %}
+<style>
+  :root { --teal: #2F4F4F; --card: #DFE5F3; --accent: #F2EFEA; }
+  .fail-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 24px;
+    padding: 48px 40px;
+    max-width: 480px;
+    margin: 60px auto;
+    text-align: center;
+  }
+  .fail-icon {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: rgba(239,68,68,0.12);
+    border: 2px solid rgba(239,68,68,0.3);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+  }
+  .retry-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 32px; border-radius: 14px;
+    background: #fff; color: var(--teal);
+    font-size: 13px; font-weight: 800;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    text-decoration: none; transition: background 0.15s;
+    margin-top: 24px;
+  }
+  .retry-btn:hover { background: var(--accent); }
+  .secondary-links {
+    display: flex; flex-direction: column; gap: 10px;
+    margin-top: 16px;
+  }
+  .secondary-link {
+    font-size: 12px; color: rgba(255,255,255,0.35);
+    text-decoration: none; transition: color 0.15s;
+  }
+  .secondary-link:hover { color: rgba(255,255,255,0.6); }
+  .order-info {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin: 24px 0;
+    text-align: left;
+  }
+</style>
+
+<div class="container mx-auto px-6">
+  <div class="fail-card">
+
+    <div class="fail-icon">
+      <i class="bi bi-x-lg text-2xl text-red-400"></i>
+    </div>
+
+    <h1 class="text-2xl font-black text-white mb-3">Payment Failed</h1>
+    <p class="text-white/50 text-sm leading-relaxed mb-2">
+      Your payment could not be processed. No order has been placed.
+    </p>
+
+    <div class="order-info">
+      {% if amount %}
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-xs text-white/40 uppercase tracking-widest font-bold">Amount</span>
+        <span class="text-sm font-black text-white">₹{{ amount }}</span>
+      </div>
+      {% endif %}
+      <p class="text-xs text-white/50 leading-relaxed">
+        No money has been deducted from your account.
+        Your wallet balance is completely unchanged.
+      </p>
+    </div>
+
+    <a href="{% url 'orders:checkout' %}" class="retry-btn">
+      <i class="bi bi-arrow-clockwise"></i> Try Again
+    </a>
+
+    <div class="secondary-links">
+      <a href="{% url 'orders:order_list' %}" class="secondary-link">
+        <i class="bi bi-bag mr-1"></i> Go to My Orders
+      </a>
+      <a href="{% url 'product_list' %}" class="secondary-link">
+        <i class="bi bi-shop mr-1"></i> Continue Shopping
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

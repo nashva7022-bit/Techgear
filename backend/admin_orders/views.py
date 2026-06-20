@@ -420,3 +420,77 @@ def admin_cancel_item(request, order_number, item_id):
             return JsonResponse({'ok': False, 'error': str(e)}, status=400)
         messages.error(request, str(e))
         return redirect('admin_orders:order_detail', order_number=order_number)
+    
+
+@staff_member_required(login_url='admin_login')
+@require_POST
+def approve_return_view(request, order_number, item_id):
+    order = get_object_or_404(Order, order_number=order_number)
+    item  = get_object_or_404(OrderItem, pk=item_id, order=order)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    try:
+        approve_return(order_item=item, approved_by=request.user)
+
+        log_activity(
+            admin=request.user,
+            action='order_status_change',
+            description=(
+                f'Return approved for "{item.product_name}" in order '
+                f'{order.order_number}. Stock restored and refund credited to wallet.'
+            ),
+            order_number=order.order_number,
+        )
+
+        if is_ajax:
+            return JsonResponse({
+                'ok': True,
+                'message': f'Return approved for "{item.product_name}". Refund credited to wallet.',
+            })
+        messages.success(
+            request,
+            f'Return approved for "{item.product_name}". Stock restored and refund credited to wallet.',
+        )
+        return redirect('admin_orders:order_detail', order_number=order_number)
+
+    except ValueError as e:
+        if is_ajax:
+            return JsonResponse({'ok': False, 'error': str(e)}, status=400)
+        messages.error(request, str(e))
+        return redirect('admin_orders:order_detail', order_number=order_number)
+
+
+@staff_member_required(login_url='admin_login')
+@require_POST
+def reject_return_view(request, order_number, item_id):
+    order  = get_object_or_404(Order, order_number=order_number)
+    item   = get_object_or_404(OrderItem, pk=item_id, order=order)
+    reason = request.POST.get('reason', '').strip()
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    try:
+        reject_return(order_item=item, rejected_by=request.user, reason=reason)
+
+        log_activity(
+            admin=request.user,
+            action='order_status_change',
+            description=(
+                f'Return rejected for "{item.product_name}" in order '
+                f'{order.order_number}. Reason: {reason or "Not provided"}.'
+            ),
+            order_number=order.order_number,
+        )
+
+        if is_ajax:
+            return JsonResponse({
+                'ok': True,
+                'message': f'Return rejected for "{item.product_name}".',
+            })
+        messages.success(request, f'Return rejected for "{item.product_name}".')
+        return redirect('admin_orders:order_detail', order_number=order_number)
+
+    except ValueError as e:
+        if is_ajax:
+            return JsonResponse({'ok': False, 'error': str(e)}, status=400)
+        messages.error(request, str(e))
+        return redirect('admin_orders:order_detail', order_number=order_number)

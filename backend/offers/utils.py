@@ -5,11 +5,7 @@ from .models import ProductOffer, CategoryOffer
 
 
 def get_effective_price(variant):
-    """
-    Returns (effective_price, discount_percent) for a variant.
-    Picks the highest active offer between product and category.
-    Returns (variant.price, Decimal('0')) if no active offer.
-    """
+   
     today         = timezone.now().date()
     best_discount = Decimal('0')
 

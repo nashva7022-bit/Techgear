@@ -26,43 +26,33 @@ class Wallet(models.Model):
         return f"{self.user.email} — ₹{self.balance}"
 
     def credit(self, amount, reason, order=None):
-        """
-        Add money to wallet.
-        Always use this — never update balance directly.
-        Creates a WalletTransaction record automatically.
-        """
-        with db_transaction.atomic():
-            self.balance += amount
-            self.save(update_fields=['balance', 'updated_at'])
-            WalletTransaction.objects.create(
-                wallet           = self,
-                amount           = amount,
-                transaction_type = 'credit',
-                reason           = reason,
-                order            = order,
-            )
+    
+        self.balance += amount
+        self.save(update_fields=['balance', 'updated_at'])
+        WalletTransaction.objects.create(
+            wallet=self,
+            amount=amount,
+            transaction_type='credit',
+            reason=reason,
+            order=order,
+    )
 
     def debit(self, amount, reason, order=None):
-        """
-        Deduct money from wallet.
-        Raises ValueError if balance is insufficient.
-        """
+    
         if amount > self.balance:
             raise ValueError(
                 f"Insufficient wallet balance. "
                 f"Available: ₹{self.balance}, Required: ₹{amount}"
             )
-        with db_transaction.atomic():
-            self.balance -= amount
-            self.save(update_fields=['balance', 'updated_at'])
-            WalletTransaction.objects.create(
-                wallet           = self,
-                amount           = amount,
-                transaction_type = 'debit',
-                reason           = reason,
-                order            = order,
-            )
-
+        self.balance -= amount
+        self.save(update_fields=['balance', 'updated_at'])
+        WalletTransaction.objects.create(
+            wallet=self,
+            amount=amount,
+            transaction_type='debit',
+            reason=reason,
+            order=order,
+        )
     @property
     def total_credited(self):
         from django.db.models import Sum
