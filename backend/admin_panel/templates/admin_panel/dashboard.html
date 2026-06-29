@@ -1,54 +1,248 @@
 {% extends "admin_panel/admin_base.html" %}
-
 {% block content %}
-<div class="flex">
-    
 
-    <div class="ml-64 flex-1 p-8 bg-gray-50 min-h-screen">
-        <h2 class="text-2xl font-bold mb-6">Dashboard</h2>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-xl border shadow-sm">
-                <p class="text-gray-500 text-sm">Total Orders</p>
-                <h3 class="text-2xl font-bold">{{ total_orders }}</h3>
-            </div>
-            <div class="bg-white p-6 rounded-xl border shadow-sm">
-                <p class="text-gray-500 text-sm">Total Revenue</p>
-                <h3 class="text-2xl font-bold">${{ total_revenue }}</h3>
-            </div>
-            <div class="bg-white p-6 rounded-xl border shadow-sm">
-                <p class="text-gray-500 text-sm">Total Users</p>
-                <h3 class="text-2xl font-bold">{{ total_users }}</h3>
-            </div>
-            <div class="bg-white p-6 rounded-xl border shadow-sm">
-                <p class="text-gray-500 text-sm">Pending Orders</p>
-                <h3 class="text-2xl font-bold text-blue-600">{{ pending_orders }}</h3>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
-            <div class="p-4 border-b">
-                <h4 class="font-bold">Recent Orders</h4>
-            </div>
-            <table class="w-full text-left text-sm">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="p-4">Order ID</th>
-                        <th class="p-4">Customer</th>
-                        <th class="p-4">Status</th>
-                        <th class="p-4 text-right">Amount</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    <tr>
-                        <td class="p-4 font-medium">#ORD-1248</td>
-                        <td class="p-4">John Smith</td>
-                        <td class="p-4 text-green-600">Delivered</td>
-                        <td class="p-4 text-right font-bold">$248.00</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+<!-- Header -->
+<div class="flex items-start justify-between mb-8">
+  <div>
+    <h1 class="text-2xl font-black text-gray-900 tracking-tight">Dashboard</h1>
+    <p class="text-sm text-gray-500 mt-1 font-medium">{{ today|date:"l, d F Y" }} · Live overview</p>
+  </div>
+  <a href="{% url 'orders:order_list' %}"
+     class="inline-flex items-center gap-2 bg-black text-white px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition shadow-sm">
+    View All Orders
+  </a>
 </div>
+
+<!-- STAT CARDS -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Orders</p>
+    <p class="text-3xl font-black text-gray-900">{{ total_orders }}</p>
+    <p class="text-[11px] text-gray-400 mt-2">{{ delivered_orders }} delivered</p>
+  </div>
+
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Revenue</p>
+    <p class="text-3xl font-black text-gray-900">₹{{ total_revenue|floatformat:0 }}</p>
+    <p class="text-[11px] text-gray-400 mt-2">₹{{ month_revenue|floatformat:0 }} this month</p>
+  </div>
+
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Users</p>
+    <p class="text-3xl font-black text-gray-900">{{ total_users }}</p>
+    <p class="text-[11px] text-gray-400 mt-2">Registered customers</p>
+  </div>
+
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Pending Orders</p>
+    <p class="text-3xl font-black text-yellow-500">{{ pending_orders }}</p>
+    <p class="text-[11px] text-gray-400 mt-2">Awaiting dispatch</p>
+  </div>
+
+</div>
+
+<!-- ORDER STATUS ROW -->
+<div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
+  {% for status, count in status_counts.items %}
+  <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm text-center">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{{ status|title|cut:"_" }}</p>
+    <p class="text-2xl font-black
+      {% if status == 'delivered' %}text-green-600
+      {% elif status == 'pending' %}text-yellow-500
+      {% elif status == 'cancelled' %}text-red-500
+      {% elif status == 'shipped' %}text-blue-500
+      {% else %}text-purple-500{% endif %}">
+      {{ count }}
+    </p>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- CHART -->
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-8">
+  <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+    <div>
+      <h2 class="text-sm font-black text-gray-900">Sales Overview</h2>
+      <p class="text-[11px] text-gray-400 mt-0.5">Last 7 days — orders and revenue</p>
+    </div>
+    <div class="flex items-center gap-4 text-[11px] text-gray-400">
+      <span class="flex items-center gap-1.5">
+        <span class="w-3 h-3 rounded-full bg-black inline-block"></span> Orders
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="w-3 h-3 rounded-full bg-gray-300 inline-block"></span> Revenue (₹)
+      </span>
+    </div>
+  </div>
+  <div class="p-6">
+    <canvas id="salesChart" height="80"></canvas>
+  </div>
+</div>
+
+<!-- BEST SELLERS — 3 columns -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+  <!-- Best Products -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100">
+      <h2 class="text-sm font-black text-gray-900">Top Products</h2>
+      <p class="text-[11px] text-gray-400 mt-0.5">By units sold</p>
+    </div>
+    {% if best_products %}
+    <div class="divide-y divide-gray-50">
+      {% for p in best_products %}
+      <div class="px-6 py-3 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="text-[10px] font-black text-gray-300 w-5 flex-shrink-0">{{ forloop.counter }}</span>
+          <p class="text-xs font-semibold text-gray-800 truncate">{{ p.product_name }}</p>
+        </div>
+        <div class="text-right flex-shrink-0">
+          <p class="text-xs font-black text-gray-900">{{ p.total_qty }} units</p>
+          <p class="text-[10px] text-gray-400">₹{{ p.total_revenue|floatformat:0 }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="px-6 py-8 text-center text-sm text-gray-300 font-bold">No data yet</div>
+    {% endif %}
+  </div>
+
+  <!-- Best Categories -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100">
+      <h2 class="text-sm font-black text-gray-900">Top Categories</h2>
+      <p class="text-[11px] text-gray-400 mt-0.5">By units sold</p>
+    </div>
+    {% if best_categories %}
+    <div class="divide-y divide-gray-50">
+      {% for cat in best_categories %}
+      <div class="px-6 py-3 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="text-[10px] font-black text-gray-300 w-5 flex-shrink-0">{{ forloop.counter }}</span>
+          <p class="text-xs font-semibold text-gray-800 truncate">{{ cat.variant__product__category__name }}</p>
+        </div>
+        <div class="text-right flex-shrink-0">
+          <p class="text-xs font-black text-gray-900">{{ cat.total_qty }} units</p>
+          <p class="text-[10px] text-gray-400">₹{{ cat.total_revenue|floatformat:0 }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="px-6 py-8 text-center text-sm text-gray-300 font-bold">No data yet</div>
+    {% endif %}
+  </div>
+
+  <!-- Best Brands -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100">
+      <h2 class="text-sm font-black text-gray-900">Top Brands</h2>
+      <p class="text-[11px] text-gray-400 mt-0.5">By units sold</p>
+    </div>
+    {% if best_brands %}
+    <div class="divide-y divide-gray-50">
+      {% for b in best_brands %}
+      <div class="px-6 py-3 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="text-[10px] font-black text-gray-300 w-5 flex-shrink-0">{{ forloop.counter }}</span>
+          <p class="text-xs font-semibold text-gray-800 truncate">{{ b.brand }}</p>
+        </div>
+        <div class="text-right flex-shrink-0">
+          <p class="text-xs font-black text-gray-900">{{ b.total_qty }} units</p>
+          <p class="text-[10px] text-gray-400">₹{{ b.total_revenue|floatformat:0 }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="px-6 py-8 text-center text-sm text-gray-300 font-bold">No data yet</div>
+    {% endif %}
+  </div>
+
+</div>
+
+
+
+
+<!-- CHART JS -->
+<script>
+const ctx = document.getElementById('salesChart').getContext('2d');
+new Chart(ctx, {
+  data: {
+    labels: {{ chart_labels|safe }},
+    datasets: [
+      {
+        type: 'bar',
+        label: 'Orders',
+        data: {{ chart_orders|safe }},
+        backgroundColor: '#111827',
+        borderRadius: 6,
+        yAxisID: 'y',
+      },
+      {
+        type: 'line',
+        label: 'Revenue (₹)',
+        data: {{ chart_revenue|safe }},
+        borderColor: '#d1d5db',
+        backgroundColor: 'rgba(209,213,219,0.1)',
+        borderWidth: 2,
+        pointBackgroundColor: '#d1d5db',
+        pointRadius: 4,
+        tension: 0.4,
+        fill: true,
+        yAxisID: 'y1',
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#111827',
+        titleFont: { size: 11, weight: 'bold' },
+        bodyFont: { size: 11 },
+        padding: 12,
+        cornerRadius: 8,
+        callbacks: {
+          label: function(ctx) {
+            if (ctx.dataset.label === 'Revenue (₹)') {
+              return ' ₹' + ctx.parsed.y.toLocaleString('en-IN');
+            }
+            return ' ' + ctx.parsed.y + ' orders';
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { font: { size: 11 }, color: '#9ca3af' }
+      },
+      y: {
+        type: 'linear',
+        position: 'left',
+        grid: { color: '#f3f4f6' },
+        ticks: { font: { size: 11 }, color: '#9ca3af', stepSize: 1 }
+      },
+      y1: {
+        type: 'linear',
+        position: 'right',
+        grid: { drawOnChartArea: false },
+        ticks: {
+          font: { size: 11 },
+          color: '#9ca3af',
+          callback: v => '₹' + v.toLocaleString('en-IN')
+        }
+      }
+    }
+  }
+});
+</script>
+
 {% endblock %}

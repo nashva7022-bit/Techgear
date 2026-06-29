@@ -7,10 +7,10 @@ import os
 from dotenv import load_dotenv
 import cloudinary
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load the .env file explicitly
+
 env_path = os.path.join(BASE_DIR, '.env')
 load_dotenv(dotenv_path=env_path)
 
@@ -34,7 +34,7 @@ ORDERS_PER_PAGE = 10
 PRODUCTS_PER_PAGE = 4
 CATEGORIES_PER_PAGE = 5
 USERS_PER_PAGE = 20
-# Tell Django to use Cloudinary for all file uploads
+
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
@@ -46,10 +46,9 @@ STORAGES = {
 RAZORPAY_KEY_ID     = os.environ.get('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
 
-# Add this to allow Razorpay's bank OTP/Verification popups to open
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
 
-# Application definition
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

@@ -58,23 +58,158 @@ def admin_login(request):
     return render(request, 'admin_panel/login.html', {'form': form})
 
 #  DASHBOARD VIEW
+# Replace your entire admin_dashboard view with this
+
+from django.db.models import Sum, Count, Q
+from django.utils import timezone
+from datetime import timedelta
+from decimal import Decimal
+import json
+
 @never_cache
 @staff_member_required(login_url='admin_login')
 def admin_dashboard(request):
-    # Stats for the top cards
-    
-    
+    from orders.models import Order, OrderItem
+    from products.models import Product, Category, BRAND_CHOICES
+
+    today      = timezone.now().date()
+    this_month = today.replace(day=1)
+    last_month = (this_month - timedelta(days=1)).replace(day=1)
+
+    #  TOP STAT CARDS 
+    total_orders   = Order.objects.count()
+    total_revenue  = Order.objects.filter(
+        status__in=['pending','shipped','out_for_delivery','delivered']
+    ).aggregate(r=Sum('total_amount'))['r'] or Decimal('0.00')
+
+    total_users    = User.objects.filter(is_superuser=False).count()
+    pending_orders = Order.objects.filter(status='pending').count()
+    delivered_orders = Order.objects.filter(status='delivered').count()
+
+    # Month revenue
+    month_revenue = Order.objects.filter(
+        created_at__date__gte=this_month,
+        status__in=['pending','shipped','out_for_delivery','delivered']
+    ).aggregate(r=Sum('total_amount'))['r'] or Decimal('0.00')
+
+    last_month_revenue = Order.objects.filter(
+        created_at__date__gte=last_month,
+        created_at__date__lt=this_month,
+        status__in=['pending','shipped','out_for_delivery','delivered']
+    ).aggregate(r=Sum('total_amount'))['r'] or Decimal('0.00')
+
+    #  CHART — last 7 days orders + revenue
+    chart_labels   = []
+    chart_orders   = []
+    chart_revenue  = []
+
+    for i in range(6, -1, -1):
+        day = today - timedelta(days=i)
+        label = day.strftime('%d %b')
+        day_orders = Order.objects.filter(created_at__date=day).count()
+        day_revenue = Order.objects.filter(
+            created_at__date=day,
+            status__in=['pending','shipped','out_for_delivery','delivered']
+        ).aggregate(r=Sum('total_amount'))['r'] or 0
+
+        chart_labels.append(label)
+        chart_orders.append(day_orders)
+        chart_revenue.append(float(day_revenue))
+
+    #BEST SELLING PRODUCTS (Top 10)
+    best_products = (
+        OrderItem.objects
+        .filter(order__status__in=['pending','shipped','out_for_delivery','delivered'])
+        .values('product_name')
+        .annotate(
+            total_qty=Sum('quantity'),
+            total_revenue=Sum('subtotal'),
+        )
+        .order_by('-total_qty')[:10]
+    )
+
+    #BEST SELLING CATEGORIES (Top 10) 
+    best_categories = (
+        OrderItem.objects
+        .filter(
+            order__status__in=['pending','shipped','out_for_delivery','delivered'],
+            variant__product__category__isnull=False,
+        )
+        .values('variant__product__category__name')
+        .annotate(
+            total_qty=Sum('quantity'),
+            total_revenue=Sum('subtotal'),
+        )
+        .order_by('-total_qty')[:10]
+    )
+
+    # BEST SELLING BRANDS (Top 10)
+    best_brands = (
+        OrderItem.objects
+        .filter(
+            order__status__in=['pending','shipped','out_for_delivery','delivered'],
+            variant__product__brand__isnull=False,
+        )
+        .values('variant__product__brand')
+        .annotate(
+            total_qty=Sum('quantity'),
+            total_revenue=Sum('subtotal'),
+        )
+        .order_by('-total_qty')[:10]
+    )
+
+    # Map brand value to label
+    brand_map = dict(BRAND_CHOICES)
+    best_brands_display = [
+        {
+            'brand': brand_map.get(b['variant__product__brand'], b['variant__product__brand']),
+            'total_qty': b['total_qty'],
+            'total_revenue': b['total_revenue'],
+        }
+        for b in best_brands
+    ]
+
+    # RECENT ORDERS (last 8) 
+    recent_orders = Order.objects.select_related('user').order_by('-created_at')[:8]
+
+    #  ORDER STATUS BREAKDOWN 
+    status_counts = {
+        'pending':          Order.objects.filter(status='pending').count(),
+        'shipped':          Order.objects.filter(status='shipped').count(),
+        'out_for_delivery': Order.objects.filter(status='out_for_delivery').count(),
+        'delivered':        Order.objects.filter(status='delivered').count(),
+        'cancelled':        Order.objects.filter(status='cancelled').count(),
+    }
+
     context = {
-        'total_orders': User.objects.annotate(c=Count('order')).aggregate(Sum('c'))['c__sum'] or 0,
-        'total_revenue': 48392, # Placeholder until you have an Order 'total' field
-        'total_users': User.objects.filter(is_superuser=False).count(),
-        'pending_orders': 87,   # Placeholder
-        
-        
-        # 'recent_orders': Order.objects.all().order_by('-created_at')[:5]
+        # Stat cards
+        'total_orders':        total_orders,
+        'total_revenue':       total_revenue,
+        'total_users':         total_users,
+        'pending_orders':      pending_orders,
+        'delivered_orders':    delivered_orders,
+        'month_revenue':       month_revenue,
+        'last_month_revenue':  last_month_revenue,
+
+        # Chart data (JSON for JS)
+        'chart_labels':   json.dumps(chart_labels),
+        'chart_orders':   json.dumps(chart_orders),
+        'chart_revenue':  json.dumps(chart_revenue),
+
+        # Best sellers
+        'best_products':   best_products,
+        'best_categories': best_categories,
+        'best_brands':     best_brands_display,
+
+        # Recent orders
+        'recent_orders': recent_orders,
+
+        # Status breakdown
+        'status_counts': status_counts,
+
+        'today': today,
     }
     return render(request, 'admin_panel/dashboard.html', context)
-
 #  USER MANAGEMENT 
 
 @never_cache
@@ -173,11 +308,7 @@ def admin_logout(request):
 @staff_member_required(login_url='admin_login')
 @never_cache
 def site_settings(request):
-    """
-    Admin page to configure site-wide settings.
-    Currently: customization fee.
-    Add more fields to SiteSettings model as needed.
-    """
+   
     settings_obj = SiteSettings.get()
 
     if request.method == 'POST':
@@ -198,15 +329,12 @@ def site_settings(request):
     })
 
 
-    # ── ADMIN WALLET VIEW ─────────────────────────────────────────────────────────
+    # ADMIN WALLET VIEW 
 
 @staff_member_required(login_url='admin_login')
 @never_cache
 def admin_wallet_list(request):
-    """
-    Admin page — shows all user wallets with their balances.
-    Useful for support — admin can see any user's wallet.
-    """
+    
     from django.db.models import Q
     search = request.GET.get('search', '').strip()
 
