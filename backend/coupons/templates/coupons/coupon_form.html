@@ -208,38 +208,36 @@ value=""
 
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
-              Start Date <span class="text-red-400">*</span>
-            </label>
-            <input type="date"
-                   name="start_date"
-                   {% if submitted.start_date %}
+  Start Date <span class="text-red-400">*</span>
+</label>
+<input type="date"
+       name="start_date"
+       {% if submitted.start_date %}
 value="{{ submitted.start_date }}"
 {% elif coupon %}
-value="{{ coupon.start_date }}"
+value="{{ coupon.start_date|date:'Y-m-d' }}"
 {% else %}
 value=""
 {% endif %}
-                   class="w-full px-4 py-3 rounded-xl border {% if field_errors.start_date %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">
-            {% if field_errors.start_date %}
+       class="w-full px-4 py-3 rounded-xl border {% if field_errors.start_date %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">{% if field_errors.start_date %}
             <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ field_errors.start_date }}</p>
             {% endif %}
           </div>
 
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
-              End Date <span class="text-red-400">*</span>
-            </label>
-            <input type="date"
-                   name="end_date"
-                   {% if submitted.end_date %}
+  End Date <span class="text-red-400">*</span>
+</label>
+<input type="date"
+       name="end_date"
+       {% if submitted.end_date %}
 value="{{ submitted.end_date }}"
 {% elif coupon %}
-value="{{ coupon.end_date }}"
+value="{{ coupon.end_date|date:'Y-m-d' }}"
 {% else %}
 value=""
 {% endif %}
-                   class="w-full px-4 py-3 rounded-xl border {% if field_errors.end_date %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">
-            {% if field_errors.end_date %}
+       class="w-full px-4 py-3 rounded-xl border {% if field_errors.end_date %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">{% if field_errors.end_date %}
             <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ field_errors.end_date }}</p>
             {% endif %}
           </div>

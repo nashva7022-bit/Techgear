@@ -11,8 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <script>
         // Initial Theme Check (prevents white flash)
         if (localStorage.getItem('theme') === 'dark' ||
@@ -26,27 +25,28 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { 
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        'site-bg': '#557373',      
-                        'card-bg': '#DFE5F3',      
-                        'accent-hover': '#F2EFEA',
-                    },
-                    fontFamily: {
-                        'serif': ['Lora', 'serif'],
-                        'sans': ['Inter', 'sans-serif'],
-                    }
-                }
+    darkMode: 'class',
+    theme: {
+        extend: {
+            colors: {
+                'site-bg': '#F9F9F6',      // cream — was near-black
+                'nav-bg': '#EFEDE6',       // deeper cream for section alternation — was graphite
+                'card-bg': '#FFFFFF',      // white product cards — was off-white
+                'accent-hover': '#2D4330', // deep olive/forest green — was electric blue
+                'ink': '#111111',          // NEW — charcoal text color, since white text won't work on cream
+            },
+            fontFamily: {
+                'serif': ['Playfair Display', 'serif'],   // swapped from Lora — more high-fashion
+                'sans': ['Inter', 'sans-serif'],
             }
         }
+    }
+}
     </script>
 </head>
 
 <!-- min-h-screen and flex flex-col pushes the footer to the bottom of the page -->
-<body class="bg-site-bg text-white font-sans antialiased min-h-screen flex flex-col transition-colors duration-300">
-    
+<body class="bg-site-bg text-ink font-sans antialiased min-h-screen flex flex-col transition-colors duration-300">
     <!-- Navbar Included Here -->
     {% include 'components/navbar.html' %}
 
@@ -64,13 +64,14 @@
     {% endif %}
 
     <!-- pt-24 is critical: ensures your content isn't hidden under the fixed Navbar -->
-    <main class="flex-grow w-full pt-24">
+    <main class="flex-grow w-full pt-24 ">
         {% block content %}
         {% endblock %}
     </main>
 
     <!-- Footer Included Here -->
     {% include 'components/footer.html' %}
+    
 
     <script>
         // 1. Message Timer (5 seconds)

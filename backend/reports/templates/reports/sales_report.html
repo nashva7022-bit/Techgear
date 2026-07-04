@@ -1,0 +1,113 @@
+{% extends "admin_panel/admin_base.html" %}
+{% block content %}
+
+<!-- Header -->
+<div class="flex items-start justify-between mb-8">
+  <div>
+    <h1 class="text-2xl font-black text-gray-900 tracking-tight">Sales Report</h1>
+    <p class="text-sm text-gray-500 mt-1 font-medium">{{ start_date|date:"d M Y" }} – {{ end_date|date:"d M Y" }}</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <a href="{% url 'reports:sales_report_pdf' %}?period={{ period }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}"
+       class="inline-flex items-center gap-2 bg-white text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-50 transition shadow-sm">
+      <i class="bi bi-file-earmark-pdf text-red-500"></i> PDF
+    </a>
+    <a href="{% url 'reports:sales_report_excel' %}?period={{ period }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}"
+       class="inline-flex items-center gap-2 bg-white text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-50 transition shadow-sm">
+      <i class="bi bi-file-earmark-excel text-green-600"></i> Excel
+    </a>
+  </div>
+</div>
+
+<!-- PERIOD FILTER -->
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
+  <form method="GET" class="flex flex-wrap items-end gap-4">
+    <div class="flex items-center gap-1 bg-gray-50 rounded-xl p-1">
+      <a href="?period=daily" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition {% if period == 'daily' %}bg-black text-white{% else %}text-gray-500 hover:bg-gray-100{% endif %}">Daily</a>
+      <a href="?period=weekly" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition {% if period == 'weekly' %}bg-black text-white{% else %}text-gray-500 hover:bg-gray-100{% endif %}">Weekly</a>
+      <a href="?period=yearly" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition {% if period == 'yearly' %}bg-black text-white{% else %}text-gray-500 hover:bg-gray-100{% endif %}">Yearly</a>
+      <a href="?period=custom" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition {% if period == 'custom' %}bg-black text-white{% else %}text-gray-500 hover:bg-gray-100{% endif %}">Custom</a>
+    </div>
+
+    {% if period == 'custom' %}
+    <input type="hidden" name="period" value="custom">
+    <div>
+      <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Start Date</label>
+      <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}"
+             class="px-3 py-2 rounded-lg border border-gray-200 text-sm">
+    </div>
+    <div>
+      <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">End Date</label>
+      <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}"
+             class="px-3 py-2 rounded-lg border border-gray-200 text-sm">
+    </div>
+    <button type="submit" class="bg-black text-white px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition">
+      Apply
+    </button>
+    {% endif %}
+  </form>
+</div>
+
+<!-- SUMMARY CARDS -->
+<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Sales Count</p>
+    <p class="text-2xl font-black text-gray-900">{{ sales_count }}</p>
+  </div>
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Gross Amount</p>
+    <p class="text-2xl font-black text-gray-900">₹{{ gross_amount|floatformat:0 }}</p>
+  </div>
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Offer Discount</p>
+    <p class="text-2xl font-black text-orange-500">₹{{ offer_discount_total|floatformat:0 }}</p>
+  </div>
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Coupon Discount</p>
+    <p class="text-2xl font-black text-purple-500">₹{{ coupon_discount_total|floatformat:0 }}</p>
+  </div>
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Net Revenue</p>
+    <p class="text-2xl font-black text-green-600">₹{{ net_revenue|floatformat:0 }}</p>
+  </div>
+</div>
+
+<!-- ORDERS TABLE -->
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+  <div class="px-6 py-4 border-b border-gray-100">
+    <h2 class="text-sm font-black text-gray-900">Orders in Range</h2>
+    <p class="text-[11px] text-gray-400 mt-0.5">{{ sales_count }} order{{ sales_count|pluralize }}</p>
+  </div>
+  {% if orders %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-gray-100 text-left">
+          <th class="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order #</th>
+          <th class="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Customer</th>
+          <th class="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date</th>
+          <th class="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+          <th class="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Discount</th>
+          <th class="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for order in orders %}
+        <tr>
+          <td class="px-6 py-3 font-mono text-xs font-semibold">{{ order.order_number }}</td>
+          <td class="px-6 py-3 text-xs">{{ order.user.email|default:"Deleted User" }}</td>
+          <td class="px-6 py-3 text-xs text-gray-500">{{ order.created_at|date:"d M Y" }}</td>
+          <td class="px-6 py-3 text-xs">{{ order.get_status_display }}</td>
+          <td class="px-6 py-3 text-xs text-right">₹{{ order.discount_amount|floatformat:0 }}</td>
+          <td class="px-6 py-3 text-xs font-bold text-right">₹{{ order.total_amount|floatformat:0 }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="px-6 py-12 text-center text-sm text-gray-300 font-bold">No orders in this period</div>
+  {% endif %}
+</div>
+
+{% endblock %}

@@ -19,8 +19,7 @@ urlpatterns = [
     path('returns/', views.return_requests, name='return_requests'),
 
     # ── ORDER DETAIL & STATUS ─────────────────────────────────────
-    # ⚠️ These must come AFTER all fixed-word paths (inventory, returns, activity)
-    # because <str:order_number> is greedy and would swallow them otherwise.
+   
     path('<str:order_number>/', views.order_detail, name='order_detail'),
     path('<str:order_number>/change-status/', views.change_status, name='change_status'),
 

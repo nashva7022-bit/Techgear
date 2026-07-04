@@ -21,4 +21,6 @@ urlpatterns = [
     path('wallets/<int:user_id>/', views.admin_wallet_detail, name='admin_wallet_detail'),
 
     path('wallets/<int:user_id>/credit/', views.admin_wallet_credit, name='admin_wallet_credit'),
+
+    
 ]

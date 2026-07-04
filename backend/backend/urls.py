@@ -41,6 +41,8 @@ urlpatterns = [
     path('manage/offers/', include('offers.urls', namespace='offers')),
     path('manage/coupons/', include('coupons.urls', namespace='coupons')),
    
+    path('reports/', include('reports.urls')),
+    
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

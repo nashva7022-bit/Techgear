@@ -3,11 +3,7 @@ from django.db import models
 from django.utils import timezone
 
 class User(AbstractUser):
-    """
-    Custom User model extending Django's AbstractUser.
-    We use Email as the primary login identifier while keeping the username 
-    field strictly under-the-hood for Django & Allauth compatibility.
-    """
+   
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
 
@@ -38,7 +34,7 @@ class Address(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
     full_name = models.CharField(max_length=100)
     phone = models.CharField(max_length=15)
-    # Add these fields specifically
+   
     address_label = models.CharField(max_length=50, default="Home") 
     address_line_1 = models.CharField(max_length=255)
     address_line_2 = models.CharField(max_length=255, blank=True, null=True)
@@ -53,25 +49,22 @@ class Address(models.Model):
 
     class Meta:
         verbose_name_plural = "Addresses"
-        ordering =['-is_default', '-created_at'] # Puts default address at the top
+        ordering =['-is_default', '-created_at'] 
 
     def __str__(self):
         return f"{self.address_label} - {self.city} ({self.user.email})"
 
-    # Automatically handle the "Default" logic
+   
     def save(self, *args, **kwargs):
         if self.is_default:
-            # Set all other addresses for this user to is_default=False
+           
             Address.objects.filter(user=self.user).update(is_default=False)
         super().save(*args, **kwargs)
 
 class OTP(models.Model):
-    """
-    Stores hashed One Time Passwords for Account Verification and Password Resets.
-    Includes brute-force and resend-limit tracking.
-    """
+    
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    otp = models.CharField(max_length=128)  # Fits the Django hashed password format securely
+    otp = models.CharField(max_length=128) 
     
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     
@@ -82,7 +75,7 @@ class OTP(models.Model):
     purpose = models.CharField(max_length=20, default='signup')
 
     class Meta:
-        # DB Indexing makes looking up OTPs incredibly fast, even with 100,000+ users
+        
         indexes = [
             models.Index(fields=['user', 'created_at'])
         ]

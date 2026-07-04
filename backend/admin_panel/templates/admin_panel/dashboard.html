@@ -15,6 +15,53 @@
   </a>
 </div>
 
+<!-- QUICK ACTIONS -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+  <a href="{% url 'admin_orders:return_requests' %}"
+     class="flex items-center gap-3 bg-white rounded-xl px-4 py-3.5 border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition">
+    <div class="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+      <i class="bi bi-arrow-counterclockwise text-red-500 text-sm"></i>
+    </div>
+    <div class="min-w-0">
+      <p class="text-xs font-bold text-gray-900 truncate">Return Requests</p>
+      <p class="text-[10px] text-gray-400">{{ pending_returns_count }} pending</p>
+    </div>
+  </a>
+
+  <a href="{% url 'admin_orders:inventory_list' %}"
+     class="flex items-center gap-3 bg-white rounded-xl px-4 py-3.5 border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition">
+    <div class="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+      <i class="bi bi-box-seam text-orange-500 text-sm"></i>
+    </div>
+    <div class="min-w-0">
+      <p class="text-xs font-bold text-gray-900 truncate">Inventory</p>
+      <p class="text-[10px] text-gray-400">{{ low_stock_count }} low stock</p>
+    </div>
+  </a>
+
+  <a href="{% url 'admin_orders:order_list' %}?status=pending"
+     class="flex items-center gap-3 bg-white rounded-xl px-4 py-3.5 border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition">
+    <div class="w-9 h-9 rounded-lg bg-yellow-50 flex items-center justify-center flex-shrink-0">
+      <i class="bi bi-clock-history text-yellow-500 text-sm"></i>
+    </div>
+    <div class="min-w-0">
+      <p class="text-xs font-bold text-gray-900 truncate">Pending Orders</p>
+      <p class="text-[10px] text-gray-400">{{ pending_orders }} to process</p>
+    </div>
+  </a>
+
+  <a href="{% url 'admin_wallet_list' %}"
+     class="flex items-center gap-3 bg-white rounded-xl px-4 py-3.5 border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition">
+    <div class="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+      <i class="bi bi-wallet2 text-green-600 text-sm"></i>
+    </div>
+    <div class="min-w-0">
+      <p class="text-xs font-bold text-gray-900 truncate">Wallets</p>
+      <p class="text-[10px] text-gray-400">₹{{ wallet_liability|floatformat:0 }} total</p>
+    </div>
+  </a>
+</div>
+
 <!-- STAT CARDS -->
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
 
@@ -42,13 +89,60 @@
     <p class="text-[11px] text-gray-400 mt-2">Awaiting dispatch</p>
   </div>
 
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Avg Order Value</p>
+    <p class="text-3xl font-black text-gray-900">₹{{ aov|floatformat:0 }}</p>
+    <p class="text-[11px] text-gray-400 mt-2">Per order average</p>
+  </div>
+
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Wallet Liability</p>
+    <p class="text-3xl font-black text-gray-900">₹{{ wallet_liability|floatformat:0 }}</p>
+    <p class="text-[11px] text-gray-400 mt-2">Total customer balance</p>
+  </div>
+
+  <a href="{% url 'admin_orders:inventory_list' %}?stock=low_stock"
+     class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition block">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Low Stock</p>
+    <p class="text-3xl font-black text-orange-500">{{ low_stock_count }}</p>
+    <p class="text-[11px] text-gray-400 mt-2">{{ out_of_stock_count }} out of stock</p>
+  </a>
+
+  <a href="{% url 'admin_orders:return_requests' %}"
+     class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition block">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Pending Returns</p>
+    <p class="text-3xl font-black text-red-500">{{ pending_returns_count }}</p>
+    <p class="text-[11px] text-gray-400 mt-2">Awaiting review</p>
+  </a>
+
+</div>
+
+<!-- NEW VS RETURNING CUSTOMERS -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">New Customers</p>
+    <p class="text-2xl font-black text-gray-900">{{ new_customers_this_month }}</p>
+    <p class="text-[11px] text-gray-400 mt-2">Joined this month</p>
+  </div>
+  <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Returning Customers</p>
+    <p class="text-2xl font-black text-gray-900">{{ returning_customers_this_month }}</p>
+    <p class="text-[11px] text-gray-400 mt-2">Ordered again this month</p>
+  </div>
 </div>
 
 <!-- ORDER STATUS ROW -->
 <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
   {% for status, count in status_counts.items %}
   <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm text-center">
-    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{{ status|title|cut:"_" }}</p>
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+  {% if status == 'pending' %}Pending
+  {% elif status == 'shipped' %}Shipped
+  {% elif status == 'out_for_delivery' %}Out for Delivery
+  {% elif status == 'delivered' %}Delivered
+  {% elif status == 'cancelled' %}Cancelled
+  {% else %}{{ status }}{% endif %}
+</p>
     <p class="text-2xl font-black
       {% if status == 'delivered' %}text-green-600
       {% elif status == 'pending' %}text-yellow-500
@@ -63,18 +157,44 @@
 
 <!-- CHART -->
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-8">
-  <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+  <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
     <div>
       <h2 class="text-sm font-black text-gray-900">Sales Overview</h2>
-      <p class="text-[11px] text-gray-400 mt-0.5">Last 7 days — orders and revenue</p>
+      <p class="text-[11px] text-gray-400 mt-0.5">
+        {% if chart_filter == 'weekly' %}Last 7 days
+        {% elif chart_filter == 'monthly' %}This month
+        {% else %}Last 12 months{% endif %} — orders and revenue
+      </p>
     </div>
-    <div class="flex items-center gap-4 text-[11px] text-gray-400">
-      <span class="flex items-center gap-1.5">
-        <span class="w-3 h-3 rounded-full bg-black inline-block"></span> Orders
-      </span>
-      <span class="flex items-center gap-1.5">
-        <span class="w-3 h-3 rounded-full bg-gray-300 inline-block"></span> Revenue (₹)
-      </span>
+
+    <div class="flex items-center gap-3">
+      <!-- Filter buttons -->
+      <div class="flex items-center gap-1 bg-gray-50 rounded-xl p-1">
+        <a href="?chart_filter=weekly"
+           class="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wide transition
+                  {% if chart_filter == 'weekly' %}bg-black text-white{% else %}text-gray-500 hover:bg-gray-100{% endif %}">
+          Weekly
+        </a>
+        <a href="?chart_filter=monthly"
+           class="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wide transition
+                  {% if chart_filter == 'monthly' %}bg-black text-white{% else %}text-gray-500 hover:bg-gray-100{% endif %}">
+          Monthly
+        </a>
+        <a href="?chart_filter=yearly"
+           class="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wide transition
+                  {% if chart_filter == 'yearly' %}bg-black text-white{% else %}text-gray-500 hover:bg-gray-100{% endif %}">
+          Yearly
+        </a>
+      </div>
+
+      <div class="flex items-center gap-4 text-[11px] text-gray-400">
+        <span class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-black inline-block"></span> Orders
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-gray-300 inline-block"></span> Revenue (₹)
+        </span>
+      </div>
     </div>
   </div>
   <div class="p-6">

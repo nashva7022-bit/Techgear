@@ -19,12 +19,11 @@ User = get_user_model()
 
 
 def get_or_create_wallet(user):
-    """
-    Gets the user's wallet, creating one with ₹0 balance if it doesn't exist.
-    Use this everywhere instead of Wallet.objects.get() or .first()
-    """
+    
     wallet, _ = Wallet.objects.get_or_create(user=user)
     return wallet
+
+
 
 
 
@@ -86,6 +85,21 @@ def admin_dashboard(request):
     pending_orders = Order.objects.filter(status='pending').count()
     delivered_orders = Order.objects.filter(status='delivered').count()
 
+
+
+
+    from products.models import ProductVariant
+
+    low_stock_count = ProductVariant.objects.filter(
+        product__is_active=True, is_active=True, stock__gt=0, stock__lte=10
+    ).count()
+
+      
+
+    pending_returns_count = OrderItem.objects.filter(item_status='return_requested').count()
+    out_of_stock_count = ProductVariant.objects.filter(
+        product__is_active=True, is_active=True, stock=0
+    ).count()
     # Month revenue
     month_revenue = Order.objects.filter(
         created_at__date__gte=this_month,
@@ -98,23 +112,99 @@ def admin_dashboard(request):
         status__in=['pending','shipped','out_for_delivery','delivered']
     ).aggregate(r=Sum('total_amount'))['r'] or Decimal('0.00')
 
-    #  CHART — last 7 days orders + revenue
-    chart_labels   = []
-    chart_orders   = []
-    chart_revenue  = []
 
-    for i in range(6, -1, -1):
-        day = today - timedelta(days=i)
-        label = day.strftime('%d %b')
-        day_orders = Order.objects.filter(created_at__date=day).count()
-        day_revenue = Order.objects.filter(
-            created_at__date=day,
-            status__in=['pending','shipped','out_for_delivery','delivered']
-        ).aggregate(r=Sum('total_amount'))['r'] or 0
+    aov = (total_revenue / total_orders) if total_orders > 0 else Decimal('0.00')
+    
 
-        chart_labels.append(label)
-        chart_orders.append(day_orders)
-        chart_revenue.append(float(day_revenue))
+    wallet_liability = Wallet.objects.aggregate(total=Sum('balance'))['total'] or Decimal('0.00')
+
+    #New vs Returning Customers
+    new_customers_this_month = User.objects.filter(
+        is_superuser=False,
+        date_joined__date__gte=this_month,
+    ).count()
+
+    returning_customers_this_month = Order.objects.filter(
+        created_at__date__gte=this_month,
+        user__date_joined__date__lt=this_month,
+    ).values('user').distinct().count()
+    
+    #  CHART — Weekly / Monthly / Yearly aggregation
+    chart_labels  = []
+    chart_orders  = []
+    chart_revenue = []
+
+    chart_filter = request.GET.get('chart_filter', 'weekly')
+    if chart_filter not in ('weekly', 'monthly', 'yearly'):
+        chart_filter = 'weekly'
+
+    if chart_filter == 'weekly':
+    # Last 7 days, daily buckets
+        for i in range(6, -1, -1):
+            day = today - timedelta(days=i)
+            label = day.strftime('%d %b')
+            day_orders = Order.objects.filter(created_at__date=day).count()
+            day_revenue = Order.objects.filter(
+                created_at__date=day,
+                status__in=['pending','shipped','out_for_delivery','delivered']
+            ).aggregate(r=Sum('total_amount'))['r'] or 0
+
+            chart_labels.append(label)
+            chart_orders.append(day_orders)
+            chart_revenue.append(float(day_revenue))
+
+    elif chart_filter == 'monthly':
+    # Current month, daily buckets
+        days_in_month = (
+            (this_month.replace(month=this_month.month % 12 + 1, day=1)
+            if this_month.month != 12
+            else this_month.replace(year=this_month.year + 1, month=1, day=1))
+            - timedelta(days=1)
+        ).day
+
+        for d in range(1, days_in_month + 1):
+            try:
+                day = this_month.replace(day=d)
+            except ValueError:
+                break
+            if day > today:
+                break
+            label = day.strftime('%d %b')
+            day_orders = Order.objects.filter(created_at__date=day).count()
+            day_revenue = Order.objects.filter(
+                created_at__date=day,
+                status__in=['pending','shipped','out_for_delivery','delivered']
+            ).aggregate(r=Sum('total_amount'))['r'] or 0
+
+            chart_labels.append(label)
+            chart_orders.append(day_orders)
+            chart_revenue.append(float(day_revenue))
+
+    else:  # yearly
+    # Last 12 months, monthly buckets
+        for i in range(11, -1, -1):
+            month_date = (this_month.replace(day=1) - timedelta(days=1))
+            for _ in range(i):
+                month_date = (month_date.replace(day=1) - timedelta(days=1))
+            month_start = month_date.replace(day=1)
+            if month_start.month == 12:
+                month_end = month_start.replace(year=month_start.year + 1, month=1, day=1) - timedelta(days=1)
+            else:
+                month_end = month_start.replace(month=month_start.month + 1, day=1) - timedelta(days=1)
+
+            label = month_start.strftime('%b %Y')
+            month_orders = Order.objects.filter(
+                created_at__date__gte=month_start, created_at__date__lte=month_end
+            ).count()
+            month_revenue_val = Order.objects.filter(
+                created_at__date__gte=month_start, created_at__date__lte=month_end,
+                status__in=['pending','shipped','out_for_delivery','delivered']
+            ).aggregate(r=Sum('total_amount'))['r'] or 0
+
+            chart_labels.append(label)
+            chart_orders.append(month_orders)
+            chart_revenue.append(float(month_revenue_val))
+    
 
     #BEST SELLING PRODUCTS (Top 10)
     best_products = (
@@ -182,6 +272,7 @@ def admin_dashboard(request):
     }
 
     context = {
+        'wallet_liability': wallet_liability,
         # Stat cards
         'total_orders':        total_orders,
         'total_revenue':       total_revenue,
@@ -190,6 +281,18 @@ def admin_dashboard(request):
         'delivered_orders':    delivered_orders,
         'month_revenue':       month_revenue,
         'last_month_revenue':  last_month_revenue,
+        #out of stock and lowstock
+        'low_stock_count': low_stock_count,
+        'out_of_stock_count': out_of_stock_count,
+        #pending return
+        'pending_returns_count': pending_returns_count,
+
+        'aov': aov,
+        #new returning customers
+        'new_customers_this_month': new_customers_this_month,
+        'returning_customers_this_month': returning_customers_this_month,
+
+        'chart_filter': chart_filter,
 
         # Chart data (JSON for JS)
         'chart_labels':   json.dumps(chart_labels),

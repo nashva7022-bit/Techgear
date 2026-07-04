@@ -264,11 +264,11 @@ def checkout(request):
                         address=address,
                         use_wallet=use_wallet,
                         coupon_code=coupon_code,
-                    )
-                    request.session.pop("applied_coupon", None)
+                )
 
-                    
+
                     if razorpay_data is None and order_or_none is not None:
+                        request.session.pop("applied_coupon", None)
                         return redirect(
                             "orders:order_success",
                             order_number=order_or_none.order_number,
@@ -276,7 +276,7 @@ def checkout(request):
 
                     if razorpay_data is not None:
                         rp_order = razorpay_data["razorpay_order"]
-                        # razorpay SDK returns a plain dict.
+                        
                         razorpay_order_id = (
                             rp_order["id"]
                             if isinstance(rp_order, dict)

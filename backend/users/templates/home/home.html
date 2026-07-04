@@ -1,276 +1,555 @@
-
 {% extends 'base.html' %}
 {% load static %}
 {% load offer_tags %}
 
 {% block content %}
 
+<!-- GSAP for scroll-driven hero animation -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
 <!-- 1. HERO -->
-<section class="relative w-full h-[85vh] flex items-center justify-center overflow-hidden">
-    <img src="https://res.cloudinary.com/da4xw9ois/image/upload/v1777004559/photo-1682094506687-bd8416aad2d6_facwma.jpg"
-         class="absolute inset-0 w-full h-full object-cover animate-slow-pan">
-    <div class="absolute inset-0 bg-site-bg/60"></div>
+<section id="heroSection" class="relative w-full h-[100vh] flex items-center justify-center overflow-hidden bg-site-bg">
+
+    <!-- Cursor-following spotlight -->
+    <div id="heroSpotlight" class="absolute inset-0 pointer-events-none" style="background: radial-gradient(400px circle at 50% 50%, rgba(45,67,48,0.08), transparent 70%);"></div>
+
+    <!-- Giant faint serif watermark -->
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+        <span class="font-serif font-black uppercase text-[22vw] leading-none text-ink/5 tracking-tighter">
+            SHIELD
+        </span>
+    </div>
+
+    <!-- Content -->
     <div class="relative z-10 text-center px-4">
-        <h1 class="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter mb-6 font-serif">TechGear</h1>
-        <p class="text-xl md:text-2xl text-white mb-8 tracking-widest uppercase">Precision Crafted Protection</p>
-        <a href="{% url 'product_list' %}"
-           class="px-10 py-4 bg-card-bg text-site-bg rounded-full font-bold hover:bg-accent-hover transition-all">
+        <span class="inline-block text-accent-hover text-xs font-bold uppercase tracking-[0.3em] mb-5">
+            New Season Collection
+        </span>
+        <h1 class="text-5xl md:text-7xl font-black text-ink uppercase tracking-tighter mb-6 font-serif">
+            TechGear
+        </h1>
+        <p class="text-lg md:text-xl text-ink/60 mb-10 tracking-wide max-w-xl mx-auto">
+            Precision crafted protection for the devices you rely on every day
+        </p>
+        <a id="magneticCta" href="{% url 'product_list' %}"
+           class="group inline-flex items-center gap-2 px-10 py-4 bg-accent-hover text-white rounded-full font-bold hover:bg-ink transition-colors duration-300">
             Explore Collection
+            <i class="bi bi-arrow-right transition-transform group-hover:translate-x-1"></i>
         </a>
+    </div>
+
+    <!-- Floating hero product (desktop only, GSAP scroll-driven) -->
+    <div id="heroProductWrap" class="hidden md:flex absolute right-[10%] top-1/2 z-20 items-center justify-center" style="transform: translateY(-50%) perspective(900px);">
+        <div class="absolute w-72 h-72 lg:w-96 lg:h-96 rounded-full bg-accent-hover/10 blur-[70px]"></div>
+        <div class="absolute w-56 h-56 lg:w-72 lg:h-72 rounded-full border border-accent-hover/20"></div>
+        <svg id="heroProductSvg" viewBox="0 0 190 380" class="relative w-40 h-40 lg:w-52 lg:h-52 drop-shadow-2xl" style="transform-style: preserve-3d;">
+            <rect x="10" y="10" width="170" height="360" rx="34" fill="white" stroke="#d8d6cc" stroke-width="2"/>
+            <rect x="22" y="22" width="146" height="336" rx="24" fill="#eae7dd"/>
+            <circle cx="60" cy="46" r="12" fill="white" stroke="#d8d6cc" stroke-width="2"/>
+            <circle cx="60" cy="46" r="5" fill="#2D4330"/>
+            <circle cx="90" cy="46" r="7" fill="white" stroke="#d8d6cc" stroke-width="2"/>
+            <text x="95" y="200" text-anchor="middle" font-size="13" font-family="serif" fill="#2D4330" font-weight="700" letter-spacing="1">YOUR</text>
+            <text x="95" y="222" text-anchor="middle" font-size="13" font-family="serif" fill="#2D4330" font-weight="700" letter-spacing="1">DESIGN</text>
+        </svg>
+    </div>
+
+    <!-- Scroll cue -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-ink/40 text-xs uppercase tracking-widest animate-bounce-slow">
+        <span>Scroll</span>
+        <i class="bi bi-chevron-down"></i>
     </div>
 </section>
 
-<!-- 2. SHOP BY BRAND -->
-<section class="py-20 container mx-auto px-6">
-    <h2 class="text-3xl font-bold font-serif mb-12 text-center text-white">Shop By Brand</h2>
-    <div class="grid grid-cols-2 md:grid-cols-6 gap-6">
-        {% for value, label in brand_choices %}
-        <a href="{% url 'product_list' %}?brand={{ value }}"
-           class="p-8 bg-card-bg text-site-bg rounded-2xl text-center font-bold hover:bg-accent-hover transition hover:scale-105">
-            {{ label }}
-        </a>
-        {% endfor %}
-    </div>
-</section>
+<style>
+    @keyframes bounce-slow {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(8px); }
+    }
+    .animate-bounce-slow { animation: bounce-slow 2s infinite; }
+</style>
 
-<!-- 3. CATEGORIES -->
-<section class="py-20 bg-white/5 border-y border-white/10">
+<!-- 2. PRODUCT SHOWCASE (scroll-revealed, desktop only) -->
+<section id="showcaseSection" class="hidden md:block relative w-full py-32 bg-site-bg overflow-hidden">
     <div class="container mx-auto px-6">
-        <h2 class="text-4xl font-bold font-serif mb-16 text-center text-white">Collections</h2>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {% for cat in categories %}
-            <a href="{% url 'product_list' %}?category={{ cat.slug }}"
-               class="h-[400px] bg-card-bg p-8 rounded-3xl transition hover:-translate-y-4 hover:shadow-2xl hover:bg-accent-hover flex flex-col justify-end relative overflow-hidden">
-                {% if cat.image %}
-                <img src="{{ cat.image.url }}" alt="{{ cat.name }}"
-                     class="absolute inset-0 w-full h-full object-cover opacity-40">
-                {% endif %}
-                <h3 class="text-2xl font-bold text-site-bg relative z-10">{{ cat.name }}</h3>
+        <div class="grid grid-cols-3 items-center gap-8">
+
+            <!-- Left features -->
+            <div class="flex flex-col gap-14 items-end text-right pr-8">
+                <div class="showcase-feature opacity-0" data-side="left" data-index="0">
+                    <p class="font-bold text-sm text-ink uppercase tracking-wide mb-1">Fully customizable</p>
+                    <p class="text-xs text-ink/50">Add your own text or image</p>
+                </div>
+                <div class="showcase-feature opacity-0" data-side="left" data-index="1">
+                    <p class="font-bold text-sm text-ink uppercase tracking-wide mb-1">Drop protection</p>
+                    <p class="text-xs text-ink/50">Reinforced corners, tested to 2m</p>
+                </div>
+                <div class="showcase-feature opacity-0" data-side="left" data-index="2">
+                    <p class="font-bold text-sm text-ink uppercase tracking-wide mb-1">Slim fit</p>
+                    <p class="text-xs text-ink/50">Barely adds any bulk</p>
+                </div>
+            </div>
+
+            <!-- Center product target -->
+            <div class="flex items-center justify-center">
+                <div id="showcaseTarget" class="relative w-52 h-52 flex items-center justify-center">
+                    <div class="absolute w-64 h-64 rounded-full bg-accent-hover/10 blur-[60px]"></div>
+                </div>
+            </div>
+
+            <!-- Right features -->
+            <div class="flex flex-col gap-14 items-start text-left pl-8">
+                <div class="showcase-feature opacity-0" data-side="right" data-index="0">
+                    <p class="font-bold text-sm text-ink uppercase tracking-wide mb-1">Precision fit</p>
+                    <p class="text-xs text-ink/50">Exact cutouts for ports and camera</p>
+                </div>
+                <div class="showcase-feature opacity-0" data-side="right" data-index="1">
+                    <p class="font-bold text-sm text-ink uppercase tracking-wide mb-1">Wireless charging ready</p>
+                    <p class="text-xs text-ink/50">No need to remove the case</p>
+                </div>
+                <div class="showcase-feature opacity-0" data-side="right" data-index="2">
+                    <p class="font-bold text-sm text-ink uppercase tracking-wide mb-1">48-hour dispatch</p>
+                    <p class="text-xs text-ink/50">Printed and shipped fast</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 3. SHOP BY BRAND -->
+<section class="py-20 bg-site-bg">
+    <div class="container mx-auto px-6">
+        <h2 class="text-3xl font-bold font-serif mb-2 text-center text-ink">Shop By Brand</h2>
+        <p class="text-center text-ink/40 text-sm mb-14">Top brands, all in one place</p>
+
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-5">
+            {% for value, label in brand_choices %}
+            <a href="{% url 'product_list' %}?brand={{ value }}"
+               class="brand-card group relative bg-white border border-ink/10 rounded-2xl py-8 px-4 text-center transition hover:border-accent-hover/50 hover:-translate-y-1 overflow-hidden">
+                <span class="relative z-10 text-ink/50 font-bold uppercase tracking-wider text-sm group-hover:text-accent-hover transition-all duration-300">
+                    {{ label }}
+                </span>
+                <div class="brand-glow"></div>
             </a>
-            {% empty %}
-            <p class="text-white/40 col-span-4 text-center">No categories available.</p>
             {% endfor %}
         </div>
     </div>
 </section>
 
-<!-- 4. CUSTOMIZATION -->
-<section class="py-24 container mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
-    <div class="text-white">
-        <h2 class="text-5xl font-serif font-bold mb-8">Personalize Your Tech</h2>
-        <div class="space-y-4">
-            <a href="{% url 'product_list' %}?category=laptop-skins"
-               class="block bg-card-bg text-site-bg p-6 rounded-2xl hover:bg-accent-hover transition font-bold text-lg">
-               Custom Laptop Skin (Text/Image) →
+<style>
+    .brand-glow {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at center, rgba(45,67,48,0.08), transparent 70%);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+    }
+    .brand-card:hover .brand-glow {
+        opacity: 1;
+    }
+</style>
+
+<!-- 4. CATEGORIES -->
+<section class="py-20 bg-nav-bg">
+    <div class="container mx-auto px-6">
+        <h2 class="text-3xl font-bold font-serif mb-2 text-center text-ink">Shop by Category</h2>
+        <p class="text-center text-ink/40 text-sm mb-14">Find exactly what you're looking for</p>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {% for cat in categories %}
+            <a href="{% url 'product_list' %}?category={{ cat.slug }}"
+               class="cat-card group relative bg-white border {% if request.GET.category == cat.slug %}border-accent-hover{% else %}border-ink/10{% endif %} rounded-2xl p-8 flex flex-col items-center text-center transition hover:-translate-y-1 overflow-hidden">
+
+                <div class="cat-shine"></div>
+
+                <div class="relative mb-5">
+                    <div class="absolute inset-0 rounded-full bg-accent-hover blur-xl opacity-0 group-hover:opacity-20 scale-75 group-hover:scale-125 transition-all duration-500"></div>
+                    <div class="relative w-20 h-20 rounded-full bg-site-bg flex items-center justify-center overflow-hidden">
+                        {% if cat.image %}
+                        <img src="{{ cat.image.url }}" alt="{{ cat.name }}"
+                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
+                        {% else %}
+                        <i class="bi bi-grid text-2xl text-ink/30"></i>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <h3 class="text-sm font-bold text-ink uppercase tracking-wide group-hover:text-accent-hover transition">
+                    {{ cat.name }}
+                </h3>
+                <p class="text-xs text-ink/40 mt-1">{{ cat.product_count }} products</p>
             </a>
-            <a href="{% url 'product_list' %}?category=phone-cases"
-               class="block bg-card-bg text-site-bg p-6 rounded-2xl hover:bg-accent-hover transition font-bold text-lg">
-               Custom Phone Case (Text/Image) →
-            </a>
-        </div>
-    </div>
-    <div class="h-96 bg-card-bg rounded-[3rem] flex items-center justify-center overflow-hidden group">
-        <img src="https://res.cloudinary.com/da4xw9ois/image/upload/v1777004667/photo-1743865001634-0bf8a22b94cf_vwmtbo.jpg"
-             class="h-64 transition-transform duration-700 group-hover:translate-x-12 group-hover:rotate-6">
-    </div>
-</section>
-
-<!-- 5. TRENDING PRODUCTS -->
-<section id="shop" class="py-20 container mx-auto px-6 border-t border-white/10">
-    <div class="flex justify-between items-center mb-12">
-        <h2 class="text-3xl font-bold text-white font-serif">Trending</h2>
-        <a href="{% url 'product_list' %}" class="text-accent-hover font-bold hover:underline">View All →</a>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        {% for product in trending_products %}
-        {% with variant=product.active_variant %}
-        <div class="bg-card-bg rounded-3xl transition hover:-translate-y-2 group shadow-xl overflow-hidden flex flex-col">
-
-            <!-- Image — clicking goes to detail -->
-            <a href="{% url 'product_detail' product.slug %}" class="block h-48 bg-white/40 overflow-hidden">
-                {% if variant and variant.primary_image %}
-                <img src="{{ variant.primary_image.image.url }}"
-                     alt="{{ product.name }}"
-                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                {% else %}
-                <div class="w-full h-full flex items-center justify-center">
-                    <i class="bi bi-image text-4xl text-site-bg/20"></i>
-                </div>
-                {% endif %}
-            </a>
-
-            <div class="p-6 flex flex-col flex-1">
-                <div class="flex justify-between items-start mb-2">
-                    <a href="{% url 'product_detail' product.slug %}"
-                       class="font-bold text-site-bg hover:text-site-bg/70 transition leading-tight">
-                        {{ product.name }}
-                    </a>
-                    <!-- Wishlist toggle -->
-                    <form method="POST" action="{% url 'toggle_wishlist' product.pk %}" class="flex-shrink-0 ml-2">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="{{ request.path }}">
-                        <button type="submit" class="text-site-bg hover:text-red-500 transition">
-                            <i class="bi {% if product.pk in wishlist_ids %}bi-heart-fill text-red-500{% else %}bi-heart{% endif %}"></i>
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Rating -->
-                {% if product.avg_rating %}
-                <div class="flex items-center gap-1 my-1">
-                    {% for i in "12345" %}
-                    <i class="bi bi-star-fill text-xs {% if forloop.counter <= product.avg_rating %}text-yellow-500{% else %}text-gray-300{% endif %}"></i>
-                    {% endfor %}
-                    <span class="text-xs text-site-bg/50 ml-1">({{ product.review_count }})</span>
-                </div>
-                {% else %}
-                <div class="flex items-center gap-1 my-1">
-                    {% for i in "12345" %}
-                    <i class="bi bi-star text-xs text-gray-300"></i>
-                    {% endfor %}
-                </div>
-                {% endif %}
-
-                <div class="flex justify-between items-center mt-auto pt-3">
-    <div>
-        {% if variant %}
-            {% effective_price variant as eff_price %}
-            {% discount_percent variant as disc_pct %}
-            {% if disc_pct > 0 %}
-                <span class="font-bold text-lg text-site-bg">₹{{ eff_price }}</span>
-                <span class="text-xs text-site-bg/40 line-through ml-1">₹{{ variant.price }}</span>
-                <span class="text-[9px] font-bold text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full ml-1">{{ disc_pct }}% OFF</span>
-            {% else %}
-                <span class="font-bold text-lg text-site-bg">₹{{ eff_price }}</span>
-            {% endif %}
-        {% else %}
-            <span class="font-bold text-lg text-site-bg">
-                {% if product.min_price %}₹{{ product.min_price }}{% else %}—{% endif %}
-            </span>
-        {% endif %}
-    </div>
-                    <a href="{% url 'product_detail' product.slug %}"
-                       class="bg-site-bg text-white p-3 rounded-full hover:bg-black transition"
-                       title="View product">
-                        <i class="bi bi-eye text-sm"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-        {% endwith %}
-        {% empty %}
-        <p class="text-white/40 col-span-4 text-center">No trending products available.</p>
-        {% endfor %}
-    </div>
-</section>
-
-<!-- 6. FEATURED PRODUCTS -->
-<section class="py-20 container mx-auto px-6 border-t border-white/10">
-    <div class="flex justify-between items-center mb-12">
-        <h2 class="text-3xl font-bold text-white font-serif">Featured</h2>
-        <a href="{% url 'product_list' %}" class="text-accent-hover font-bold hover:underline">View All →</a>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        {% for product in featured_products %}
-        {% with variant=product.active_variant %}
-        <div class="bg-card-bg rounded-3xl transition hover:-translate-y-2 group shadow-xl overflow-hidden flex flex-col">
-
-            <a href="{% url 'product_detail' product.slug %}" class="block h-48 bg-white/40 overflow-hidden">
-                {% if variant and variant.primary_image %}
-                <img src="{{ variant.primary_image.image.url }}"
-                     alt="{{ product.name }}"
-                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                {% else %}
-                <div class="w-full h-full flex items-center justify-center">
-                    <i class="bi bi-image text-4xl text-site-bg/20"></i>
-                </div>
-                {% endif %}
-            </a>
-
-            <div class="p-6 flex flex-col flex-1">
-                <div class="flex justify-between items-start mb-2">
-                    <a href="{% url 'product_detail' product.slug %}"
-                       class="font-bold text-site-bg hover:text-site-bg/70 transition leading-tight">
-                        {{ product.name }}
-                    </a>
-                    <form method="POST" action="{% url 'toggle_wishlist' product.pk %}" class="flex-shrink-0 ml-2">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="{{ request.path }}">
-                        <button type="submit" class="text-site-bg hover:text-red-500 transition">
-                            <i class="bi {% if product.pk in wishlist_ids %}bi-heart-fill text-red-500{% else %}bi-heart{% endif %}"></i>
-                        </button>
-                    </form>
-                </div>
-
-                {% if product.avg_rating %}
-                <div class="flex items-center gap-1 my-1">
-                    {% for i in "12345" %}
-                    <i class="bi bi-star-fill text-xs {% if forloop.counter <= product.avg_rating %}text-yellow-500{% else %}text-gray-300{% endif %}"></i>
-                    {% endfor %}
-                    <span class="text-xs text-site-bg/50 ml-1">({{ product.review_count }})</span>
-                </div>
-                {% else %}
-                <div class="flex items-center gap-1 my-1">
-                    {% for i in "12345" %}
-                    <i class="bi bi-star text-xs text-gray-300"></i>
-                    {% endfor %}
-                </div>
-                {% endif %}
-
-               <div class="flex justify-between items-center mt-auto pt-3">
-    <div>
-        {% if variant %}
-            {% effective_price variant as eff_price %}
-            {% discount_percent variant as disc_pct %}
-            {% if disc_pct > 0 %}
-                <span class="font-bold text-lg text-site-bg">₹{{ eff_price }}</span>
-                <span class="text-xs text-site-bg/40 line-through ml-1">₹{{ variant.price }}</span>
-                <span class="text-[9px] font-bold text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full ml-1">{{ disc_pct }}% OFF</span>
-            {% else %}
-                <span class="font-bold text-lg text-site-bg">₹{{ eff_price }}</span>
-            {% endif %}
-        {% else %}
-            <span class="font-bold text-lg text-site-bg">
-                {% if product.min_price %}₹{{ product.min_price }}{% else %}—{% endif %}
-            </span>
-        {% endif %}
-    </div>
-                    <a href="{% url 'product_detail' product.slug %}"
-                       class="bg-site-bg text-white p-3 rounded-full hover:bg-black transition"
-                       title="View product">
-                        <i class="bi bi-eye text-sm"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-        {% endwith %}
-        {% empty %}
-        <p class="text-white/40 col-span-4 text-center">No featured products available.</p>
-        {% endfor %}
-    </div>
-</section>
-
-<!-- 7. SITE FEATURES -->
-<section class="py-24 border-t border-white/10">
-    <div class="container mx-auto px-6 grid md:grid-cols-3 gap-8">
-        <div class="bg-card-bg p-10 rounded-2xl text-center">
-            <h4 class="font-bold text-site-bg text-xl mb-2">Quality</h4>
-            <p class="text-sm text-site-bg/80">Premium materials</p>
-        </div>
-        <div class="bg-card-bg p-10 rounded-2xl text-center">
-            <h4 class="font-bold text-site-bg text-xl mb-2">Custom</h4>
-            <p class="text-sm text-site-bg/80">Design your own</p>
-        </div>
-        <div class="bg-card-bg p-10 rounded-2xl text-center">
-            <h4 class="font-bold text-site-bg text-xl mb-2">Fast</h4>
-            <p class="text-sm text-site-bg/80">48-hour dispatch</p>
+            {% empty %}
+            <p class="text-ink/40 col-span-4 text-center">No categories available.</p>
+            {% endfor %}
         </div>
     </div>
 </section>
 
 <style>
-    @keyframes slow-pan { 0% { transform: scale(1); } 100% { transform: scale(1.08); } }
-    .animate-slow-pan { animation: slow-pan 20s infinite alternate; }
+    .cat-shine {
+        position: absolute;
+        top: 0;
+        left: -75%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(120deg, transparent, rgba(45,67,48,0.08), transparent);
+        transform: skewX(-20deg);
+        transition: left 0.7s ease;
+        pointer-events: none;
+    }
+    .cat-card:hover .cat-shine {
+        left: 125%;
+    }
 </style>
+
+<!-- 5. CUSTOMIZATION -->
+<section class="py-24 bg-site-bg">
+    <div class="container mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+        <div class="text-ink">
+            <h2 class="text-5xl font-serif font-bold mb-8">Personalize Your Tech</h2>
+            <div class="space-y-4">
+                <a href="{% url 'product_list' %}?category=laptop-skins"
+                   class="block bg-white border border-ink/10 text-ink p-6 rounded-2xl hover:bg-accent-hover hover:text-white hover:border-accent-hover transition font-bold text-lg">
+                   Custom Laptop Skin (Text/Image) →
+                </a>
+                <a href="{% url 'product_list' %}?category=phone-cases"
+                   class="block bg-white border border-ink/10 text-ink p-6 rounded-2xl hover:bg-accent-hover hover:text-white hover:border-accent-hover transition font-bold text-lg">
+                   Custom Phone Case (Text/Image) →
+                </a>
+            </div>
+        </div>
+        <div class="h-96 bg-nav-bg rounded-[3rem] flex items-center justify-center overflow-hidden group">
+            <img src="https://res.cloudinary.com/da4xw9ois/image/upload/v1777004667/photo-1743865001634-0bf8a22b94cf_vwmtbo.jpg"
+                 class="h-64 transition-transform duration-700 group-hover:translate-x-12 group-hover:rotate-6">
+        </div>
+    </div>
+</section>
+
+<!-- 6. TRENDING PRODUCTS -->
+<section id="shop" class="py-20 bg-nav-bg">
+    <div class="container mx-auto px-6">
+        <div class="flex justify-between items-end mb-12">
+            <div>
+                <span class="text-accent-hover text-xs font-bold uppercase tracking-[0.2em]">Hot Right Now</span>
+                <h2 class="text-3xl font-bold text-ink font-serif mt-2">Trending</h2>
+            </div>
+            <a href="{% url 'product_list' %}" class="text-accent-hover font-bold text-sm hover:underline flex items-center gap-1">
+                View All <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {% for product in trending_products %}
+            {% with variant=product.active_variant %}
+            <div class="product-card group relative bg-white border border-ink/10 rounded-2xl transition duration-500 hover:-translate-y-1.5 hover:border-accent-hover/50 overflow-hidden flex flex-col">
+
+                <div class="product-shine"></div>
+                <div class="product-glow"></div>
+
+                <a href="{% url 'product_detail' product.slug %}" class="block h-48 bg-site-bg overflow-hidden relative">
+                    {% if variant and variant.primary_image %}
+                    <img src="{{ variant.primary_image.image.url }}"
+                         alt="{{ product.name }}"
+                         class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center">
+                        <i class="bi bi-image text-4xl text-ink/20"></i>
+                    </div>
+                    {% endif %}
+                    {% if variant %}
+                        {% discount_percent variant as disc_pct %}
+                        {% if disc_pct > 0 %}
+                        <span class="absolute top-3 left-3 z-10 bg-accent-hover text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+                            {{ disc_pct }}% OFF
+                        </span>
+                        {% endif %}
+                    {% endif %}
+                </a>
+
+                <div class="relative z-10 p-6 flex flex-col flex-1">
+                    <div class="flex justify-between items-start mb-2">
+                        <a href="{% url 'product_detail' product.slug %}"
+                           class="font-bold text-ink group-hover:text-accent-hover transition leading-tight">
+                            {{ product.name }}
+                        </a>
+                        <form method="POST" action="{% url 'toggle_wishlist' product.pk %}" class="flex-shrink-0 ml-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit" class="text-ink/30 hover:text-red-500 hover:scale-110 transition">
+                                <i class="bi {% if product.pk in wishlist_ids %}bi-heart-fill text-red-500{% else %}bi-heart{% endif %}"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    {% if product.avg_rating %}
+                    <div class="flex items-center gap-1 my-1">
+                        {% for i in "12345" %}
+                        <i class="bi bi-star-fill text-xs {% if forloop.counter <= product.avg_rating %}text-yellow-500{% else %}text-gray-300{% endif %}"></i>
+                        {% endfor %}
+                        <span class="text-xs text-ink/40 ml-1">({{ product.review_count }})</span>
+                    </div>
+                    {% else %}
+                    <div class="flex items-center gap-1 my-1">
+                        {% for i in "12345" %}
+                        <i class="bi bi-star text-xs text-gray-300"></i>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="flex justify-between items-center mt-auto pt-3">
+                        <div>
+                            {% if variant %}
+                                {% effective_price variant as eff_price %}
+                                {% discount_percent variant as disc_pct %}
+                                {% if disc_pct > 0 %}
+                                    <span class="font-bold text-lg text-ink">₹{{ eff_price }}</span>
+                                    <span class="text-xs text-ink/40 line-through ml-1">₹{{ variant.price }}</span>
+                                {% else %}
+                                    <span class="font-bold text-lg text-ink">₹{{ eff_price }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="font-bold text-lg text-ink">
+                                    {% if product.min_price %}₹{{ product.min_price }}{% else %}—{% endif %}
+                                </span>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'product_detail' product.slug %}"
+                           class="bg-site-bg border border-ink/10 text-ink p-3 rounded-full transition duration-300 group-hover:bg-accent-hover group-hover:text-white group-hover:border-accent-hover group-hover:rotate-12"
+                           title="View product">
+                            <i class="bi bi-eye text-sm"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+            {% empty %}
+            <p class="text-ink/40 col-span-4 text-center">No trending products available.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- 7. FEATURED PRODUCTS -->
+<section class="py-20 bg-site-bg">
+    <div class="container mx-auto px-6">
+        <div class="flex justify-between items-end mb-12">
+            <div>
+                <span class="text-accent-hover text-xs font-bold uppercase tracking-[0.2em]">Handpicked</span>
+                <h2 class="text-3xl font-bold text-ink font-serif mt-2">Featured</h2>
+            </div>
+            <a href="{% url 'product_list' %}" class="text-accent-hover font-bold text-sm hover:underline flex items-center gap-1">
+                View All <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {% for product in featured_products %}
+            {% with variant=product.active_variant %}
+            <div class="bg-white rounded-3xl transition hover:-translate-y-2 group shadow-md hover:shadow-xl overflow-hidden flex flex-col border border-ink/5">
+
+                <a href="{% url 'product_detail' product.slug %}" class="block h-48 bg-nav-bg overflow-hidden relative">
+                    {% if variant and variant.primary_image %}
+                    <img src="{{ variant.primary_image.image.url }}"
+                         alt="{{ product.name }}"
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center">
+                        <i class="bi bi-image text-4xl text-ink/20"></i>
+                    </div>
+                    {% endif %}
+                    {% if variant %}
+                        {% discount_percent variant as disc_pct %}
+                        {% if disc_pct > 0 %}
+                        <span class="absolute top-3 left-3 bg-accent-hover text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+                            {{ disc_pct }}% OFF
+                        </span>
+                        {% endif %}
+                    {% endif %}
+                </a>
+
+                <div class="p-6 flex flex-col flex-1">
+                    <div class="flex justify-between items-start mb-2">
+                        <a href="{% url 'product_detail' product.slug %}"
+                           class="font-bold text-ink hover:text-accent-hover transition leading-tight">
+                            {{ product.name }}
+                        </a>
+                        <form method="POST" action="{% url 'toggle_wishlist' product.pk %}" class="flex-shrink-0 ml-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit" class="text-ink/30 hover:text-red-500 transition">
+                                <i class="bi {% if product.pk in wishlist_ids %}bi-heart-fill text-red-500{% else %}bi-heart{% endif %}"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    {% if product.avg_rating %}
+                    <div class="flex items-center gap-1 my-1">
+                        {% for i in "12345" %}
+                        <i class="bi bi-star-fill text-xs {% if forloop.counter <= product.avg_rating %}text-yellow-500{% else %}text-gray-300{% endif %}"></i>
+                        {% endfor %}
+                        <span class="text-xs text-ink/40 ml-1">({{ product.review_count }})</span>
+                    </div>
+                    {% else %}
+                    <div class="flex items-center gap-1 my-1">
+                        {% for i in "12345" %}
+                        <i class="bi bi-star text-xs text-gray-300"></i>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="flex justify-between items-center mt-auto pt-3">
+                        <div>
+                            {% if variant %}
+                                {% effective_price variant as eff_price %}
+                                {% discount_percent variant as disc_pct %}
+                                {% if disc_pct > 0 %}
+                                    <span class="font-bold text-lg text-ink">₹{{ eff_price }}</span>
+                                    <span class="text-xs text-ink/40 line-through ml-1">₹{{ variant.price }}</span>
+                                {% else %}
+                                    <span class="font-bold text-lg text-ink">₹{{ eff_price }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="font-bold text-lg text-ink">
+                                    {% if product.min_price %}₹{{ product.min_price }}{% else %}—{% endif %}
+                                </span>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'product_detail' product.slug %}"
+                           class="bg-accent-hover text-white p-3 rounded-full hover:bg-ink transition"
+                           title="View product">
+                            <i class="bi bi-eye text-sm"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+            {% empty %}
+            <p class="text-ink/40 col-span-4 text-center">No featured products available.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- 8. SITE FEATURES -->
+<section class="py-24 bg-nav-bg">
+    <div class="container mx-auto px-6 grid md:grid-cols-3 gap-8">
+        <div class="bg-white border border-ink/10 p-10 rounded-2xl text-center hover:border-accent-hover/40 transition">
+            <i class="bi bi-gem text-3xl text-accent-hover mb-4 block"></i>
+            <h4 class="font-bold text-ink text-xl mb-2">Quality</h4>
+            <p class="text-sm text-ink/50">Premium materials</p>
+        </div>
+        <div class="bg-white border border-ink/10 p-10 rounded-2xl text-center hover:border-accent-hover/40 transition">
+            <i class="bi bi-brush text-3xl text-accent-hover mb-4 block"></i>
+            <h4 class="font-bold text-ink text-xl mb-2">Custom</h4>
+            <p class="text-sm text-ink/50">Design your own</p>
+        </div>
+        <div class="bg-white border border-ink/10 p-10 rounded-2xl text-center hover:border-accent-hover/40 transition">
+            <i class="bi bi-lightning-charge text-3xl text-accent-hover mb-4 block"></i>
+            <h4 class="font-bold text-ink text-xl mb-2">Fast</h4>
+            <p class="text-sm text-ink/50">48-hour dispatch</p>
+        </div>
+    </div>
+</section>
+
+<!-- GSAP scroll-driven hero product reveal -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof gsap === 'undefined' || window.matchMedia('(max-width: 767px)').matches) return;
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    const heroWrap    = document.getElementById('heroProductWrap');
+    const heroSvg      = document.getElementById('heroProductSvg');
+    const heroSection = document.getElementById('heroSection');
+    const showcaseSection = document.getElementById('showcaseSection');
+    const showcaseTarget  = document.getElementById('showcaseTarget');
+    const features     = gsap.utils.toArray('.showcase-feature');
+
+    if (!heroWrap || !heroSvg || !heroSection || !showcaseSection || !showcaseTarget) return;
+
+    // Resting tilt in the hero: product sits slightly turned away, like it's asleep
+    gsap.set(heroSvg, { rotateY: -35, rotateX: 8, transformOrigin: '50% 50%' });
+
+    gsap.to(heroSvg, {
+        rotateY: -25,
+        rotateX: 4,
+        duration: 3,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut'
+    });
+
+    // Scroll-driven journey: hero position -> centered, upright, facing forward in showcase
+    const tl = gsap.timeline({
+        scrollTrigger: {
+            trigger: heroSection,
+            start: 'top top',
+            endTrigger: showcaseSection,
+            end: 'center center',
+            scrub: 1
+        }
+    });
+
+    tl.to(heroSvg, {
+        rotateY: 0,
+        rotateX: 0,
+        duration: 1,
+        ease: 'none'
+    }, 0);
+
+    tl.to(heroWrap, {
+        x: () => {
+            const startRect = heroWrap.getBoundingClientRect();
+            const endRect = showcaseTarget.getBoundingClientRect();
+            return (endRect.left + endRect.width / 2) - (startRect.left + startRect.width / 2);
+        },
+        y: () => {
+            const startRect = heroWrap.getBoundingClientRect();
+            const endRect = showcaseTarget.getBoundingClientRect();
+            return (endRect.top + endRect.height / 2) - (startRect.top + startRect.height / 2);
+        },
+        scale: 1.15,
+        duration: 1,
+        ease: 'none'
+    }, 0);
+
+    // Feature callouts fade/slide in once the product has landed
+    features.forEach((el, i) => {
+        const fromX = el.dataset.side === 'left' ? 24 : -24;
+        gsap.set(el, { x: fromX });
+        ScrollTrigger.create({
+            trigger: showcaseSection,
+            start: 'top 55%',
+            onEnter: () => {
+                gsap.to(el, {
+                    opacity: 1,
+                    x: 0,
+                    duration: 0.6,
+                    delay: i * 0.12,
+                    ease: 'power2.out'
+                });
+            },
+            onLeaveBack: () => {
+                gsap.to(el, { opacity: 0, x: fromX, duration: 0.3 });
+            }
+        });
+    });
+
+    // Gentle idle spin once parked in the showcase
+    ScrollTrigger.create({
+        trigger: showcaseSection,
+        start: 'top 55%',
+        onEnter: () => {
+            gsap.to(heroSvg, {
+                rotateY: 360,
+                duration: 8,
+                repeat: -1,
+                ease: 'linear',
+                overwrite: false
+            });
+        }
+    });
+});
+</script>
 
 {% endblock %}

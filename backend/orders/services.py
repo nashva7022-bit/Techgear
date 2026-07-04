@@ -257,11 +257,20 @@ def place_cod_order(user, cart, address, use_wallet=False, coupon_code=None) -> 
             wallet_deduction = min(_d(wallet_obj.balance), total_amount)
             paid_via_cod = total_amount - wallet_deduction
 
+
+           
+    if wallet_deduction >= total_amount:
+        payment_method = "wallet"
+    elif wallet_deduction > 0:
+        payment_method = "wallet_cod"
+    else:
+        payment_method = "cod"
+
     with transaction.atomic():
         order = _create_order_with_retry(
             {
                 "user": user,
-                "payment_method": "cod",
+                "payment_method": payment_method,
                 "status": "pending",
                 "wallet_amount": wallet_deduction,
                 "paid_amount": paid_via_cod,
@@ -353,7 +362,7 @@ def cancel_order(order: Order, cancelled_by, reason: str = "") -> Order:
             if order.wallet_amount and order.wallet_amount > 0:
                 refund_to_wallet += _d(order.wallet_amount)
 
-            if order.payment_method == "razorpay" and order.paid_amount > 0:
+            if order.payment_method in ("razorpay", "wallet_razorpay") and order.paid_amount > 0:
                 refund_to_wallet += _d(order.paid_amount)
 
             if refund_to_wallet > 0:
@@ -421,7 +430,7 @@ def cancel_order_item(order_item: OrderItem, cancelled_by, reason: str = "") -> 
                 )
                 total_item_refund += wallet_share
 
-            if order.payment_method == "razorpay" and order.paid_amount > 0:
+            if order.payment_method in ("razorpay", "wallet_razorpay") and order.paid_amount > 0:
                 razorpay_share = (_d(order.paid_amount) * proportion).quantize(
                     Decimal("0.01"), rounding=ROUND_DOWN
                 )
@@ -521,46 +530,65 @@ def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
     with db_transaction.atomic():
         order = order_item.order
 
-        
         item_wallet_refund = _calculate_item_wallet_refund(order_item, order)
 
         order_item.item_status = "returned"
         order_item.save(update_fields=["item_status"])
 
-        # Restore stock.
         if order_item.variant_id:
             order_item.variant.stock += order_item.quantity
             order_item.variant.save(update_fields=["stock"])
 
-        
         _recalculate_order_total(order)
 
-        
-        refund_amount = _d(order_item.subtotal)
-        if order.user and refund_amount > 0:
+        refund_amount = Decimal("0.00")
+
+        if order.user:
             from wallet.models import Wallet
-            wallet, _ = Wallet.objects.get_or_create(user=order.user)
-            wallet.credit(
-                amount=refund_amount,
-                reason=(
-                    f"Refund for returned item: {order_item.product_name} ×"
-                    f" {order_item.quantity} (Order {order.order_number})"
-                ),
-                order=order,
-            )
-            
-            new_wallet_amount = max(
-                Decimal("0.00"),
-                _d(order.wallet_amount) - item_wallet_refund,
-            )
-            order.wallet_amount = new_wallet_amount
-            order.save(update_fields=["wallet_amount", "updated_at"])
-            # Reduce paid_amount to reflect the return
-            order.paid_amount = max(
-            Decimal("0.00"),
-            _d(order.paid_amount) - refund_amount,
-            )
-            order.save(update_fields=["paid_amount", "updated_at"])         
+
+            item_subtotal  = _d(order_item.subtotal)
+            order_subtotal = _d(order.subtotal) if order.subtotal else Decimal("0.00")
+
+            if order_subtotal > 0:
+                proportion = item_subtotal / order_subtotal
+
+                if order.wallet_amount and order.wallet_amount > 0:
+                    wallet_share = (_d(order.wallet_amount) * proportion).quantize(
+                        Decimal("0.01"), rounding=ROUND_DOWN
+                    )
+                    refund_amount += wallet_share
+
+                if order.payment_method in ("razorpay", "wallet_razorpay") and order.paid_amount > 0:
+                    razorpay_share = (_d(order.paid_amount) * proportion).quantize(
+                        Decimal("0.01"), rounding=ROUND_DOWN
+                    )
+                    refund_amount += razorpay_share
+
+                if order.coupon_discount and order.coupon_discount > 0:
+                    coupon_share = (_d(order.coupon_discount) * proportion).quantize(
+                        Decimal("0.01"), rounding=ROUND_DOWN
+                    )
+                    refund_amount = max(Decimal("0.00"), refund_amount - coupon_share)
+
+            if refund_amount > 0:
+                wallet, _ = Wallet.objects.get_or_create(user=order.user)
+                wallet.credit(
+                    amount=refund_amount,
+                    reason=(
+                        f"Refund for returned item: {order_item.product_name} ×"
+                        f" {order_item.quantity} (Order {order.order_number})"
+                    ),
+                    order=order,
+                )
+                order.wallet_amount = max(
+                    Decimal("0.00"),
+                    _d(order.wallet_amount) - item_wallet_refund,
+                )
+                order.paid_amount = max(
+                    Decimal("0.00"),
+                    _d(order.paid_amount) - refund_amount,
+                )
+                order.save(update_fields=["wallet_amount", "paid_amount", "updated_at"])
 
         OrderStatusLog.objects.create(
             order=order,
@@ -569,7 +597,7 @@ def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
             new_status=order.status,
             note=(
                 f'Return approved for "{order_item.product_name}". '
-                f"Stock restored. ₹{refund_amount} credited to wallet."
+                f"Stock restored. ₹{refund_amount} refunded to wallet (proportional to amount paid)."
             ),
         )
 
@@ -777,7 +805,7 @@ def verify_razorpay_payment(
             order = _create_order_with_retry(
                 {
                     "user": user,
-                    "payment_method": "razorpay",
+                    "payment_method": "wallet_razorpay" if wallet_deduction > 0 else "razorpay",
                     "status": "pending",
                     "wallet_amount": wallet_deduction,
                     "paid_amount": razorpay_amount,

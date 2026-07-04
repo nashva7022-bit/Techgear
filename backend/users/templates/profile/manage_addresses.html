@@ -2,28 +2,28 @@
 {% block title %}Manage Addresses | TechGear{% endblock %}
 
 {% block content %}
-<div class="min-h-screen px-4 py-10" style="background:#4a6464;">
+<div class="min-h-screen px-4 py-10 bg-site-bg">
 
   <div class="max-w-5xl mx-auto">
 
     <!-- Back -->
-    <nav class="flex items-center gap-2 mb-6 text-xs font-semibold text-white/40">
-      <a href="{% url 'dashboard' %}" class="hover:text-white transition flex items-center gap-1">
+    <nav class="flex items-center gap-2 mb-6 text-xs font-semibold text-ink/40">
+      <a href="{% url 'dashboard' %}" class="hover:text-accent-hover transition flex items-center gap-1">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"/></svg>
         Dashboard
       </a>
-      <span class="text-white/20">/</span>
-      <span class="text-white/70">Manage Addresses</span>
+      <span class="text-ink/20">/</span>
+      <span class="text-ink/70">Manage Addresses</span>
     </nav>
 
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
       <div>
-        <h1 class="text-2xl font-extrabold text-white tracking-tight">Manage Addresses</h1>
-        <p class="text-white/40 text-sm mt-1">Add, edit or remove your saved delivery addresses.</p>
+        <h1 class="text-2xl font-extrabold text-ink tracking-tight font-serif">Manage Addresses</h1>
+        <p class="text-ink/50 text-sm mt-1">Add, edit or remove your saved delivery addresses.</p>
       </div>
       <button onclick="openAddDrawer()"
-              class="inline-flex items-center gap-2 bg-white text-[#557373] font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-[#F2EFEA] transition shadow-lg">
+              class="inline-flex items-center gap-2 bg-accent-hover text-white font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-ink transition shadow-lg">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
         Add New Address
       </button>
@@ -33,20 +33,18 @@
     {% if addresses %}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
       {% for addr in addresses %}
-      <div class="rounded-2xl border-2 p-6 transition-all duration-200 relative
-        {% if addr.is_default %}border-white/40 shadow-xl{% else %}border-white/10 hover:border-white/20{% endif %}"
-        style="background:{% if addr.is_default %}rgba(255,255,255,0.12){% else %}rgba(255,255,255,0.07){% endif %};">
+      <div class="rounded-2xl border-2 p-6 transition-all duration-200 relative bg-white
+        {% if addr.is_default %}border-accent-hover shadow-xl{% else %}border-ink/10 hover:border-ink/20{% endif %}">
 
         <!-- Top row -->
         <div class="flex items-start justify-between mb-4">
           <div class="flex items-center gap-2">
-            <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border"
-              style="background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.15); color:rgba(255,255,255,0.7);">
+            <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-ink/15 bg-site-bg text-ink/60">
               {{ addr.address_label }}
             </span>
             {% if addr.is_default %}
             <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full"
-              style="background:rgba(74,222,128,0.15); color:rgba(74,222,128,0.9); border:1px solid rgba(74,222,128,0.2);">
+              style="background:rgba(22,163,74,0.10); color:rgba(22,163,74,0.9); border:1px solid rgba(22,163,74,0.25);">
               ✓ Default
             </span>
             {% endif %}
@@ -66,11 +64,11 @@
                 '{{ addr.address_label|escapejs }}',
                 {{ addr.is_default|yesno:'true,false' }}
               )"
-              class="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition">
+              class="w-8 h-8 rounded-lg flex items-center justify-center text-ink/40 hover:text-accent-hover hover:bg-site-bg transition">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
             </button>
             <button onclick="confirmDelete('{{ addr.id }}', '{{ addr.full_name|escapejs }}')"
-              class="w-8 h-8 rounded-lg flex items-center justify-center text-white/30 hover:text-red-400 hover:bg-red-400/10 transition">
+              class="w-8 h-8 rounded-lg flex items-center justify-center text-ink/30 hover:text-red-500 hover:bg-red-50 transition">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
             </button>
           </div>
@@ -78,14 +76,14 @@
 
         <!-- Address details -->
         <div class="space-y-1 mb-5">
-          <p class="text-white font-bold text-base">{{ addr.full_name }}</p>
-          <p class="text-white/60 text-sm">{{ addr.address_line_1 }}</p>
+          <p class="text-ink font-bold text-base">{{ addr.full_name }}</p>
+          <p class="text-ink/60 text-sm">{{ addr.address_line_1 }}</p>
           {% if addr.address_line_2 %}
-          <p class="text-white/60 text-sm">{{ addr.address_line_2 }}</p>
+          <p class="text-ink/60 text-sm">{{ addr.address_line_2 }}</p>
           {% endif %}
-          <p class="text-white/60 text-sm">{{ addr.city }}, {{ addr.state }} — {{ addr.postal_code }}</p>
-          <p class="text-white/60 text-sm">{{ addr.country }}</p>
-          <p class="text-white/80 text-sm font-semibold pt-1">{{ addr.phone }}</p>
+          <p class="text-ink/60 text-sm">{{ addr.city }}, {{ addr.state }} — {{ addr.postal_code }}</p>
+          <p class="text-ink/60 text-sm">{{ addr.country }}</p>
+          <p class="text-ink/80 text-sm font-semibold pt-1">{{ addr.phone }}</p>
         </div>
 
         <!-- Set as default -->
@@ -93,16 +91,15 @@
         <form action="{% url 'set_default_address' addr.id %}" method="POST">
           {% csrf_token %}
           <button type="submit"
-                  class="flex items-center gap-2 text-xs font-bold text-white/40 hover:text-white transition pt-4 border-t"
-                  style="border-color:rgba(255,255,255,0.08);">
-            <div class="w-4 h-4 rounded-full border-2 border-white/20 flex items-center justify-center">
-              <div class="w-1.5 h-1.5 rounded-full bg-white/0 group-hover:bg-white transition"></div>
+                  class="flex items-center gap-2 text-xs font-bold text-ink/40 hover:text-accent-hover transition pt-4 border-t border-ink/10">
+            <div class="w-4 h-4 rounded-full border-2 border-ink/20 flex items-center justify-center">
+              <div class="w-1.5 h-1.5 rounded-full bg-transparent group-hover:bg-accent-hover transition"></div>
             </div>
             Set as Default
           </button>
         </form>
         {% else %}
-        <div class="flex items-center gap-2 text-xs font-bold pt-4 border-t" style="border-color:rgba(255,255,255,0.08); color:rgba(74,222,128,0.8);">
+        <div class="flex items-center gap-2 text-xs font-bold pt-4 border-t border-ink/10" style="color:rgba(22,163,74,0.85);">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
           Primary Delivery Address
         </div>
@@ -115,13 +112,13 @@
     {% else %}
     <!-- Empty state -->
     <div class="text-center py-20">
-      <div class="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-5" style="background:rgba(255,255,255,0.08);">
-        <svg class="w-10 h-10 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <div class="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-5 bg-white border border-ink/10">
+        <svg class="w-10 h-10 text-ink/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       </div>
-      <h3 class="text-white font-bold text-lg mb-2">No addresses saved</h3>
-      <p class="text-white/40 text-sm mb-6">Add your first delivery address to get started.</p>
+      <h3 class="text-ink font-bold text-lg mb-2">No addresses saved</h3>
+      <p class="text-ink/50 text-sm mb-6">Add your first delivery address to get started.</p>
       <button onclick="openAddDrawer()"
-              class="inline-flex items-center gap-2 bg-white text-[#557373] font-bold px-6 py-3 rounded-xl text-sm hover:bg-[#F2EFEA] transition shadow-lg">
+              class="inline-flex items-center gap-2 bg-accent-hover text-white font-bold px-6 py-3 rounded-xl text-sm hover:bg-ink transition shadow-lg">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
         Add First Address
       </button>
@@ -135,15 +132,15 @@
 <div id="overlay" class="fixed inset-0 bg-black/50 z-40 hidden backdrop-blur-sm" onclick="closeDrawer()"></div>
 
 <!-- DRAWER -->
-<div id="drawer" class="fixed top-0 right-0 h-full w-full max-w-md z-50 flex flex-col shadow-2xl translate-x-full transition-transform duration-300 ease-in-out" style="background:#2d4040;">
+<div id="drawer" class="fixed top-0 right-0 h-full w-full max-w-md z-50 flex flex-col shadow-2xl translate-x-full transition-transform duration-300 ease-in-out bg-white">
 
   <!-- Drawer header -->
-  <div class="flex items-start justify-between p-6 border-b flex-shrink-0" style="border-color:rgba(255,255,255,0.08);">
+  <div class="flex items-start justify-between p-6 border-b border-ink/10 flex-shrink-0">
     <div>
-      <h2 id="drawer-title" class="text-lg font-extrabold text-white">Add New Address</h2>
-      <p class="text-white/40 text-xs mt-1">Fill in your delivery details below.</p>
+      <h2 id="drawer-title" class="text-lg font-extrabold text-ink">Add New Address</h2>
+      <p class="text-ink/50 text-xs mt-1">Fill in your delivery details below.</p>
     </div>
-    <button onclick="closeDrawer()" class="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition flex-shrink-0">
+    <button onclick="closeDrawer()" class="w-8 h-8 rounded-lg flex items-center justify-center text-ink/40 hover:text-ink hover:bg-site-bg transition flex-shrink-0">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
   </div>
@@ -154,21 +151,20 @@
     <div class="p-6 space-y-5">
 
       <!-- Section: Contact -->
-      <p class="text-white/30 text-[10px] font-bold uppercase tracking-[0.15em]">Contact Info</p>
+      <p class="text-ink/40 text-[10px] font-bold uppercase tracking-[0.15em]">Contact Info</p>
 
       <!-- Full Name -->
       <div>
-        <label class="block text-xs font-bold text-white/50 uppercase tracking-wider mb-1.5">
-          Full Name <span class="text-red-400">*</span>
+        <label class="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-1.5">
+          Full Name <span class="text-red-500">*</span>
         </label>
         <input type="text" name="full_name" id="f-full-name"
                placeholder="Enter full name"
                value="{% if form.full_name.value %}{{ form.full_name.value }}{% endif %}"
-               class="drawer-input w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 border outline-none transition-all
-               {% if form.full_name.errors %}border-red-400/60{% else %}border-white/10 focus:border-white/30{% endif %}"
-               style="background:rgba(255,255,255,0.06);">
+               class="drawer-input w-full px-4 py-3 rounded-xl text-sm text-ink placeholder-ink/30 border outline-none transition-all bg-site-bg
+               {% if form.full_name.errors %}border-red-400{% else %}border-ink/15 focus:border-accent-hover{% endif %}">
         {% if form.full_name.errors %}
-        <p class="field-err flex items-center gap-1 text-red-400 text-xs mt-1.5 font-medium">
+        <p class="field-err flex items-center gap-1 text-red-500 text-xs mt-1.5 font-medium">
           <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           {{ form.full_name.errors.0 }}
         </p>
@@ -177,18 +173,17 @@
 
       <!-- Phone -->
       <div>
-        <label class="block text-xs font-bold text-white/50 uppercase tracking-wider mb-1.5">
-          Phone Number <span class="text-red-400">*</span>
+        <label class="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-1.5">
+          Phone Number <span class="text-red-500">*</span>
         </label>
         <input type="tel" name="phone" id="f-phone"
                placeholder="10-digit number"
                maxlength="10"
                value="{% if form.phone.value %}{{ form.phone.value }}{% endif %}"
-               class="drawer-input w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 border outline-none transition-all
-               {% if form.phone.errors %}border-red-400/60{% else %}border-white/10 focus:border-white/30{% endif %}"
-               style="background:rgba(255,255,255,0.06);">
+               class="drawer-input w-full px-4 py-3 rounded-xl text-sm text-ink placeholder-ink/30 border outline-none transition-all bg-site-bg
+               {% if form.phone.errors %}border-red-400{% else %}border-ink/15 focus:border-accent-hover{% endif %}">
         {% if form.phone.errors %}
-        <p class="field-err flex items-center gap-1 text-red-400 text-xs mt-1.5 font-medium">
+        <p class="field-err flex items-center gap-1 text-red-500 text-xs mt-1.5 font-medium">
           <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           {{ form.phone.errors.0 }}
         </p>
@@ -196,21 +191,20 @@
       </div>
 
       <!-- Section: Address -->
-      <p class="text-white/30 text-[10px] font-bold uppercase tracking-[0.15em] pt-2">Address Details</p>
+      <p class="text-ink/40 text-[10px] font-bold uppercase tracking-[0.15em] pt-2">Address Details</p>
 
       <!-- Address Line 1 -->
       <div>
-        <label class="block text-xs font-bold text-white/50 uppercase tracking-wider mb-1.5">
-          Address Line 1 <span class="text-red-400">*</span>
+        <label class="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-1.5">
+          Address Line 1 <span class="text-red-500">*</span>
         </label>
         <input type="text" name="address_line_1" id="f-line1"
                placeholder="Street address, P.O. box"
                value="{% if form.address_line_1.value %}{{ form.address_line_1.value }}{% endif %}"
-               class="drawer-input w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 border outline-none transition-all
-               {% if form.address_line_1.errors %}border-red-400/60{% else %}border-white/10 focus:border-white/30{% endif %}"
-               style="background:rgba(255,255,255,0.06);">
+               class="drawer-input w-full px-4 py-3 rounded-xl text-sm text-ink placeholder-ink/30 border outline-none transition-all bg-site-bg
+               {% if form.address_line_1.errors %}border-red-400{% else %}border-ink/15 focus:border-accent-hover{% endif %}">
         {% if form.address_line_1.errors %}
-        <p class="field-err flex items-center gap-1 text-red-400 text-xs mt-1.5 font-medium">
+        <p class="field-err flex items-center gap-1 text-red-500 text-xs mt-1.5 font-medium">
           <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           {{ form.address_line_1.errors.0 }}
         </p>
@@ -219,47 +213,44 @@
 
       <!-- Address Line 2 -->
       <div>
-        <label class="block text-xs font-bold text-white/50 uppercase tracking-wider mb-1.5">
-          Address Line 2 <span class="text-white/20 font-normal normal-case tracking-normal">(optional)</span>
+        <label class="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-1.5">
+          Address Line 2 <span class="text-ink/30 font-normal normal-case tracking-normal">(optional)</span>
         </label>
         <input type="text" name="address_line_2" id="f-line2"
                placeholder="Apartment, suite, floor, etc."
                value="{% if form.address_line_2.value %}{{ form.address_line_2.value }}{% endif %}"
-               class="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 border border-white/10 outline-none transition-all focus:border-white/30"
-               style="background:rgba(255,255,255,0.06);">
+               class="w-full px-4 py-3 rounded-xl text-sm text-ink placeholder-ink/30 border border-ink/15 outline-none transition-all focus:border-accent-hover bg-site-bg">
       </div>
 
       <!-- City + State -->
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs font-bold text-white/50 uppercase tracking-wider mb-1.5">
-            City <span class="text-red-400">*</span>
+          <label class="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-1.5">
+            City <span class="text-red-500">*</span>
           </label>
           <input type="text" name="city" id="f-city"
                  placeholder="City"
                  value="{% if form.city.value %}{{ form.city.value }}{% endif %}"
-                 class="drawer-input w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 border outline-none transition-all
-                 {% if form.city.errors %}border-red-400/60{% else %}border-white/10 focus:border-white/30{% endif %}"
-                 style="background:rgba(255,255,255,0.06);">
+                 class="drawer-input w-full px-4 py-3 rounded-xl text-sm text-ink placeholder-ink/30 border outline-none transition-all bg-site-bg
+                 {% if form.city.errors %}border-red-400{% else %}border-ink/15 focus:border-accent-hover{% endif %}">
           {% if form.city.errors %}
-          <p class="field-err flex items-center gap-1 text-red-400 text-xs mt-1.5 font-medium">
+          <p class="field-err flex items-center gap-1 text-red-500 text-xs mt-1.5 font-medium">
             <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             {{ form.city.errors.0 }}
           </p>
           {% endif %}
         </div>
         <div>
-          <label class="block text-xs font-bold text-white/50 uppercase tracking-wider mb-1.5">
-            State <span class="text-red-400">*</span>
+          <label class="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-1.5">
+            State <span class="text-red-500">*</span>
           </label>
           <input type="text" name="state" id="f-state"
                  placeholder="State"
                  value="{% if form.state.value %}{{ form.state.value }}{% endif %}"
-                 class="drawer-input w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 border outline-none transition-all
-                 {% if form.state.errors %}border-red-400/60{% else %}border-white/10 focus:border-white/30{% endif %}"
-                 style="background:rgba(255,255,255,0.06);">
+                 class="drawer-input w-full px-4 py-3 rounded-xl text-sm text-ink placeholder-ink/30 border outline-none transition-all bg-site-bg
+                 {% if form.state.errors %}border-red-400{% else %}border-ink/15 focus:border-accent-hover{% endif %}">
           {% if form.state.errors %}
-          <p class="field-err flex items-center gap-1 text-red-400 text-xs mt-1.5 font-medium">
+          <p class="field-err flex items-center gap-1 text-red-500 text-xs mt-1.5 font-medium">
             <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             {{ form.state.errors.0 }}
           </p>
@@ -270,30 +261,28 @@
       <!-- Postal Code + Country -->
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs font-bold text-white/50 uppercase tracking-wider mb-1.5">
-            Postal Code <span class="text-red-400">*</span>
+          <label class="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-1.5">
+            Postal Code <span class="text-red-500">*</span>
           </label>
           <input type="text" name="postal_code" id="f-postal"
                  placeholder="6-digit code"
                  maxlength="6"
                  value="{% if form.postal_code.value %}{{ form.postal_code.value }}{% endif %}"
-                 class="drawer-input w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 border outline-none transition-all
-                 {% if form.postal_code.errors %}border-red-400/60{% else %}border-white/10 focus:border-white/30{% endif %}"
-                 style="background:rgba(255,255,255,0.06);">
+                 class="drawer-input w-full px-4 py-3 rounded-xl text-sm text-ink placeholder-ink/30 border outline-none transition-all bg-site-bg
+                 {% if form.postal_code.errors %}border-red-400{% else %}border-ink/15 focus:border-accent-hover{% endif %}">
           {% if form.postal_code.errors %}
-          <p class="field-err flex items-center gap-1 text-red-400 text-xs mt-1.5 font-medium">
+          <p class="field-err flex items-center gap-1 text-red-500 text-xs mt-1.5 font-medium">
             <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             {{ form.postal_code.errors.0 }}
           </p>
           {% endif %}
         </div>
         <div>
-          <label class="block text-xs font-bold text-white/50 uppercase tracking-wider mb-1.5">
-            Country <span class="text-red-400">*</span>
+          <label class="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-1.5">
+            Country <span class="text-red-500">*</span>
           </label>
           <select name="country" id="f-country"
-                  class="w-full px-4 py-3 rounded-xl text-sm text-white border border-white/10 outline-none transition-all focus:border-white/30 cursor-pointer"
-                  style="background:#2d4040;">
+                  class="w-full px-4 py-3 rounded-xl text-sm text-ink border border-ink/15 outline-none transition-all focus:border-accent-hover cursor-pointer bg-site-bg">
             {% with countries="India,United Arab Emirates,United States,United Kingdom,Canada,Australia,Singapore,Malaysia,Sri Lanka,Nepal,Bangladesh,Pakistan,Germany,France,Japan,China" %}
             {% for country in countries.split %}
             <option value="{{ country }}"
@@ -308,7 +297,7 @@
 
       <!-- Address Label -->
       <div>
-        <label class="block text-xs font-bold text-white/50 uppercase tracking-wider mb-2">
+        <label class="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-2">
           Address Label
         </label>
         <div class="flex gap-3">
@@ -317,8 +306,8 @@
             <input type="radio" name="address_label" value="{{ val }}" class="hidden peer"
               {% if form.address_label.value == val %}checked{% elif not form.address_label.value and val == 'Home' %}checked{% endif %}>
             <div class="text-center py-2.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all
-                        border-white/10 text-white/40
-                        peer-checked:border-white/40 peer-checked:text-white peer-checked:bg-white/10">
+                        border-ink/15 text-ink/40
+                        peer-checked:border-accent-hover peer-checked:text-accent-hover peer-checked:bg-accent-hover/10">
               {{ display }}
             </div>
           </label>
@@ -327,30 +316,29 @@
       </div>
 
    <!-- Set as Default toggle -->
-      <div class="flex items-center justify-between p-4 rounded-xl border border-white/10 cursor-pointer"
-           style="background:rgba(255,255,255,0.04);"
+      <div class="flex items-center justify-between p-4 rounded-xl border border-ink/10 cursor-pointer bg-site-bg"
            onclick="toggleDefault()">
         <div>
-          <p class="text-white text-sm font-semibold">Set as default address</p>
-          <p class="text-white/30 text-xs mt-0.5">Use this address for all deliveries</p>
+          <p class="text-ink text-sm font-semibold">Set as default address</p>
+          <p class="text-ink/40 text-xs mt-0.5">Use this address for all deliveries</p>
         </div>
         <input type="checkbox" name="is_default" id="f-default" class="hidden"
           {% if form.is_default.value %}checked{% endif %}>
         <div id="toggle-track" class="w-11 h-6 rounded-full relative transition-all duration-200 flex-shrink-0"
-             style="background:rgba(255,255,255,0.15);">
+             style="background:rgba(17,17,17,0.15);">
           <div id="toggle-knob" class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-200"></div>
         </div>
       </div>
 
-    </div> 
+    </div>
     <!-- Drawer footer -->
-    <div class="p-6 border-t flex gap-3 flex-shrink-0" style="border-color:rgba(255,255,255,0.08);">
+    <div class="p-6 border-t border-ink/10 flex gap-3 flex-shrink-0">
       <button type="button" onclick="closeDrawer()"
-              class="flex-1 py-3 rounded-xl font-bold text-sm border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition">
+              class="flex-1 py-3 rounded-xl font-bold text-sm border border-ink/15 text-ink/60 hover:text-ink hover:border-ink/30 transition">
         Cancel
       </button>
       <button type="submit"
-              class="flex-1 py-3 rounded-xl font-bold text-sm bg-white text-[#557373] hover:bg-[#F2EFEA] transition shadow-lg">
+              class="flex-1 py-3 rounded-xl font-bold text-sm bg-accent-hover text-white hover:bg-ink transition shadow-lg">
         Save Address
       </button>
     </div>
@@ -364,15 +352,15 @@
      data-delete-url-template="{% url 'delete_address' 0 %}"
      class="fixed inset-0 bg-black/50 z-50 items-center justify-center px-4 backdrop-blur-sm"
      style="display:none;">
-  <div class="w-full max-w-sm rounded-2xl p-6 text-center shadow-2xl" style="background:#2d4040;">
-    <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style="background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.2);">
-      <svg class="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+  <div class="w-full max-w-sm rounded-2xl p-6 text-center shadow-2xl bg-white">
+    <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style="background:rgba(220,38,38,0.08); border:1px solid rgba(220,38,38,0.2);">
+      <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
     </div>
-    <h3 class="text-white font-extrabold text-lg mb-2">Delete Address?</h3>
-    <p class="text-white/40 text-sm mb-6" id="delete-msg">This address will be permanently removed.</p>
+    <h3 class="text-ink font-extrabold text-lg mb-2">Delete Address?</h3>
+    <p class="text-ink/50 text-sm mb-6" id="delete-msg">This address will be permanently removed.</p>
     <div class="flex gap-3">
       <button onclick="closeDeleteModal()"
-              class="flex-1 py-3 rounded-xl font-bold text-sm border border-white/10 text-white/60 hover:text-white transition">
+              class="flex-1 py-3 rounded-xl font-bold text-sm border border-ink/15 text-ink/60 hover:text-ink transition">
         Cancel
       </button>
       <form id="delete-form" method="POST" action="" class="flex-1">
@@ -400,10 +388,10 @@ const toggleTrack = document.getElementById('toggle-track');
 function syncToggle() {
   if (defaultCheckbox.checked) {
     toggleKnob.style.transform = 'translateX(20px)';
-    toggleTrack.style.background = 'rgba(255,255,255,0.7)';
+    toggleTrack.style.background = '#2D4330';
   } else {
     toggleKnob.style.transform = 'translateX(0px)';
-    toggleTrack.style.background = 'rgba(255,255,255,0.15)';
+    toggleTrack.style.background = 'rgba(17,17,17,0.15)';
   }
 }
 
@@ -435,7 +423,7 @@ function openAddDrawer() {
   // Clear any leftover error borders
   drawerForm.querySelectorAll('.drawer-input').forEach(el => {
     el.style.borderColor = '';
-    el.style.background = 'rgba(255,255,255,0.06)';
+    el.style.background = '';
   });
 
   showDrawer();

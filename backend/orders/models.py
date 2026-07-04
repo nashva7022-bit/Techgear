@@ -45,13 +45,13 @@ ITEM_STATUS_CHOICES = [
 
 
 # PAYMENT METHOD CHOICES
-
 PAYMENT_METHOD_CHOICES = [
-    ('cod', 'Cash on Delivery'),
-    ('razorpay', 'Razorpay'),
-     
+    ('cod',             'Cash on Delivery'),
+    ('razorpay',        'Razorpay'),
+    ('wallet',          'Wallet'),
+    ('wallet_cod',      'Wallet + Cash on Delivery'),
+    ('wallet_razorpay', 'Wallet + Razorpay'),
 ]
-
 
 
 def generate_order_number():

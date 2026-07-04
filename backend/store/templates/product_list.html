@@ -5,6 +5,7 @@
 {% block title %}Shop — TechGear{% endblock %}
 
 {% block content %}
+<form style="display:none">{% csrf_token %}</form>
 
 <style>
   /* ── Page-level variables matching TechGear palette ── */
@@ -388,12 +389,14 @@
 
 
             
-            <!-- Wishlist heart — goes to product detail to pick variant first -->
-<a href="{% url 'product_detail' product.slug %}"
-   class="wish-btn absolute top-3 right-3"
-   title="Add to wishlist">
+            <!-- Wishlist heart — toggles instantly via AJAX -->
+<button type="button"
+        class="wish-btn absolute top-3 right-3"
+        data-product-id="{{ product.pk }}"
+        title="{% if product.pk in wishlist_ids %}Remove from wishlist{% else %}Add to wishlist{% endif %}"
+        onclick="ajaxToggleWishlistCard({{ product.pk }}, this)">
   <i class="bi {% if product.pk in wishlist_ids %}bi-heart-fill text-red-500{% else %}bi-heart text-[#557373]{% endif %} text-sm"></i>
-</a>
+</button>
           </div>
 
           <!-- Card body -->
@@ -517,5 +520,88 @@
     </div>
   </div>
 </div>
+<script>
+function getCsrfToken() {
+  return document.querySelector('[name=csrfmiddlewaretoken]')?.value
+      || document.cookie.match(/csrftoken=([^;]+)/)?.[1];
+}
+
+async function ajaxToggleWishlistCard(productId, btn) {
+  const icon = btn.querySelector('i');
+  const wasWishlisted = icon.classList.contains('bi-heart-fill');
+
+  // Optimistic UI update
+  icon.classList.toggle('bi-heart-fill', !wasWishlisted);
+  icon.classList.toggle('bi-heart', wasWishlisted);
+  icon.classList.toggle('text-red-500', !wasWishlisted);
+  icon.classList.toggle('text-[#557373]', wasWishlisted);
+  btn.title = wasWishlisted ? 'Add to wishlist' : 'Remove from wishlist';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`{% url 'toggle_wishlist' 0 %}`.replace('0', productId), {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': getCsrfToken(),
+      },
+      body: new URLSearchParams({ next: window.location.pathname }),
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      icon.classList.toggle('bi-heart-fill', data.in_wishlist);
+      icon.classList.toggle('bi-heart', !data.in_wishlist);
+      icon.classList.toggle('text-red-500', data.in_wishlist);
+      icon.classList.toggle('text-[#557373]', !data.in_wishlist);
+      btn.title = data.in_wishlist ? 'Remove from wishlist' : 'Add to wishlist';
+      showCardToast(data.message, data.in_wishlist ? 'success' : 'info');
+      if (data.wishlist_count !== undefined) updateWishlistBadge(data.wishlist_count);
+    } else {
+      // revert on failure
+      icon.classList.toggle('bi-heart-fill', wasWishlisted);
+      icon.classList.toggle('bi-heart', !wasWishlisted);
+      showCardToast(data.error || 'Could not update wishlist.', 'error');
+    }
+  } catch {
+    icon.classList.toggle('bi-heart-fill', wasWishlisted);
+    icon.classList.toggle('bi-heart', !wasWishlisted);
+    showCardToast('Something went wrong.', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function updateWishlistBadge(count) {
+  const badge = document.getElementById('wishlistBadge');
+  if (!badge) return;
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+}
+
+function showCardToast(message, type = 'info') {
+  const existing = document.getElementById('listToast');
+  if (existing) existing.remove();
+  const colors = { success: 'rgba(34,197,94,0.92)', error: 'rgba(239,68,68,0.92)', info: 'rgba(99,102,241,0.92)' };
+  const toast = document.createElement('div');
+  toast.id = 'listToast';
+  toast.style.cssText = `
+    position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(10px);
+    padding:13px 22px; border-radius:14px; font-size:13px; font-weight:600; z-index:9999;
+    box-shadow:0 8px 32px rgba(0,0,0,0.35); background:${colors[type] || colors.info};
+    color:#fff; opacity:0; transition:opacity 0.25s ease, transform 0.25s ease;
+    white-space:nowrap; pointer-events:none;
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { toast.style.opacity = '1'; toast.style.transform = 'translateX(-50%) translateY(0)'; });
+  });
+  setTimeout(() => {
+    toast.style.opacity = '0'; toast.style.transform = 'translateX(-50%) translateY(10px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+</script>
 
 {% endblock %}
