@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns =[
-    # ---------------- PUBLIC / AUTH ----------------
+    
     path('', views.landing, name='landing'),
     path('home/', views.home, name='home'),
 
@@ -10,29 +10,26 @@ urlpatterns =[
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
 
-    # ---------------- OTP ----------------
+    
     path('verify-otp/', views.verify_otp, name='verify_otp'),
     path('resend-otp/', views.resend_otp, name='resend_otp'),
 
-    # ---------------- FORGOT PASSWORD ----------------
+ 
     path('forgot-password/', views.forgot_password, name='forgot_password'),
     path('forgot-otp/', views.forgot_otp, name='forgot_otp'),
     path('reset-password/', views.reset_password, name='reset_password'),
     path('password-reset-sent/', views.password_reset_sent, name='password_reset_sent'),
 
-    # ---------------- SEPARATE PROFILE PAGES ----------------
-    # 1. Display Only
+
     path('dashboard/', views.dashboard, name='dashboard'),
-    # 2. Edit Profile
+
     path('profile/edit/', views.edit_profile, name='edit_profile'),
-    # 3. Change Password
+   
     path('profile/change-password/', views.change_password, name='change_password'),
 
-    # ---------------- SEPARATE EMAIL CHANGE FLOW ----------------
     path('profile/change-email/', views.change_email_request, name='change_email'),
     path('profile/verify-email/', views.verify_email, name='verify_email'),
 
-    # ---------------- SEPARATE ADDRESS PAGES ----------------
     path('addresses/', views.manage_addresses, name='manage_addresses'),
         path('addresses/add/', views.add_address, name='add_address'),
         path('addresses/edit/<int:address_id>/', views.edit_address, name='edit_address'),

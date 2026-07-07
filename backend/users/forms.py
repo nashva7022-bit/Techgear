@@ -7,11 +7,16 @@ from .models import User, Address
 # Regex for real-world names (allows spaces, hyphens, and apostrophes, but NO numbers/symbols)
 NAME_REGEX = r"^[A-Za-z\s\-\']+$"
 
-# ---------------- SIGNUP FORM ----------------
+#SIGNUP FORM 
 class SignupForm(forms.ModelForm):
     full_name = forms.CharField(max_length=100)
     password = forms.CharField(widget=forms.PasswordInput)
     confirm_password = forms.CharField(widget=forms.PasswordInput)
+    referral_code = forms.CharField(
+        max_length=10,
+        required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Referral code (optional)'}),
+    )
 
     class Meta:
         model = User
@@ -59,9 +64,9 @@ class SignupForm(forms.ModelForm):
                     self.add_error('password', e)
         return cleaned_data
 
-# ---------------- EDIT PROFILE FORM ----------------
+#EDIT PROFILE FORM
 class EditProfileForm(forms.ModelForm):
-    # Make fields explicitly optional (except first name)
+    
     first_name = forms.CharField(required=True, error_messages={'required': 'First name is required.'})
     last_name = forms.CharField(required=False)
     phone = forms.CharField(required=False)
@@ -104,39 +109,38 @@ class EditProfileForm(forms.ModelForm):
         return image
     
 
-    # forms.py addition
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
-            field.widget.attrs.update({'class': 'w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-white text-site-bg focus:ring-2 focus:ring-site-bg/20 outline-none transition'})
+            field.widget.attrs.update({'class': 'w-full px-5 py-3.5 rounded-xl border border-ink/15 bg-white text-ink focus:ring-2 focus:ring-accent-hover/30 outline-none transition'})
 
-
-# ---------------- CHANGE PASSWORD FORM ----------------
+#  CHANGE PASSWORD FORM 
 class ChangePasswordForm(forms.Form):
     old_password = forms.CharField(widget=forms.PasswordInput)
     new_password = forms.CharField(widget=forms.PasswordInput)
     confirm_password = forms.CharField(widget=forms.PasswordInput)
 
     def __init__(self, user, *args, **kwargs):
-        # 1. Capture the user passed from the view
+        
         self.user = user
         super().__init__(*args, **kwargs)
         
-        # 2. Add professional Tailwind styling automatically
-        input_style = "w-full px-5 py-4 rounded-xl border border-site-bg/20 bg-white/50 text-site-bg placeholder-site-bg/30 focus:outline-none focus:ring-2 focus:ring-site-bg"
+        
+        input_style = "w-full px-5 py-4 rounded-xl border border-ink/15 bg-white text-ink placeholder-ink/30 focus:outline-none focus:ring-2 focus:ring-accent-hover"
         for field in self.fields.values():
             field.widget.attrs.update({'class': input_style})
 
     def clean_old_password(self):
         old_password = self.cleaned_data.get('old_password')
-        # self.user now exists because of the __init__ above!
+       
         if not self.user.check_password(old_password):
             raise ValidationError("Incorrect old password.")
         return old_password
 
     def clean_new_password(self):
         new_password = self.cleaned_data.get('new_password')
-        # Standard Django validation
+        
         validate_password(new_password, self.user)
         
         return new_password
@@ -151,14 +155,14 @@ class ChangePasswordForm(forms.Form):
         return cleaned_data
 
 
-# ---------------- CHANGE EMAIL FORM ----------------
+# CHANGE EMAIL FORM 
 class ChangeEmailForm(forms.Form):
     email = forms.EmailField(
         label="Email Address",
         widget=forms.EmailInput(attrs={
             'placeholder': 'name@company.com',
             # Tailwind classes for Standard, Curved, and Spaced look
-            'class': 'w-full px-5 py-4 rounded-xl border border-site-bg/20 bg-white text-site-bg focus:ring-2 focus:ring-site-bg outline-none transition duration-200 text-lg'
+           'class': 'w-full px-5 py-4 rounded-xl border border-ink/15 bg-white text-ink focus:ring-2 focus:ring-accent-hover outline-none transition duration-200 text-lg'
         })
     )
 
@@ -171,7 +175,7 @@ class ChangeEmailForm(forms.Form):
         return email
 
 
-# ---------------- ADDRESS FORM ----------------
+# ADDRESS FORM 
 class AddressForm(forms.ModelForm):
     class Meta:
         model = Address

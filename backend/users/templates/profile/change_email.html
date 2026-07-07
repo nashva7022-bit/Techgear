@@ -2,15 +2,15 @@
 {% block title %}Change Email | TechGear{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto py-20 px-6">
-    <div class="bg-card-bg text-site-bg p-10 rounded-[2rem] shadow-2xl">
+<div class="max-w-md mx-auto py-20 px-6 bg-site-bg">
+    <div class="bg-white text-ink p-10 rounded-[2rem] shadow-2xl border border-ink/10">
         <h2 class="text-2xl font-serif font-bold mb-2">Change Email</h2>
-        <p class="text-sm opacity-80 mb-8">Enter your new email. We'll send a code to verify it.</p>
-        
+        <p class="text-sm text-ink/60 mb-8">Enter your new email. We'll send a code to verify it.</p>
+
         <form method="POST" class="space-y-6">
             {% csrf_token %}
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-site-bg/60 mb-2">New Email Address</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-ink/50 mb-2">New Email Address</label>
                 {{ form.email }}
                 {% if form.email.errors %}
             <div class="mt-2 space-y-1">
@@ -22,8 +22,8 @@
             </div>
         {% endif %}
     </div>
-    
-    <button type="submit" class="w-full bg-site-bg text-white font-bold py-4 rounded-xl hover:opacity-90 transition">
+
+    <button type="submit" class="w-full bg-accent-hover text-white font-bold py-4 rounded-xl hover:bg-ink transition">
         Send Verification Code
     </button>
 </form>

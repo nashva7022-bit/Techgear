@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Referrals — TechGear{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-10">
+
+  <!-- Page Header -->
+  <div class="mb-8">
+    <p class="text-xs font-bold text-ink/40 uppercase tracking-widest mb-1">Your Account</p>
+    <h1 class="text-3xl font-extrabold text-ink font-serif">Referral Program</h1>
+    <p class="text-ink/50 text-sm mt-1">Invite friends and earn wallet credits when they shop.</p>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+    <div class="bg-white border border-ink/10 rounded-2xl p-5">
+      <div class="w-9 h-9 rounded-xl bg-accent-hover/10 flex items-center justify-center mb-3">
+        <i class="bi bi-share text-accent-hover text-base"></i>
+      </div>
+      <p class="text-xs font-bold text-ink uppercase tracking-wider mb-1">Step 1</p>
+      <p class="text-sm text-ink/60 leading-relaxed">Share your unique referral link or code with a friend.</p>
+    </div>
+    <div class="bg-white border border-ink/10 rounded-2xl p-5">
+      <div class="w-9 h-9 rounded-xl bg-accent-hover/10 flex items-center justify-center mb-3">
+        <i class="bi bi-person-check text-accent-hover text-base"></i>
+      </div>
+      <p class="text-xs font-bold text-ink uppercase tracking-wider mb-1">Step 2</p>
+      <p class="text-sm text-ink/60 leading-relaxed">They sign up and get ₹100 added to their wallet instantly.</p>
+    </div>
+    <div class="bg-white border border-ink/10 rounded-2xl p-5">
+      <div class="w-9 h-9 rounded-xl bg-accent-hover/10 flex items-center justify-center mb-3">
+        <i class="bi bi-wallet2 text-accent-hover text-base"></i>
+      </div>
+      <p class="text-xs font-bold text-ink uppercase tracking-wider mb-1">Step 3</p>
+      <p class="text-sm text-ink/60 leading-relaxed">When they place their first order, you earn ₹50 in your wallet.</p>
+    </div>
+  </div>
+
+  <!-- YOUR CODE + LINK -->
+  <div class="bg-white border border-ink/10 rounded-2xl p-6 mb-6">
+    <p class="text-xs font-bold text-ink/40 uppercase tracking-widest mb-4">Your Referral Code & Link</p>
+
+    <!-- Code -->
+    <div class="flex items-center gap-3 mb-4">
+      <div class="flex-1 px-5 py-3 rounded-xl bg-nav-bg border border-ink/10 font-mono font-black text-xl text-accent-hover tracking-widest select-all">
+        {{ code_obj.code }}
+      </div>
+      <button onclick="copyCode()"
+              class="flex-shrink-0 flex items-center gap-2 px-4 py-3 rounded-xl bg-accent-hover text-white text-xs font-bold uppercase tracking-widest hover:bg-ink transition">
+        <i class="bi bi-clipboard" id="copyCodeIcon"></i>
+        <span id="copyCodeText">Copy</span>
+      </button>
+    </div>
+
+    <!-- Link -->
+    <div class="flex items-center gap-3">
+      <div class="flex-1 px-4 py-2.5 rounded-xl bg-nav-bg border border-ink/10 text-xs text-ink/50 font-mono truncate select-all" id="referralLinkDisplay">
+        {{ referral_link }}
+      </div>
+      <button onclick="copyLink()"
+              class="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl border border-ink/15 text-ink text-xs font-bold uppercase tracking-widest hover:border-accent-hover hover:text-accent-hover transition">
+        <i class="bi bi-link-45deg" id="copyLinkIcon"></i>
+        <span id="copyLinkText">Copy Link</span>
+      </button>
+    </div>
+
+    <!-- Share buttons -->
+    <div class="flex items-center gap-2 mt-4 pt-4 border-t border-ink/8">
+      <p class="text-xs text-ink/40 font-semibold mr-1">Share via</p>
+      <a href="https://wa.me/?text=Use%20my%20referral%20code%20{{ code_obj.code }}%20on%20TechGear%20and%20get%20₹100%20off%20your%20first%20order!%20{{ referral_link|urlencode }}"
+         target="_blank"
+         class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 text-green-700 text-xs font-bold hover:bg-green-500/20 transition">
+        <i class="bi bi-whatsapp text-sm"></i> WhatsApp
+      </a>
+      <a href="https://t.me/share/url?url={{ referral_link|urlencode }}&text=Use%20my%20TechGear%20referral%20code%20{{ code_obj.code }}%20and%20get%20₹100%20welcome%20bonus!"
+         target="_blank"
+         class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-700 text-xs font-bold hover:bg-blue-500/20 transition">
+        <i class="bi bi-telegram text-sm"></i> Telegram
+      </a>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="grid grid-cols-3 gap-4 mb-8">
+    <div class="bg-white border border-ink/10 rounded-2xl p-5 text-center">
+      <p class="text-2xl font-black text-ink font-serif">{{ total_referred }}</p>
+      <p class="text-xs text-ink/40 font-semibold uppercase tracking-wider mt-1">Friends Referred</p>
+    </div>
+    <div class="bg-white border border-ink/10 rounded-2xl p-5 text-center">
+      <p class="text-2xl font-black text-accent-hover font-serif">{{ total_rewarded }}</p>
+      <p class="text-xs text-ink/40 font-semibold uppercase tracking-wider mt-1">Rewards Earned</p>
+    </div>
+    <div class="bg-white border border-ink/10 rounded-2xl p-5 text-center">
+      <p class="text-2xl font-black text-amber-600 font-serif">{{ pending_rewards }}</p>
+      <p class="text-xs text-ink/40 font-semibold uppercase tracking-wider mt-1">Pending</p>
+    </div>
+  </div>
+
+  <!-- REFERRAL HISTORY -->
+  <div class="bg-white border border-ink/10 rounded-2xl overflow-hidden">
+    <div class="px-6 py-4 border-b border-ink/8 flex items-center justify-between">
+      <p class="text-xs font-bold text-ink uppercase tracking-widest">Referral History</p>
+      {% if page_obj.paginator.count > 0 %}
+      <p class="text-xs text-ink/40">{{ page_obj.paginator.count }} total</p>
+      {% endif %}
+    </div>
+
+    {% if page_obj.object_list %}
+      <div class="divide-y divide-ink/6">
+        {% for usage in page_obj %}
+        <div class="flex items-center justify-between px-6 py-4">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-nav-bg border border-ink/10 flex items-center justify-center flex-shrink-0">
+              <i class="bi bi-person text-ink/40 text-sm"></i>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-ink">
+                {{ usage.referred_user.get_full_name|default:usage.referred_user.email }}
+              </p>
+              <p class="text-xs text-ink/40 mt-0.5">
+                Joined {{ usage.created_at|date:"d M Y" }}
+              </p>
+            </div>
+          </div>
+          <div class="text-right">
+            {% if usage.referrer_rewarded %}
+              <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-500/10 text-green-700 text-xs font-bold">
+                <i class="bi bi-check-circle-fill text-xs"></i>
+                ₹{{ usage.referrer_reward_amount }} Earned
+              </span>
+              {% if usage.rewarded_at %}
+              <p class="text-[10px] text-ink/30 mt-1">{{ usage.rewarded_at|date:"d M Y" }}</p>
+              {% endif %}
+            {% else %}
+              <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/10 text-amber-700 text-xs font-bold">
+                <i class="bi bi-clock text-xs"></i>
+                Awaiting first order
+              </span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if page_obj.has_other_pages %}
+      <div class="px-6 py-4 border-t border-ink/8 flex items-center justify-between">
+        <div>
+          {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}"
+             class="text-xs font-bold text-ink/50 hover:text-ink transition flex items-center gap-1">
+            <i class="bi bi-arrow-left"></i> Previous
+          </a>
+          {% endif %}
+        </div>
+        <p class="text-xs text-ink/40">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </p>
+        <div>
+          {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}"
+             class="text-xs font-bold text-ink/50 hover:text-ink transition flex items-center gap-1">
+            Next <i class="bi bi-arrow-right"></i>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+    {% else %}
+      <!-- Empty state -->
+      <div class="flex flex-col items-center justify-center py-16 px-6 text-center">
+        <div class="w-14 h-14 rounded-2xl bg-nav-bg border border-ink/10 flex items-center justify-center mb-4">
+          <i class="bi bi-people text-ink/25 text-2xl"></i>
+        </div>
+        <p class="text-sm font-bold text-ink mb-1">No referrals yet</p>
+        <p class="text-xs text-ink/40 max-w-xs leading-relaxed">
+          Share your code with friends. When they sign up and place their first order, you'll see them here.
+        </p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+function copyCode() {
+  const code = '{{ code_obj.code }}';
+  navigator.clipboard.writeText(code).then(() => {
+    document.getElementById('copyCodeText').textContent = 'Copied!';
+    document.getElementById('copyCodeIcon').className = 'bi bi-check2';
+    setTimeout(() => {
+      document.getElementById('copyCodeText').textContent = 'Copy';
+      document.getElementById('copyCodeIcon').className = 'bi bi-clipboard';
+    }, 2000);
+  });
+}
+
+function copyLink() {
+  const link = '{{ referral_link }}';
+  navigator.clipboard.writeText(link).then(() => {
+    document.getElementById('copyLinkText').textContent = 'Copied!';
+    document.getElementById('copyLinkIcon').className = 'bi bi-check2';
+    setTimeout(() => {
+      document.getElementById('copyLinkText').textContent = 'Copy Link';
+      document.getElementById('copyLinkIcon').className = 'bi bi-link-45deg';
+    }, 2000);
+  });
+}
+</script>
+{% endblock %}

@@ -226,6 +226,30 @@
             </div>
           </div>
         {% endif %}
+        <!-- Referral Code (optional) -->
+<div>
+  <label class="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-1.5">
+    Referral Code <span class="text-ink/30 font-normal normal-case">(optional)</span>
+  </label>
+  <input
+    type="text"
+    name="referral_code"
+    id="referralCodeInput"
+    value="{{ ref_code|default:'' }}"
+    placeholder="Enter referral code"
+    maxlength="10"
+    style="text-transform:uppercase"
+    class="w-full px-4 py-3 rounded-xl text-sm text-ink placeholder-ink/30 border border-ink/15 outline-none transition-all bg-site-bg focus:border-accent-hover"
+  >
+  {% if ref_code %}
+  <p class="text-green-600 text-xs mt-1.5 font-medium flex items-center gap-1">
+    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+    </svg>
+    Referral code applied — you'll get ₹100 welcome bonus after signup!
+  </p>
+  {% endif %}
+</div>
 
         <!-- Submit -->
         <button type="submit"

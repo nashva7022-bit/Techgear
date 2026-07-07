@@ -11,30 +11,23 @@
       </svg>
     </a>
     <div>
-      <h1 class="text-xl font-black text-gray-900">New Product Offer</h1>
+      <h1 class="text-xl font-black text-gray-900">{% if is_edit %}Edit Product Offer{% else %}New Product Offer{% endif %}</h1>
       <p class="text-xs text-gray-400 mt-0.5">Apply a discount to a specific product</p>
     </div>
   </div>
 
   {% if messages %}
 <div class="mb-5 flex flex-col gap-2">
-
   {% for message in messages %}
-
   <div class="px-4 py-3 rounded-xl text-sm font-medium shadow-sm
-
       {% if message.tags == 'success' %}
       bg-green-50 border border-green-100 text-green-600
       {% else %}
       bg-red-50 border border-red-100 text-red-600
       {% endif %}">
-
       {{ message }}
-
   </div>
-
   {% endfor %}
-
 </div>
 {% endif %}
   <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -49,6 +42,12 @@
     <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">
       Product <span class="text-red-400">*</span>
     </label>
+    {% if is_edit %}
+    <div class="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-sm font-medium text-gray-500">
+      {{ offer.product.name }} · {{ offer.product.category.name }}
+    </div>
+    <p class="text-[11px] text-gray-400 mt-1.5">Product can't be changed — delete and create a new offer instead</p>
+    {% else %}
     <div class="relative">
       <select name="product"
               class="w-full px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-black transition
@@ -70,11 +69,11 @@
       <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
       {{ field_errors.product }}
     </p>
-
     {% else %}
 <p class="text-[11px] text-gray-400 mt-1.5">
    Discount applies only to this product
 </p>
+    {% endif %}
     {% endif %}
   </div>
 
@@ -85,7 +84,7 @@
     <div class="relative">
       <input type="number" name="discount_percent" min="1" max="90" step="0.01"
              placeholder="e.g. 20"
-             value="{{ submitted.discount_percent|default:'' }}"
+             value="{% if submitted.discount_percent %}{{ submitted.discount_percent }}{% elif is_edit %}{{ offer.discount_percent }}{% endif %}"
              class="w-full px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition pr-10
                     {% if field_errors.discount_percent %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %}">
       <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">%</span>
@@ -106,7 +105,7 @@
         Start Date <span class="text-red-400">*</span>
       </label>
       <input type="date" name="start_date"
-             value="{{ submitted.start_date|default:'' }}"
+             value="{% if submitted.start_date %}{{ submitted.start_date }}{% elif is_edit %}{{ offer.start_date|date:'Y-m-d' }}{% endif %}"
              class="w-full px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition
                     {% if field_errors.start_date %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %}">
       {% if field_errors.start_date %}
@@ -114,7 +113,6 @@
         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
         {{ field_errors.start_date }}
       </p>
-
       {% else %}
 <p class="text-[11px] text-gray-400 mt-1.5">
    Offer activation date
@@ -126,7 +124,7 @@
         End Date <span class="text-red-400">*</span>
       </label>
       <input type="date" name="end_date"
-             value="{{ submitted.end_date|default:'' }}"
+             value="{% if submitted.end_date %}{{ submitted.end_date }}{% elif is_edit %}{{ offer.end_date|date:'Y-m-d' }}{% endif %}"
              class="w-full px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black transition
                     {% if field_errors.end_date %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %}">
       {% if field_errors.end_date %}
@@ -138,7 +136,6 @@
 <p class="text-[11px] text-gray-400 mt-1.5">
    Offer expiry date
 </p>
-
       {% endif %}
     </div>
   </div>
@@ -150,7 +147,7 @@
     </a>
     <button type="submit"
             class="flex-1 py-3 bg-black text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition">
-      Create Offer
+      {% if is_edit %}Save Changes{% else %}Create Offer{% endif %}
     </button>
   </div>
 

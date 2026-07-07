@@ -307,6 +307,13 @@ def place_cod_order(user, cart, address, use_wallet=False, coupon_code=None) -> 
         if coupon:
             _record_coupon_usage(coupon, user, order)
 
+            # Referral reward — credit referrer if this is referred user's first order
+        try:
+            from referrals.services import reward_referrer_on_first_order
+            reward_referrer_on_first_order(order)
+        except Exception:
+            logger.exception("Referral reward failed for order %s", order.order_number)
+
         # Activity log.
         notes = ["Order placed via Cash on Delivery."]
         if coupon:
@@ -530,6 +537,12 @@ def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
     with db_transaction.atomic():
         order = order_item.order
 
+        # Capture BEFORE any changes
+        item_subtotal  = _d(order_item.subtotal)
+        order_subtotal = _d(order.subtotal)
+        order_wallet   = _d(order.wallet_amount) if order.wallet_amount else Decimal("0.00")
+        order_paid     = _d(order.paid_amount) if order.paid_amount else Decimal("0.00")
+
         item_wallet_refund = _calculate_item_wallet_refund(order_item, order)
 
         order_item.item_status = "returned"
@@ -539,36 +552,32 @@ def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
             order_item.variant.stock += order_item.quantity
             order_item.variant.save(update_fields=["stock"])
 
+        # Recalculate AFTER capturing values
         _recalculate_order_total(order)
 
         refund_amount = Decimal("0.00")
 
-        if order.user:
+        if order.user and order_subtotal > 0:
             from wallet.models import Wallet
+            proportion = item_subtotal / order_subtotal
 
-            item_subtotal  = _d(order_item.subtotal)
-            order_subtotal = _d(order.subtotal) if order.subtotal else Decimal("0.00")
+            if order_wallet > 0:
+                wallet_share = (order_wallet * proportion).quantize(
+                    Decimal("0.01"), rounding=ROUND_DOWN
+                )
+                refund_amount += wallet_share
 
-            if order_subtotal > 0:
-                proportion = item_subtotal / order_subtotal
+            if order.payment_method in ("razorpay", "wallet_razorpay") and order_paid > 0:
+                razorpay_share = (order_paid * proportion).quantize(
+                    Decimal("0.01"), rounding=ROUND_DOWN
+                )
+                refund_amount += razorpay_share
 
-                if order.wallet_amount and order.wallet_amount > 0:
-                    wallet_share = (_d(order.wallet_amount) * proportion).quantize(
-                        Decimal("0.01"), rounding=ROUND_DOWN
-                    )
-                    refund_amount += wallet_share
-
-                if order.payment_method in ("razorpay", "wallet_razorpay") and order.paid_amount > 0:
-                    razorpay_share = (_d(order.paid_amount) * proportion).quantize(
-                        Decimal("0.01"), rounding=ROUND_DOWN
-                    )
-                    refund_amount += razorpay_share
-
-                if order.coupon_discount and order.coupon_discount > 0:
-                    coupon_share = (_d(order.coupon_discount) * proportion).quantize(
-                        Decimal("0.01"), rounding=ROUND_DOWN
-                    )
-                    refund_amount = max(Decimal("0.00"), refund_amount - coupon_share)
+            if order.coupon_discount and order.coupon_discount > 0:
+                coupon_share = (_d(order.coupon_discount) * proportion).quantize(
+                    Decimal("0.01"), rounding=ROUND_DOWN
+                )
+                refund_amount = max(Decimal("0.00"), refund_amount - coupon_share)
 
             if refund_amount > 0:
                 wallet, _ = Wallet.objects.get_or_create(user=order.user)
@@ -582,11 +591,11 @@ def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
                 )
                 order.wallet_amount = max(
                     Decimal("0.00"),
-                    _d(order.wallet_amount) - item_wallet_refund,
+                    order_wallet - item_wallet_refund,
                 )
                 order.paid_amount = max(
                     Decimal("0.00"),
-                    _d(order.paid_amount) - refund_amount,
+                    order_paid - refund_amount,
                 )
                 order.save(update_fields=["wallet_amount", "paid_amount", "updated_at"])
 
@@ -597,7 +606,7 @@ def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
             new_status=order.status,
             note=(
                 f'Return approved for "{order_item.product_name}". '
-                f"Stock restored. ₹{refund_amount} refunded to wallet (proportional to amount paid)."
+                f"Stock restored. ₹{refund_amount} refunded to wallet."
             ),
         )
 
@@ -838,6 +847,13 @@ def verify_razorpay_payment(
 
             if coupon:
                 _record_coupon_usage(coupon, user, order)
+
+            # Referral reward — inside transaction so it rolls back if order fails
+            try:
+                from referrals.services import reward_referrer_on_first_order
+                reward_referrer_on_first_order(order)
+            except Exception:
+                logger.exception("Referral reward failed for order %s", order.order_number)
 
             notes = ["Order confirmed. Payment received via Razorpay."]
             if wallet_deduction > 0:

@@ -22,5 +22,12 @@ urlpatterns = [
 
     path('wallets/<int:user_id>/credit/', views.admin_wallet_credit, name='admin_wallet_credit'),
 
+    path('referrals/', views.admin_referral_list, name='admin_referral_list'),
+ 
+    path('referrals/settings/', views.admin_referral_settings, name='admin_referral_settings'),
+ 
+    path('referrals/<int:usage_id>/mark-rewarded/', views.admin_referral_mark_rewarded, name='admin_referral_mark_rewarded'),
+ 
+
     
 ]

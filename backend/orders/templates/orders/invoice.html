@@ -27,7 +27,7 @@
     body {
       font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
       font-size: 12px;
-      color: #1a1a1a;
+      color: #111111;
       background: #ffffff;
       line-height: 1.5;
     }
@@ -83,10 +83,11 @@
 
     .text-muted   { color: #6b7280; }
     .text-light   { color: #9ca3af; }
-    .text-dark    { color: #111827; }
+    .text-dark    { color: #111111; }
     .text-green   { color: #16a34a; }
     .text-red     { color: #dc2626; }
     .text-purple  { color: #7c3aed; }
+    .text-accent  { color: #2D4330; }
 
     /* ── SPACING ── */
     .mb-1  { margin-bottom: 4px; }
@@ -103,7 +104,7 @@
     /* ── INVOICE HEADER ── */
     .invoice-header {
       padding-bottom: 24px;
-      border-bottom: 2px solid #1a1a1a;
+      border-bottom: 2px solid #2D4330;
       margin-bottom: 28px;
     }
     /* The thick border at the top separates the brand header from
@@ -113,7 +114,7 @@
       font-size: 28px;
       font-weight: 900;
       letter-spacing: -0.03em;
-      color: #1a1a1a;
+      color: #2D4330;
     }
 
     .brand-tagline {
@@ -137,7 +138,7 @@
     .invoice-number {
       font-size: 18px;
       font-weight: 900;
-      color: #1a1a1a;
+      color: #111111;
       text-align: right;
       font-family: 'Courier New', monospace;
       /* Monospace font for the order number looks clean and
@@ -149,7 +150,7 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 16px;
-      background: #f9fafb;
+      background: #F9F9F6;
       border: 1px solid #e5e7eb;
       border-radius: 10px;
       padding: 16px 20px;
@@ -171,7 +172,7 @@
     .meta-value {
       font-size: 12px;
       font-weight: 700;
-      color: #1a1a1a;
+      color: #111111;
     }
 
     /* ── ADDRESS SECTION ── */
@@ -185,7 +186,7 @@
        This is the standard invoice layout. */
 
     .address-box {
-      background: #f9fafb;
+      background: #F9F9F6;
       border: 1px solid #e5e7eb;
       border-radius: 10px;
       padding: 16px;
@@ -219,7 +220,7 @@
       text-transform: uppercase;
       letter-spacing: 0.1em;
       padding: 10px 12px;
-      background: #f3f4f6;
+      background: #F9F9F6;
       border-bottom: 1px solid #e5e7eb;
       /* Header row has a grey background so it's clearly different
          from the data rows. */
@@ -247,7 +248,7 @@
     }
 
     .items-table tbody tr:nth-child(even) {
-      background: #fafafa;
+      background: #fafaf8;
       /* Alternating row colours (white/light grey) make long tables
          much easier to read. Called "zebra striping". */
     }
@@ -256,7 +257,7 @@
     .product-name {
       font-weight: 700;
       font-size: 12px;
-      color: #1a1a1a;
+      color: #111111;
       margin-bottom: 4px;
     }
 
@@ -265,7 +266,7 @@
       font-size: 9px;
       font-weight: 600;
       color: #6b7280;
-      background: #f3f4f6;
+      background: #F9F9F6;
       border: 1px solid #e5e7eb;
       border-radius: 4px;
       padding: 1px 6px;
@@ -331,7 +332,7 @@
     }
 
     .totals-row.grand-total {
-      border-top: 2px solid #1a1a1a;
+      border-top: 2px solid #2D4330;
       border-bottom: none;
       padding-top: 10px;
       margin-top: 4px;
@@ -340,25 +341,25 @@
     }
 
     .totals-label { color: #6b7280; }
-    .totals-value { font-weight: 700; color: #1a1a1a; }
-    .totals-value.discount { color: #16a34a; }
+    .totals-value { font-weight: 700; color: #111111; }
+    .totals-value.discount { color: #2D4330; }
 
     .savings-box {
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
+      background: rgba(45,67,48,0.06);
+      border: 1px solid rgba(45,67,48,0.2);
       border-radius: 8px;
       padding: 10px 14px;
       margin-top: 10px;
       font-size: 10px;
       font-weight: 700;
-      color: #15803d;
+      color: #2D4330;
       text-align: center;
     }
     /* "You saved ₹X" badge — always nice to show on invoices. */
 
     /* ── STATUS TIMELINE (compact for PDF) ── */
     .timeline-section {
-      background: #f9fafb;
+      background: #F9F9F6;
       border: 1px solid #e5e7eb;
       border-radius: 10px;
       padding: 16px 20px;
@@ -391,7 +392,7 @@
       margin-top: 3px;
     }
 
-    .timeline-dot-pdf.done { background: #4ade80; }
+    .timeline-dot-pdf.done { background: #2D4330; }
 
     /* ── FOOTER ── */
     .invoice-footer {
@@ -648,15 +649,15 @@
       <div class="totals-row">
         <span class="totals-label">Shipping</span>
         {% if order.shipping_charge == 0 %}
-        <span class="totals-value" style="color:#15803d;">FREE</span>
+        <span class="totals-value" style="color:#2D4330;">FREE</span>
         {% else %}
         <span class="totals-value">₹{{ order.shipping_charge }}</span>
         {% endif %}
       </div>
 
       <div class="totals-row grand-total">
-        <span style="font-weight:900; font-size:13px; color:#1a1a1a;">Total</span>
-        <span style="font-weight:900; font-size:15px; color:#1a1a1a;">₹{{ order.total_amount }}</span>
+        <span style="font-weight:900; font-size:13px; color:#111111;">Total</span>
+        <span style="font-weight:900; font-size:15px; color:#111111;">₹{{ order.total_amount }}</span>
       </div>
 
       {% if order.discount_amount > 0 %}
@@ -713,3 +714,8 @@
       <div class="mt-1">
         For support, contact us at support@techgear.com
       </div>
+    </div>
+  </div>
+
+</body>
+</html>

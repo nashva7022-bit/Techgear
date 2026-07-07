@@ -233,3 +233,126 @@ def delete_category_offer(request, pk):
     offer.delete()
     messages.success(request, 'Category offer deleted.')
     return redirect('offers:offer_list')
+
+
+
+
+
+@staff_member_required(login_url='admin_login')
+@never_cache
+def product_offer_edit(request, pk):
+    offer = get_object_or_404(ProductOffer.objects.select_related('product'), pk=pk)
+
+    if request.method == 'POST':
+        discount_percent = request.POST.get('discount_percent', '').strip()
+        start_date = request.POST.get('start_date', '').strip()
+        end_date = request.POST.get('end_date', '').strip()
+
+        field_errors = {}
+        today = timezone.now().date()
+
+        try:
+            dp = float(discount_percent) if discount_percent else 0
+        except ValueError:
+            dp = 0
+
+        if not discount_percent or not (0 < dp <= 90):
+            field_errors['discount_percent'] = 'Must be between 1% and 90%.'
+
+        if not start_date:
+            field_errors['start_date'] = 'Start date is required.'
+
+        if not end_date:
+            field_errors['end_date'] = 'End date is required.'
+
+        if start_date and end_date:
+            try:
+                start = datetime.strptime(start_date, "%Y-%m-%d").date()
+                end = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+                if end < start:
+                    field_errors['end_date'] = 'End date must be after start date.'
+
+            except ValueError:
+                field_errors['start_date'] = 'Invalid date format.'
+
+        if not field_errors:
+            offer.discount_percent = discount_percent
+            offer.start_date = start_date
+            offer.end_date = end_date
+            offer.save()
+
+            messages.success(request, f'Offer updated for "{offer.product.name}".')
+            return redirect('offers:offer_list')
+
+        return render(request, 'offers/product_offer_form.html', {
+            'offer': offer,
+            'field_errors': field_errors,
+            'submitted': request.POST,
+            'is_edit': True,
+        })
+
+    return render(request, 'offers/product_offer_form.html', {
+        'offer': offer,
+        'is_edit': True,
+    })
+
+
+@staff_member_required(login_url='admin_login')
+@never_cache
+def category_offer_edit(request, pk):
+    offer = get_object_or_404(CategoryOffer.objects.select_related('category'), pk=pk)
+
+    if request.method == 'POST':
+        discount_percent = request.POST.get('discount_percent', '').strip()
+        start_date = request.POST.get('start_date', '').strip()
+        end_date = request.POST.get('end_date', '').strip()
+
+        field_errors = {}
+        today = timezone.now().date()
+
+        try:
+            dp = float(discount_percent) if discount_percent else 0
+        except ValueError:
+            dp = 0
+
+        if not discount_percent or not (0 < dp <= 90):
+            field_errors['discount_percent'] = 'Must be between 1% and 90%.'
+
+        if not start_date:
+            field_errors['start_date'] = 'Start date is required.'
+
+        if not end_date:
+            field_errors['end_date'] = 'End date is required.'
+
+        if start_date and end_date:
+            try:
+                start = datetime.strptime(start_date, "%Y-%m-%d").date()
+                end = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+                if end < start:
+                    field_errors['end_date'] = 'End date must be after start date.'
+
+            except ValueError:
+                field_errors['start_date'] = 'Invalid date format.'
+
+        if not field_errors:
+            offer.discount_percent = discount_percent
+            offer.start_date = start_date
+            offer.end_date = end_date
+            offer.save()
+
+            messages.success(request, f'Offer updated for "{offer.category.name}".')
+            return redirect('offers:offer_list')
+
+        return render(request, 'offers/category_offer_form.html', {
+            'offer': offer,
+            'field_errors': field_errors,
+            'submitted': request.POST,
+            'is_edit': True,
+        })
+
+    return render(request, 'offers/category_offer_form.html', {
+        'offer': offer,
+        'is_edit': True,
+    })

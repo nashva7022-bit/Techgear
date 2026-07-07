@@ -5,20 +5,32 @@
 
 {% block content %}
 <style>
-  :root { --teal: #2F4F4F; --accent: #F2EFEA; }
+  :root {
+    --bg:      #F9F9F6;
+    --surface: #FFFFFF;
+    --alt-bg:  #EFEDE6;
+    --accent:  #2D4330;
+    --ink:     #111111;
+    --muted:   rgba(17,17,17,0.45);
+    --border:  rgba(17,17,17,0.10);
+  }
+
+  body { background-color: var(--bg); color: var(--ink); }
+
   .pay-card {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 24px;
     padding: 40px;
     max-width: 480px;
     margin: 60px auto;
     text-align: center;
+    box-shadow: 0 1px 3px rgba(17,17,17,0.04);
   }
   .spinner {
     width: 48px; height: 48px;
-    border: 3px solid rgba(255,255,255,0.1);
-    border-top-color: #fff;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin: 0 auto 24px;
@@ -26,40 +38,40 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .amount-badge {
     display: inline-block;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
+    background: var(--alt-bg);
+    border: 1px solid var(--border);
     border-radius: 99px;
     padding: 8px 20px;
     font-size: 22px;
     font-weight: 900;
-    color: #fff;
+    color: var(--ink);
     margin: 16px 0 24px;
   }
   .retry-btn {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 12px 28px; border-radius: 12px;
-    background: #fff; color: var(--teal);
+    background: var(--accent); color: #fff;
     font-size: 13px; font-weight: 800;
     letter-spacing: 0.05em; text-transform: uppercase;
     border: none; cursor: pointer; transition: background 0.15s;
     margin-top: 16px;
   }
-  .retry-btn:hover { background: var(--accent); }
+  .retry-btn:hover { background: #111111; }
   .cancel-link {
     display: block; margin-top: 14px;
-    font-size: 12px; color: rgba(255,255,255,0.35);
+    font-size: 12px; color: var(--muted);
     text-decoration: none; transition: color 0.15s;
   }
-  .cancel-link:hover { color: rgba(255,255,255,0.6); }
+  .cancel-link:hover { color: var(--ink); }
 </style>
 
 <div class="container mx-auto px-6">
   <div class="pay-card">
     <div class="spinner" id="spinner"></div>
-    <h1 class="text-xl font-bold text-white mb-2">Adding Money to Wallet</h1>
-    <p class="text-white/40 text-sm mb-2">Please do not close this page</p>
+    <h1 class="text-xl font-bold text-ink mb-2">Adding Money to Wallet</h1>
+    <p class="text-ink/40 text-sm mb-2">Please do not close this page</p>
     <div class="amount-badge">₹{{ amount_display }}</div>
-    <p class="text-white/40 text-xs">Secure payment via Razorpay</p>
+    <p class="text-ink/40 text-xs">Secure payment via Razorpay</p>
 
     <button id="retryBtn" class="retry-btn hidden" onclick="openRazorpay()">
       <i class="bi bi-arrow-clockwise"></i> Try Again
@@ -93,7 +105,7 @@ const RZP_OPTIONS = {
     email:   "{{ user_email|escapejs }}",
     contact: "{{ user_phone|escapejs }}",
   },
-  theme: { color: '#2F4F4F' },
+  theme: { color: '#2D4330' },
   handler: function(response) {
     paymentDone = true;
     document.getElementById('rzp_payment_id').value = response.razorpay_payment_id;

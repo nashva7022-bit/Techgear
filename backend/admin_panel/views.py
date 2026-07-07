@@ -520,3 +520,168 @@ def admin_wallet_credit(request, user_id):
         'wallet_user': user,
         'wallet':      wallet,
     })
+
+
+
+
+
+#  REFERRAL MANAGEMENT 
+@never_cache
+@staff_member_required(login_url='admin_login')
+def admin_referral_list(request):
+    from referrals.models import ReferralUsage
+
+    usages = (
+        ReferralUsage.objects
+        .select_related('referrer', 'referred_user')
+        .order_by('-created_at')
+    )
+
+    # Search by referrer OR referred email 
+    search = request.GET.get('search', '').strip()
+    if search:
+        usages = usages.filter(
+            Q(referrer__email__icontains=search) |
+            Q(referred_user__email__icontains=search)
+        )
+
+    # Filter: all / pending / completed 
+    status_filter = request.GET.get('status', 'all')
+    if status_filter == 'pending':
+        usages = usages.filter(referrer_rewarded=False)
+    elif status_filter == 'completed':
+        usages = usages.filter(referrer_rewarded=True)
+    else:
+        status_filter = 'all'
+
+    # Stats
+    all_usages = ReferralUsage.objects.all()
+    total_referrals = all_usages.count()
+    total_rewarded  = all_usages.filter(referrer_rewarded=True).count()
+    total_pending   = all_usages.filter(referrer_rewarded=False).count()
+
+    total_rewards_paid = all_usages.filter(referrer_rewarded=True).aggregate(
+        t=Sum('referrer_reward_amount')
+    )['t'] or 0
+    total_signup_bonus = all_usages.aggregate(
+        t=Sum('referred_reward_amount')
+    )['t'] or 0
+
+    # Most active referrers (top 10 by number of people invited)
+    top_referrers = (
+        all_usages.filter(referrer__isnull=False)
+        .values('referrer__email')
+        .annotate(
+            invited=Count('id'),
+            paid=Count('id', filter=Q(referrer_rewarded=True)),
+        )
+        .order_by('-invited')[:10]
+    )
+
+    # Pagination 
+    paginator = Paginator(usages, 20)
+    page_obj  = paginator.get_page(request.GET.get('page'))
+
+    settings_obj = SiteSettings.get()
+
+    context = {
+        'page_obj':           page_obj,
+        'search':             search,
+        'status_filter':      status_filter,
+        'total_referrals':    total_referrals,
+        'total_rewarded':     total_rewarded,
+        'total_pending':      total_pending,
+        'total_rewards_paid': total_rewards_paid,
+        'total_signup_bonus': total_signup_bonus,
+        'top_referrers':      top_referrers,
+        'referral_enabled':   settings_obj.referral_enabled,
+    }
+    return render(request, 'admin_panel/referral_list.html', context)
+
+
+#  REFERRAL MANAGEMENT 
+@never_cache
+@staff_member_required(login_url='admin_login')
+def admin_referral_settings(request):
+    from decimal import Decimal, InvalidOperation
+
+    settings_obj = SiteSettings.get()
+
+    if request.method == 'POST':
+        enabled      = request.POST.get('referral_enabled') == 'on'
+        referrer_raw = request.POST.get('referrer_reward_amount', '').strip()
+        referred_raw = request.POST.get('referred_reward_amount', '').strip()
+
+        try:
+            referrer_amt = Decimal(referrer_raw)
+            referred_amt = Decimal(referred_raw)
+            if referrer_amt < 0 or referred_amt < 0:
+                raise ValueError()
+        except (InvalidOperation, ValueError, TypeError):
+            messages.error(request, 'Please enter valid reward amounts (0 or more).')
+            return redirect('admin_referral_settings')
+
+        settings_obj.referral_enabled       = enabled
+        settings_obj.referrer_reward_amount = referrer_amt
+        settings_obj.referred_reward_amount = referred_amt
+        settings_obj.save()
+
+        messages.success(request, 'Referral settings saved successfully.')
+        return redirect('admin_referral_settings')
+
+    return render(request, 'admin_panel/referral_settings.html', {
+        'settings': settings_obj,
+    })
+
+
+#  REFERRAL MANAGEMENT — MANUALLY MARK A REFERRAL AS REWARDED
+@never_cache
+@staff_member_required(login_url='admin_login')
+@require_POST
+def admin_referral_mark_rewarded(request, usage_id):
+    from django.db import transaction
+    from django.utils import timezone
+    from referrals.models import ReferralUsage
+    from wallet.models import Wallet
+
+    usage = get_object_or_404(ReferralUsage, id=usage_id)
+
+    if usage.referrer_rewarded:
+        messages.error(request, 'This referral has already been rewarded.')
+        return redirect('admin_referral_list')
+
+    if not usage.referrer:
+        messages.error(request, 'The referrer account no longer exists — cannot pay the reward.')
+        return redirect('admin_referral_list')
+
+    try:
+        with transaction.atomic():
+            
+            locked = ReferralUsage.objects.select_for_update().get(id=usage.id)
+            if locked.referrer_rewarded:
+                messages.error(request, 'This referral was just rewarded elsewhere.')
+                return redirect('admin_referral_list')
+
+            
+            Wallet.objects.get_or_create(user=locked.referrer)
+            wallet = Wallet.objects.select_for_update().get(user=locked.referrer)
+
+            wallet.credit(
+                amount=locked.referrer_reward_amount,
+                reason=(f"Referral reward (manual, by admin {request.user.email}) — "
+                        f"referred {locked.referred_user.email}"),
+                order=None,
+            )
+
+            locked.referrer_rewarded = True
+            locked.rewarded_at = timezone.now()
+            locked.save(update_fields=['referrer_rewarded', 'rewarded_at'])
+
+        messages.success(
+            request,
+            f"₹{usage.referrer_reward_amount} credited to {usage.referrer.email}."
+        )
+    except Exception as e:
+        messages.error(request, f"Could not process the reward: {e}")
+
+    return redirect('admin_referral_list')

@@ -1,0 +1,104 @@
+{% extends 'admin_panel/admin_base.html' %}
+{# ============================================================================
+   FILE: templates/admin_panel/referral_settings.html
+   Enable/disable the program + configure the two reward amounts.
+   (Flash messages are rendered by admin_base.html.)
+   ============================================================================ #}
+{% block content %}
+
+<div class="mb-8">
+  <a href="{% url 'admin_referral_list' %}"
+     class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-black transition mb-4">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Back to Referrals
+  </a>
+  <h1 class="text-2xl font-black text-gray-900 tracking-tight">Referral Settings</h1>
+  <p class="text-sm text-gray-400 mt-1">Turn the program on or off and set reward amounts. New amounts apply only to future referrals.</p>
+</div>
+
+<div class="max-w-xl">
+  <form method="POST">
+    {% csrf_token %}
+
+    <!-- Enable / disable -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
+      <div class="p-6 flex items-center justify-between gap-4">
+        <div>
+          <p class="text-sm font-black text-gray-900">Referral Program</p>
+          <p class="text-xs text-gray-400 mt-1 leading-relaxed">
+            When off, new signups earn no referral credit and no new referrals are recorded.
+            Referrals already created are still honoured on the referred user's first order.
+          </p>
+        </div>
+        <!-- Toggle -->
+        <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+          <input type="checkbox" name="referral_enabled" class="sr-only peer"
+                 {% if settings.referral_enabled %}checked{% endif %}>
+          <div class="w-12 h-7 bg-gray-200 rounded-full peer peer-checked:bg-green-500
+                      after:content-[''] after:absolute after:top-0.5 after:left-0.5
+                      after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all
+                      peer-checked:after:translate-x-5"></div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Reward amounts -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
+      <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Reward Amounts</p>
+      </div>
+      <div class="p-6 space-y-6">
+
+        <!-- Referrer reward -->
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+            Referrer Reward (paid on referred user's first order)
+          </label>
+          <div class="relative max-w-[220px]">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-gray-400 pointer-events-none">&#8377;</span>
+            <input type="number" name="referrer_reward_amount"
+                   value="{{ settings.referrer_reward_amount }}" min="0" step="0.01"
+                   class="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-black transition">
+          </div>
+        </div>
+
+        <!-- Referred reward -->
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+            New User Signup Bonus (paid immediately on signup)
+          </label>
+          <div class="relative max-w-[220px]">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-gray-400 pointer-events-none">&#8377;</span>
+            <input type="number" name="referred_reward_amount"
+                   value="{{ settings.referred_reward_amount }}" min="0" step="0.01"
+                   class="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-black transition">
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
+          <svg class="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <p class="text-xs text-blue-700 leading-relaxed">
+            Changing an amount affects <span class="font-bold">only new referrals</span>.
+            Referrals already created keep the amount they were promised at signup.
+            Set an amount to <span class="font-bold">0</span> to disable that specific reward.
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end">
+      <button type="submit"
+              class="px-8 py-3 bg-black text-white text-xs font-bold rounded-xl hover:bg-gray-800 transition uppercase tracking-widest">
+        Save Settings
+      </button>
+    </div>
+
+  </form>
+</div>
+
+{% endblock %}

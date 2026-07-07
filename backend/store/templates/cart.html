@@ -7,92 +7,92 @@
 {% block content %}
 
 <style>
-  :root { --teal:#2F4F4F; --teal-mid:#557373; --card:#DFE5F3; --accent:#F2EFEA; }
-
   .cart-card {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: #ffffff;
+    border: 1px solid rgba(17,17,17,0.08);
     border-radius: 20px; padding: 20px;
     transition: border-color 0.2s; position: relative;
+    box-shadow: 0 1px 3px rgba(17,17,17,0.04);
   }
-  .cart-card:hover { border-color: rgba(255,255,255,0.2); }
+  .cart-card:hover { border-color: rgba(45,67,48,0.3); }
   .cart-card.unavailable { opacity: 0.55; }
 
   .item-img { width:90px; height:90px; border-radius:14px; object-fit:cover; flex-shrink:0; }
   .item-img-placeholder {
     width:90px; height:90px; border-radius:14px;
-    background:rgba(255,255,255,0.06); border:1px dashed rgba(255,255,255,0.15);
+    background:rgba(17,17,17,0.03); border:1px dashed rgba(17,17,17,0.15);
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
   }
 
   .qty-wrap {
     display:inline-flex; align-items:center;
-    background:rgba(255,255,255,0.07); border:1.5px solid rgba(255,255,255,0.15);
+    background:rgba(17,17,17,0.03); border:1.5px solid rgba(17,17,17,0.12);
     border-radius:99px; overflow:hidden;
   }
   .qty-btn {
     width:34px; height:34px; display:flex; align-items:center; justify-content:center;
-    font-size:16px; font-weight:700; color:rgba(255,255,255,0.7);
+    font-size:16px; font-weight:700; color:rgba(17,17,17,0.55);
     cursor:pointer; border:none; background:transparent; transition:background 0.15s,color 0.15s;
   }
-  .qty-btn:hover { background:rgba(255,255,255,0.12); color:#fff; }
-  .qty-btn:disabled { opacity:0.25; cursor:not-allowed; }
-  .qty-num { min-width:32px; text-align:center; font-size:14px; font-weight:700; color:#fff; padding:0 4px; }
+  .qty-btn:hover { background:rgba(45,67,48,0.1); color:#2D4330; }
+  .qty-btn:disabled { opacity:0.3; cursor:not-allowed; }
+  .qty-num { min-width:32px; text-align:center; font-size:14px; font-weight:700; color:#111111; padding:0 4px; }
 
   .remove-btn {
     width:30px; height:30px; border-radius:50%;
-    border:1px solid rgba(239,68,68,0.25); background:rgba(239,68,68,0.07);
-    color:rgba(239,68,68,0.6); display:flex; align-items:center; justify-content:center;
+    border:1px solid rgba(220,38,38,0.2); background:rgba(220,38,38,0.05);
+    color:rgba(220,38,38,0.7); display:flex; align-items:center; justify-content:center;
     cursor:pointer; transition:all 0.15s; font-size:13px;
   }
-  .remove-btn:hover { background:rgba(239,68,68,0.18); color:#ef4444; border-color:#ef4444; }
+  .remove-btn:hover { background:rgba(220,38,38,0.12); color:#dc2626; border-color:#dc2626; }
 
   .summary-card {
-    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+    background:#ffffff; border:1px solid rgba(17,17,17,0.08);
     border-radius:20px; padding:24px; position:sticky; top:100px;
+    box-shadow: 0 1px 3px rgba(17,17,17,0.04);
   }
 
   .checkout-btn {
-    width:100%; padding:15px; border-radius:14px; background:#fff; color:var(--teal);
+    width:100%; padding:15px; border-radius:14px; background:#2D4330; color:#fff;
     font-size:13px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase;
     border:none; cursor:pointer; transition:background 0.15s,transform 0.1s;
     display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none;
   }
-  .checkout-btn:hover { background:var(--accent); }
+  .checkout-btn:hover { background:#111111; }
   .checkout-btn:active { transform:scale(0.98); }
-  .checkout-btn:disabled { background:rgba(255,255,255,0.12); color:rgba(255,255,255,0.3); cursor:not-allowed; transform:none; }
+  .checkout-btn:disabled { background:rgba(17,17,17,0.1); color:rgba(17,17,17,0.35); cursor:not-allowed; transform:none; }
 
   .warn-banner {
-    background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.25);
-    border-radius:12px; padding:12px 16px; font-size:12px; color:#fbbf24;
+    background:rgba(217,119,6,0.08); border:1px solid rgba(217,119,6,0.25);
+    border-radius:12px; padding:12px 16px; font-size:12px; color:#b45309;
     display:flex; align-items:flex-start; gap:10px;
   }
   .error-banner {
-    background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2);
-    border-radius:12px; padding:12px 16px; font-size:12px; color:#f87171;
+    background:rgba(220,38,38,0.06); border:1px solid rgba(220,38,38,0.2);
+    border-radius:12px; padding:12px 16px; font-size:12px; color:#dc2626;
     display:flex; align-items:flex-start; gap:10px;
   }
 
   .custom-panel {
-    background:rgba(124,58,237,0.07); border:1px solid rgba(124,58,237,0.18);
+    background:rgba(124,58,237,0.05); border:1px solid rgba(124,58,237,0.18);
     border-radius:12px; padding:14px; margin-top:12px;
   }
   .custom-edit-btn {
-    font-size:11px; font-weight:700; color:rgba(167,139,250,0.8);
+    font-size:11px; font-weight:700; color:rgba(124,58,237,0.85);
     cursor:pointer; display:inline-flex; align-items:center; gap:5px;
     background:none; border:none; transition:color 0.15s; padding:0;
   }
-  .custom-edit-btn:hover { color:#a78bfa; }
+  .custom-edit-btn:hover { color:#7c3aed; }
 
   .modal-overlay {
-    position:fixed; inset:0; background:rgba(0,0,0,0.65);
+    position:fixed; inset:0; background:rgba(17,17,17,0.5);
     backdrop-filter:blur(4px); z-index:300;
     display:flex; align-items:center; justify-content:center; padding:20px;
     opacity:0; pointer-events:none; transition:opacity 0.2s;
   }
   .modal-overlay.open { opacity:1; pointer-events:all; }
   .modal-box {
-    background:#1e3535; border:1px solid rgba(255,255,255,0.12);
+    background:#ffffff; border:1px solid rgba(17,17,17,0.1);
     border-radius:20px; padding:28px; width:100%; max-width:480px;
     transform:translateY(20px); transition:transform 0.25s;
     max-height:90vh; overflow-y:auto;
@@ -101,77 +101,77 @@
   .modal-label {
     display:block; font-size:11px; font-weight:700;
     text-transform:uppercase; letter-spacing:0.08em;
-    color:rgba(167,139,250,0.8); margin-bottom:8px;
+    color:rgba(124,58,237,0.85); margin-bottom:8px;
   }
   .modal-input {
     width:100%; padding:10px 14px; border-radius:10px;
-    border:1.5px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.07);
-    color:#fff; font-size:13px; outline:none; transition:border-color 0.15s;
+    border:1.5px solid rgba(17,17,17,0.12); background:#F9F9F6;
+    color:#111111; font-size:13px; outline:none; transition:border-color 0.15s;
   }
-  .modal-input:focus { border-color:rgba(167,139,250,0.5); }
-  .modal-input::placeholder { color:rgba(255,255,255,0.3); }
+  .modal-input:focus { border-color:rgba(124,58,237,0.5); }
+  .modal-input::placeholder { color:rgba(17,17,17,0.3); }
   .modal-upload-zone {
-    border:2px dashed rgba(167,139,250,0.3); border-radius:12px;
+    border:2px dashed rgba(124,58,237,0.3); border-radius:12px;
     padding:20px; text-align:center; cursor:pointer;
     transition:border-color 0.15s, background 0.15s;
   }
-  .modal-upload-zone:hover { border-color:rgba(167,139,250,0.6); background:rgba(124,58,237,0.05); }
+  .modal-upload-zone:hover { border-color:rgba(124,58,237,0.55); background:rgba(124,58,237,0.04); }
   .modal-save-btn {
-    width:100%; padding:13px; border-radius:12px; background:#fff; color:var(--teal);
+    width:100%; padding:13px; border-radius:12px; background:#2D4330; color:#fff;
     font-size:13px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase;
     border:none; cursor:pointer; transition:background 0.15s;
     display:flex; align-items:center; justify-content:center; gap:8px;
   }
-  .modal-save-btn:hover { background:var(--accent); }
+  .modal-save-btn:hover { background:#111111; }
   .modal-cancel-btn {
     width:100%; padding:11px; border-radius:12px;
-    border:1.5px solid rgba(255,255,255,0.12); background:transparent;
-    color:rgba(255,255,255,0.5); font-size:13px; font-weight:600; cursor:pointer; transition:all 0.15s;
+    border:1.5px solid rgba(17,17,17,0.12); background:transparent;
+    color:rgba(17,17,17,0.5); font-size:13px; font-weight:600; cursor:pointer; transition:all 0.15s;
   }
-  .modal-cancel-btn:hover { border-color:rgba(255,255,255,0.25); color:#fff; }
+  .modal-cancel-btn:hover { border-color:rgba(17,17,17,0.3); color:#111111; }
   .remove-img-toggle {
     display:inline-flex; align-items:center; gap:6px;
-    font-size:11px; font-weight:600; color:rgba(239,68,68,0.7);
+    font-size:11px; font-weight:600; color:rgba(220,38,38,0.75);
     cursor:pointer; transition:color 0.15s; user-select:none;
   }
-  .remove-img-toggle:hover { color:#ef4444; }
+  .remove-img-toggle:hover { color:#dc2626; }
   .remove-img-toggle input { display:none; }
 
-  .divider { height:1px; background:rgba(255,255,255,0.08); margin:16px 0; }
-  .breadcrumb-sep { color:rgba(255,255,255,0.25); margin:0 6px; }
+  .divider { height:1px; background:rgba(17,17,17,0.08); margin:16px 0; }
+  .breadcrumb-sep { color:rgba(17,17,17,0.2); margin:0 6px; }
   .shop-link {
     display:inline-flex; align-items:center; gap:8px; padding:10px 20px;
-    border-radius:12px; border:1.5px solid rgba(255,255,255,0.15);
-    color:rgba(255,255,255,0.6); font-size:12px; font-weight:600;
+    border-radius:12px; border:1.5px solid rgba(17,17,17,0.12);
+    color:rgba(17,17,17,0.55); font-size:12px; font-weight:600;
     text-decoration:none; transition:all 0.15s;
   }
-  .shop-link:hover { border-color:rgba(255,255,255,0.35); color:#fff; background:rgba(255,255,255,0.05); }
+  .shop-link:hover { border-color:rgba(45,67,48,0.4); color:#2D4330; background:rgba(45,67,48,0.04); }
   .empty-icon-wrap {
     width:100px; height:100px; border-radius:50%;
-    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+    background:rgba(17,17,17,0.03); border:1px solid rgba(17,17,17,0.08);
     display:flex; align-items:center; justify-content:center; margin:0 auto 24px;
   }
   .qty-btn.loading { opacity:0.4; pointer-events:none; }
 </style>
 
 <!-- Breadcrumb -->
-<div class="container mx-auto px-6 pt-4 pb-2">
-  <nav class="flex items-center text-xs font-semibold text-white/40 flex-wrap">
-    <a href="{% url 'home' %}" class="hover:text-white transition">Home</a>
+<div class="container mx-auto px-6 pt-4 pb-2 bg-site-bg">
+  <nav class="flex items-center text-xs font-semibold text-ink/40 flex-wrap">
+    <a href="{% url 'home' %}" class="hover:text-accent-hover transition">Home</a>
     <span class="breadcrumb-sep">/</span>
-    <a href="{% url 'product_list' %}" class="hover:text-white transition">Products</a>
+    <a href="{% url 'product_list' %}" class="hover:text-accent-hover transition">Products</a>
     <span class="breadcrumb-sep">/</span>
-    <span class="text-white/70">Cart</span>
+    <span class="text-ink/70">Cart</span>
   </nav>
 </div>
 
-<div class="container mx-auto px-6 py-8">
+<div class="container mx-auto px-6 py-8 bg-site-bg">
 
   <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
     <div>
-      <h1 class="text-3xl font-bold font-serif text-white">Your Cart</h1>
+      <h1 class="text-3xl font-bold font-serif text-ink">Your Cart</h1>
       {% if cart.total_items %}
-        <p class="text-white/40 text-sm mt-1" id="cartItemCount">
+        <p class="text-ink/40 text-sm mt-1" id="cartItemCount">
           {{ cart.total_items }} item{{ cart.total_items|pluralize }} in your bag
         </p>
       {% endif %}
@@ -206,11 +206,11 @@
 
         {% if not item.is_available %}
           <div class="absolute top-4 right-4">
-            <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-red-500/15 text-red-400 border border-red-500/20">Unavailable</span>
+            <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-red-50 text-red-600 border border-red-200">Unavailable</span>
           </div>
         {% elif not item.is_in_stock %}
           <div class="absolute top-4 right-4">
-            <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-yellow-500/15 text-yellow-400 border border-yellow-500/20">Out of Stock</span>
+            <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Out of Stock</span>
           </div>
         {% endif %}
 
@@ -218,28 +218,28 @@
           {% if item.primary_image %}
             <img src="{{ item.primary_image.image.url }}" alt="{{ item.product_name }}" class="item-img">
           {% else %}
-            <div class="item-img-placeholder"><i class="bi bi-image text-2xl text-white/20"></i></div>
+            <div class="item-img-placeholder"><i class="bi bi-image text-2xl text-ink/20"></i></div>
           {% endif %}
 
           <div class="flex-1 min-w-0">
-            <p class="text-[10px] font-bold text-white/35 uppercase tracking-widest mb-0.5">
+            <p class="text-[10px] font-bold text-ink/35 uppercase tracking-widest mb-0.5">
               {{ item.brand }} · {{ item.category_name }}
             </p>
             <a href="{% url 'product_detail' item.variant.product.slug %}"
-               class="text-white font-bold text-base leading-snug hover:text-white/75 transition line-clamp-2 block mb-2">
+               class="text-ink font-bold text-base leading-snug hover:text-accent-hover transition line-clamp-2 block mb-2">
               {{ item.product_name }}
             </a>
 
             <!-- Variant pills -->
             <div class="flex flex-wrap items-center gap-1.5 mb-3">
               {% if item.device_model %}
-                <span class="text-[11px] text-white/45 font-medium bg-white/5 px-2.5 py-1 rounded-full border border-white/10">{{ item.device_model }}</span>
+                <span class="text-[11px] text-ink/50 font-medium bg-ink/5 px-2.5 py-1 rounded-full border border-ink/10">{{ item.device_model }}</span>
               {% endif %}
               {% if item.case_type %}
-                <span class="text-[11px] text-white/45 font-medium bg-white/5 px-2.5 py-1 rounded-full border border-white/10">{{ item.case_type }}</span>
+                <span class="text-[11px] text-ink/50 font-medium bg-ink/5 px-2.5 py-1 rounded-full border border-ink/10">{{ item.case_type }}</span>
               {% endif %}
-              <span class="flex items-center gap-1.5 text-[11px] text-white/45 font-medium bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
-                <span class="w-3 h-3 rounded-full flex-shrink-0 border border-white/20" style="background:{{ item.colour_code }}"></span>
+              <span class="flex items-center gap-1.5 text-[11px] text-ink/50 font-medium bg-ink/5 px-2.5 py-1 rounded-full border border-ink/10">
+                <span class="w-3 h-3 rounded-full flex-shrink-0 border border-ink/15" style="background:{{ item.colour_code }}"></span>
                 {{ item.colour }}
               </span>
             </div>
@@ -247,23 +247,23 @@
             <!-- Price + qty + remove -->
             <div class="flex items-center justify-between flex-wrap gap-3">
               <div>
-                
+
 {% effective_price item.variant as eff_price %}
 {% discount_percent item.variant as disc_pct %}
 {% if disc_pct > 0 %}
-  <span class="text-white font-black text-lg">₹{{ eff_price }}</span>
-  <span class="text-white/30 text-xs line-through ml-1">₹{{ item.variant.price }}</span>
-  <span class="text-[10px] font-bold text-green-400 ml-1">{{ disc_pct }}% OFF</span>
+  <span class="text-ink font-black text-lg">₹{{ eff_price }}</span>
+  <span class="text-ink/30 text-xs line-through ml-1">₹{{ item.variant.price }}</span>
+  <span class="text-[10px] font-bold text-green-600 ml-1">{{ disc_pct }}% OFF</span>
 {% else %}
-  <span class="text-white font-black text-lg">₹{{ eff_price }}</span>
+  <span class="text-ink font-black text-lg">₹{{ eff_price }}</span>
 {% endif %}
                 {% if item.customization_charge > 0 %}
-                <p class="text-[10px] text-purple-300/80 mt-0.5">
+                <p class="text-[10px] text-purple-600/80 mt-0.5">
                   + ₹{{ item.customization_charge }} personalisation
                 </p>
                 {% endif %}
-                <p class="text-white/30 text-xs mt-0.5">
-                  Subtotal: <span class="text-white/60 font-semibold" id="subtotal-{{ item.pk }}">₹{{ item.subtotal }}</span>
+                <p class="text-ink/40 text-xs mt-0.5">
+                  Subtotal: <span class="text-ink/70 font-semibold" id="subtotal-{{ item.pk }}">₹{{ item.subtotal }}</span>
                 </p>
               </div>
 
@@ -282,7 +282,7 @@
                           {% if item.quantity >= item.max_quantity or not item.is_available %}disabled{% endif %}>+</button>
                 </div>
                 {% if item.is_available and item.is_in_stock %}
-                  <span class="text-white/25 text-[11px]" id="maxqty-{{ item.pk }}">Max {{ item.max_quantity }}</span>
+                  <span class="text-ink/30 text-[11px]" id="maxqty-{{ item.pk }}">Max {{ item.max_quantity }}</span>
                 {% endif %}
 
                 <form method="POST" action="{% url 'remove_from_cart' item.pk %}">
@@ -296,10 +296,10 @@
             <div class="custom-panel">
               <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2">
-                  <i class="bi bi-palette2 text-purple-400 text-sm"></i>
-                  <span class="text-xs font-bold text-purple-300 uppercase tracking-wider">Personalisation</span>
+                  <i class="bi bi-palette2 text-purple-600 text-sm"></i>
+                  <span class="text-xs font-bold text-purple-700 uppercase tracking-wider">Personalisation</span>
                   {% if item.customization_charge > 0 %}
-                  <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/20 uppercase tracking-widest">
+                  <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 uppercase tracking-widest">
                     + ₹{{ item.customization_charge }} fee
                   </span>
                   {% endif %}
@@ -311,24 +311,24 @@
               </div>
 
               <div class="mb-2">
-                <p class="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Text</p>
+                <p class="text-[10px] font-bold text-ink/30 uppercase tracking-widest mb-1">Text</p>
                 {% if item.custom_text %}
-                  <p class="text-xs text-white/65 leading-relaxed bg-white/5 px-3 py-2 rounded-lg border border-white/8">"{{ item.custom_text }}"</p>
+                  <p class="text-xs text-ink/65 leading-relaxed bg-white px-3 py-2 rounded-lg border border-ink/8">"{{ item.custom_text }}"</p>
                 {% else %}
-                  <p class="text-xs text-white/25 italic">None added — click Edit to add</p>
+                  <p class="text-xs text-ink/30 italic">None added — click Edit to add</p>
                 {% endif %}
               </div>
 
               <div>
-                <p class="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Image</p>
+                <p class="text-[10px] font-bold text-ink/30 uppercase tracking-widest mb-1">Image</p>
                 {% if item.custom_image %}
                   <div class="flex items-center gap-3">
                     <img src="{{ item.custom_image.url }}" alt="Custom"
-                         class="w-14 h-14 object-cover rounded-lg border border-purple-400/25">
-                    <p class="text-xs text-white/40">Custom image uploaded</p>
+                         class="w-14 h-14 object-cover rounded-lg border border-purple-300">
+                    <p class="text-xs text-ink/40">Custom image uploaded</p>
                   </div>
                 {% else %}
-                  <p class="text-xs text-white/25 italic">None added — click Edit to upload</p>
+                  <p class="text-xs text-ink/30 italic">None added — click Edit to upload</p>
                 {% endif %}
               </div>
             </div>
@@ -343,16 +343,16 @@
     <!-- ORDER SUMMARY -->
     <div class="w-full lg:w-80 flex-shrink-0">
       <div class="summary-card">
-        <h2 class="text-xs font-bold text-white uppercase tracking-widest mb-5">Order Summary</h2>
+        <h2 class="text-xs font-bold text-ink uppercase tracking-widest mb-5">Order Summary</h2>
 
         <div class="space-y-3 mb-4" id="summaryLines">
           {% for item in cart_items %}
             {% if item.is_available %}
             <div class="flex items-start justify-between gap-3" id="summary-line-{{ item.pk }}">
-              <span class="text-xs text-white/50 flex-1 leading-relaxed">
-                {{ item.product_name }} <span class="text-white/30" id="summary-qty-{{ item.pk }}">× {{ item.quantity }}</span>
+              <span class="text-xs text-ink/55 flex-1 leading-relaxed">
+                {{ item.product_name }} <span class="text-ink/30" id="summary-qty-{{ item.pk }}">× {{ item.quantity }}</span>
               </span>
-              <span class="text-xs font-semibold text-white flex-shrink-0" id="summary-subtotal-{{ item.pk }}">₹{{ item.subtotal }}</span>
+              <span class="text-xs font-semibold text-ink flex-shrink-0" id="summary-subtotal-{{ item.pk }}">₹{{ item.subtotal }}</span>
             </div>
             {% endif %}
           {% endfor %}
@@ -361,36 +361,36 @@
        <div class="divider"></div>
 
 <div class="flex justify-between items-center mb-2">
-  <span class="text-xs text-white/50">Original Price</span>
-  <span id="originalTotal">₹{{ cart.original_total }}</span>
+  <span class="text-xs text-ink/50">Original Price</span>
+  <span class="text-ink" id="originalTotal">₹{{ cart.original_total }}</span>
 </div>
 
 <div class="flex justify-between items-center mb-2">
-  <span class="text-xs text-green-400">Discount</span>
-  <span id="discountTotal" class="text-green-400">
+  <span class="text-xs text-green-600">Discount</span>
+  <span id="discountTotal" class="text-green-600">
     -₹{{ cart.total_discount }}
   </span>
 </div>
 
 <div class="flex justify-between items-center mb-2">
-  <span class="text-xs text-white/50">Subtotal</span>
-  <span id="cartTotal">₹{{ cart.total_price }}</span>
+  <span class="text-xs text-ink/50">Subtotal</span>
+  <span class="text-ink" id="cartTotal">₹{{ cart.total_price }}</span>
 </div>
         <div class="flex justify-between items-center mb-2">
-          <span class="text-xs text-white/50">Shipping</span>
-          <span class="text-xs font-semibold text-green-400">Calculated at checkout</span>
+          <span class="text-xs text-ink/50">Shipping</span>
+          <span class="text-xs font-semibold text-green-600">Calculated at checkout</span>
         </div>
         <div class="divider"></div>
         <div class="flex justify-between items-center mb-6">
-          <span class="text-sm font-bold text-white">Total</span>
-          <span class="text-xl font-black text-white" id="cartTotalBig">₹{{ cart.total_price }}</span>
+          <span class="text-sm font-bold text-ink">Total</span>
+          <span class="text-xl font-black text-ink" id="cartTotalBig">₹{{ cart.total_price }}</span>
         </div>
 
         {% if cart.has_unavailable or cart.has_out_of_stock %}
           <button class="checkout-btn" disabled>
             <i class="bi bi-exclamation-circle"></i> Resolve Issues First
           </button>
-          <p class="text-[11px] text-white/30 text-center mt-3 leading-relaxed">
+          <p class="text-[11px] text-ink/35 text-center mt-3 leading-relaxed">
             Remove unavailable or out-of-stock items to proceed.
           </p>
         {% else %}
@@ -400,9 +400,9 @@
         {% endif %}
 
         <div class="mt-5 space-y-2.5">
-          <div class="flex items-center gap-2 text-white/30 text-[11px]"><i class="bi bi-shield-check text-green-400"></i> Secure SSL checkout</div>
-          <div class="flex items-center gap-2 text-white/30 text-[11px]"><i class="bi bi-arrow-counterclockwise text-yellow-400"></i> Easy 7-day returns</div>
-          <div class="flex items-center gap-2 text-white/30 text-[11px]"><i class="bi bi-truck text-blue-400"></i> Dispatched within 48 hours</div>
+          <div class="flex items-center gap-2 text-ink/40 text-[11px]"><i class="bi bi-shield-check text-green-600"></i> Secure SSL checkout</div>
+          <div class="flex items-center gap-2 text-ink/40 text-[11px]"><i class="bi bi-arrow-counterclockwise text-amber-600"></i> Easy 7-day returns</div>
+          <div class="flex items-center gap-2 text-ink/40 text-[11px]"><i class="bi bi-truck text-accent-hover"></i> Dispatched within 48 hours</div>
         </div>
       </div>
     </div>
@@ -411,9 +411,9 @@
 
   {% else %}
   <div class="flex flex-col items-center justify-center py-28 text-center">
-    <div class="empty-icon-wrap"><i class="bi bi-bag text-4xl text-white/20"></i></div>
-    <h2 class="text-2xl font-bold font-serif text-white mb-2">Your cart is empty</h2>
-    <p class="text-white/40 text-sm mb-8 max-w-xs leading-relaxed">Browse our collection and find something you love.</p>
+    <div class="empty-icon-wrap"><i class="bi bi-bag text-4xl text-ink/20"></i></div>
+    <h2 class="text-2xl font-bold font-serif text-ink mb-2">Your cart is empty</h2>
+    <p class="text-ink/40 text-sm mb-8 max-w-xs leading-relaxed">Browse our collection and find something you love.</p>
     <a href="{% url 'product_list' %}" class="checkout-btn" style="max-width:220px;">
       <i class="bi bi-bag-plus text-sm"></i> Start Shopping
     </a>
@@ -428,16 +428,16 @@
   <div class="modal-box">
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-500/20 flex items-center justify-center">
-          <i class="bi bi-palette2 text-purple-400 text-sm"></i>
+        <div class="w-8 h-8 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center">
+          <i class="bi bi-palette2 text-purple-600 text-sm"></i>
         </div>
         <div>
-          <h3 class="text-sm font-bold text-white">Edit Personalisation</h3>
-          <p class="text-[10px] text-white/35">Changes apply to this cart item only</p>
+          <h3 class="text-sm font-bold text-ink">Edit Personalisation</h3>
+          <p class="text-[10px] text-ink/40">Changes apply to this cart item only</p>
         </div>
       </div>
       <button onclick="closeEditModal()"
-              class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/12 flex items-center justify-center text-white/40 hover:text-white transition">
+              class="w-8 h-8 rounded-full bg-ink/5 hover:bg-ink/10 flex items-center justify-center text-ink/40 hover:text-ink transition">
         <i class="bi bi-x text-lg"></i>
       </button>
     </div>
@@ -449,17 +449,17 @@
         <input type="text" name="custom_text" id="editCustomText"
                placeholder="e.g. Your name, a quote, initials…"
                maxlength="100" class="modal-input">
-        <p class="text-[11px] text-white/25 mt-1.5">
+        <p class="text-[11px] text-ink/35 mt-1.5">
           <i class="bi bi-info-circle mr-1"></i>Leave blank to remove existing text
         </p>
       </div>
       <div class="mb-6">
         <label class="modal-label">Custom Image</label>
-        <div id="currentImgRow" class="hidden mb-3 p-3 rounded-xl bg-white/5 border border-white/8 flex items-center gap-3">
+        <div id="currentImgRow" class="hidden mb-3 p-3 rounded-xl bg-ink/3 border border-ink/8 flex items-center gap-3">
           <img id="currentImgThumb" src="" alt="Current"
-               class="w-14 h-14 object-cover rounded-lg border border-purple-400/25 flex-shrink-0">
+               class="w-14 h-14 object-cover rounded-lg border border-purple-300 flex-shrink-0">
           <div class="flex-1 min-w-0">
-            <p class="text-xs font-semibold text-white/60 mb-1.5">Current image</p>
+            <p class="text-xs font-semibold text-ink/60 mb-1.5">Current image</p>
             <label class="remove-img-toggle">
               <input type="checkbox" name="remove_custom_image" value="1"
                      id="removeImgCheck" onchange="toggleRemoveLabel(this)">
@@ -472,15 +472,15 @@
           <input type="file" name="custom_image" id="editCustomImage"
                  accept="image/*" class="hidden" onchange="previewNewImage(event)">
           <div id="newImgPlaceholder">
-            <i class="bi bi-cloud-upload text-3xl text-purple-400/40 mb-2 block"></i>
-            <p class="text-xs text-white/40 font-medium">Click to upload a new image</p>
-            <p class="text-[11px] text-white/25 mt-1">JPG, PNG — max 5MB</p>
+            <i class="bi bi-cloud-upload text-3xl text-purple-400 mb-2 block"></i>
+            <p class="text-xs text-ink/45 font-medium">Click to upload a new image</p>
+            <p class="text-[11px] text-ink/30 mt-1">JPG, PNG — max 5MB</p>
           </div>
           <div id="newImgPreview" class="hidden">
             <img id="newImgPreviewSrc" src="" alt="Preview"
-                 class="w-16 h-16 object-cover rounded-xl mx-auto border-2 border-purple-400/40 mb-2">
-            <p class="text-[11px] text-purple-300 font-semibold" id="newImgFileName"></p>
-            <p class="text-[10px] text-white/30 mt-0.5">Click to choose a different file</p>
+                 class="w-16 h-16 object-cover rounded-xl mx-auto border-2 border-purple-300 mb-2">
+            <p class="text-[11px] text-purple-600 font-semibold" id="newImgFileName"></p>
+            <p class="text-[10px] text-ink/30 mt-0.5">Click to choose a different file</p>
           </div>
         </div>
       </div>
@@ -579,8 +579,8 @@ function showToast(message, type = 'info') {
   toast.style.cssText = `
     position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
     padding:12px 20px; border-radius:12px; font-size:13px; font-weight:600;
-    z-index:999; box-shadow:0 8px 24px rgba(0,0,0,0.3);
-    background:${type === 'error' ? 'rgba(239,68,68,0.9)' : 'rgba(34,197,94,0.9)'};
+    z-index:999; box-shadow:0 8px 24px rgba(17,17,17,0.15);
+    background:${type === 'error' ? 'rgba(220,38,38,0.95)' : 'rgba(45,67,48,0.95)'};
     color:#fff; transition:opacity 0.3s;
   `;
   toast.textContent = message;

@@ -66,6 +66,38 @@
                 </div>
             </div>
 
+            <!-- Security Section: Email & Password quick links -->
+            <div class="pt-2">
+                <p class="text-xs font-bold text-ink/40 uppercase tracking-widest mb-4">Security</p>
+                <div class="grid md:grid-cols-2 gap-4">
+
+                    <a href="{% url 'change_email' %}"
+                       class="flex items-center gap-4 p-5 rounded-xl border border-ink/10 bg-site-bg hover:border-accent-hover/50 transition group">
+                        <div class="w-10 h-10 rounded-lg bg-accent-hover/10 flex items-center justify-center flex-shrink-0">
+                            <i class="bi bi-envelope text-accent-hover"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-ink">Change Email</p>
+                            <p class="text-xs text-ink/40">Requires code verification</p>
+                        </div>
+                        <i class="bi bi-chevron-right text-ink/20 group-hover:text-accent-hover transition"></i>
+                    </a>
+
+                    <a href="{% url 'change_password' %}"
+                       class="flex items-center gap-4 p-5 rounded-xl border border-ink/10 bg-site-bg hover:border-accent-hover/50 transition group">
+                        <div class="w-10 h-10 rounded-lg bg-accent-hover/10 flex items-center justify-center flex-shrink-0">
+                            <i class="bi bi-shield-lock text-accent-hover"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-ink">Change Password</p>
+                            <p class="text-xs text-ink/40">Requires current password</p>
+                        </div>
+                        <i class="bi bi-chevron-right text-ink/20 group-hover:text-accent-hover transition"></i>
+                    </a>
+
+                </div>
+            </div>
+
             <div class="flex justify-end gap-4 pt-8">
                 <a href="{% url 'dashboard' %}" class="px-8 py-3 rounded-xl font-bold text-ink hover:bg-site-bg transition">Cancel</a>
                 <button type="submit" class="bg-accent-hover text-white px-10 py-3 rounded-xl font-bold hover:bg-ink transition shadow-lg">Save Changes</button>

@@ -2,35 +2,31 @@
 {% block title %}Verify Email | TechGear{% endblock %}
 
 {% block content %}
-<div class="flex items-center justify-center py-20 px-6">
-    <div class="max-w-md w-full bg-card-bg text-site-bg rounded-[2rem] shadow-2xl p-10 text-center">
-        <div class="text-5xl mb-6"><i class="bi bi-envelope-check"></i></div>
+<div class="flex items-center justify-center py-20 px-6 bg-site-bg">
+    <div class="max-w-md w-full bg-white text-ink rounded-[2rem] shadow-2xl p-10 text-center border border-ink/10">
+        <div class="text-5xl mb-6 text-accent-hover"><i class="bi bi-envelope-check"></i></div>
         <h2 class="text-3xl font-serif font-bold mb-4">Verification</h2>
-        <p class="text-sm mb-8">Enter the 6-digit code sent to your email.</p>
+        <p class="text-sm mb-8 text-ink/60">Enter the 6-digit code sent to your email.</p>
 
         <form method="POST" id="otp-form" class="space-y-6">
             {% csrf_token %}
             <!-- This creates the inputs named "otp_digit" that your views.py uses -->
             <div class="flex justify-center gap-2" id="otp-container">
                 {% for i in "123456" %}
-                <input type="text" name="otp_digit" maxlength="1" required 
-                       class="otp-input w-12 h-14 text-center text-2xl font-bold rounded-lg border border-site-bg/20 bg-white focus:ring-2 focus:ring-site-bg outline-none transition">
+                <input type="text" name="otp_digit" maxlength="1" required
+                       class="otp-input w-12 h-14 text-center text-2xl font-bold rounded-lg border border-ink/15 bg-site-bg text-ink focus:ring-2 focus:ring-accent-hover outline-none transition">
                 {% endfor %}
             </div>
 
-            <button type="submit" class="w-full bg-site-bg text-white font-bold py-4 rounded-xl hover:opacity-90 transition">Verify Email</button>
+            <button type="submit" class="w-full bg-accent-hover text-white font-bold py-4 rounded-xl hover:bg-ink transition">Verify Email</button>
         </form>
 
-        <!-- Add this loop exactly below the Submit button in verify_email.html -->
-<!-- Use this exact code block in verify_email.html -->
-
-
         <div class="mt-8 text-sm">
-            <p id="timer-text" class="font-bold opacity-60">Resend code in <span id="time-remaining">{{ remaining_time }}</span>s</p>
-            
+            <p id="timer-text" class="font-bold text-ink/50">Resend code in <span id="time-remaining">{{ remaining_time }}</span>s</p>
+
             <form method="POST" action="{% url 'resend_otp' %}" id="resend-form" class="hidden">
                 {% csrf_token %}
-                <button type="submit" class="text-site-bg font-bold border-b border-site-bg">Resend Verification Code</button>
+                <button type="submit" class="text-accent-hover font-bold border-b border-accent-hover">Resend Verification Code</button>
             </form>
         </div>
     </div>

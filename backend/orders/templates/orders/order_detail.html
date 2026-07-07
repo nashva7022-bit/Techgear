@@ -6,17 +6,10 @@
 {% block content %}
 
 <style>
-  :root {
-    --teal:     #2F4F4F;
-    --teal-mid: #557373;
-    --card:     #DFE5F3;
-    --accent:   #F2EFEA;
-  }
-
   /* ── Section card — matches order-card style from list page ── */
   .detail-card {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.09);
+    background: #ffffff;
+    border: 1px solid rgba(17,17,17,0.08);
     border-radius: 20px;
     overflow: hidden;
   }
@@ -24,8 +17,8 @@
   /* ── Section header inside a card ── */
   .card-header {
     padding: 16px 20px;
-    background: rgba(255,255,255,0.04);
-    border-bottom: 1px solid rgba(255,255,255,0.07);
+    background: #F9F9F6;
+    border-bottom: 1px solid rgba(17,17,17,0.06);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -35,7 +28,7 @@
   .card-header-title {
     font-size: 11px;
     font-weight: 800;
-    color: rgba(255,255,255,0.4);
+    color: rgba(17,17,17,0.45);
     text-transform: uppercase;
     letter-spacing: 0.1em;
   }
@@ -48,11 +41,11 @@
     letter-spacing: 0.07em;
     text-transform: uppercase;
   }
-  .status-pending          { background: rgba(251,191,36,0.12);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
-  .status-shipped          { background: rgba(59,130,246,0.12);  color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
-  .status-out_for_delivery { background: rgba(168,85,247,0.12);  color: #c084fc; border: 1px solid rgba(168,85,247,0.25); }
-  .status-delivered        { background: rgba(34,197,94,0.12);   color: #4ade80; border: 1px solid rgba(34,197,94,0.25); }
-  .status-cancelled        { background: rgba(239,68,68,0.12);   color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+  .status-pending          { background: rgba(245,158,11,0.10);  color: #b45309; border: 1px solid rgba(245,158,11,0.25); }
+  .status-shipped          { background: rgba(59,130,246,0.10);  color: #2563eb; border: 1px solid rgba(59,130,246,0.22); }
+  .status-out_for_delivery { background: rgba(147,51,234,0.10);  color: #7e22ce; border: 1px solid rgba(147,51,234,0.22); }
+  .status-delivered        { background: rgba(34,197,94,0.10);   color: #15803d; border: 1px solid rgba(34,197,94,0.22); }
+  .status-cancelled        { background: rgba(239,68,68,0.10);   color: #b91c1c; border: 1px solid rgba(239,68,68,0.22); }
 
   /* ── Item status pill — same as list page ── */
   .item-status-pill {
@@ -60,18 +53,18 @@
     padding: 2px 8px; border-radius: 99px;
     text-transform: uppercase; letter-spacing: 0.06em;
   }
-  .item-active    { background: rgba(34,197,94,0.1);  color: #4ade80;  border: 1px solid rgba(34,197,94,0.2); }
-  .item-cancelled { background: rgba(239,68,68,0.1);  color: #f87171;  border: 1px solid rgba(239,68,68,0.2); }
-  .item-returned  { background: rgba(168,85,247,0.1); color: #c084fc;  border: 1px solid rgba(168,85,247,0.2); }
+  .item-active    { background: rgba(34,197,94,0.08);  color: #15803d;  border: 1px solid rgba(34,197,94,0.18); }
+  .item-cancelled { background: rgba(239,68,68,0.08);  color: #b91c1c;  border: 1px solid rgba(239,68,68,0.18); }
+  .item-returned  { background: rgba(147,51,234,0.08); color: #7e22ce;  border: 1px solid rgba(147,51,234,0.18); }
 
   /* ── Custom tag — same as list page ── */
   .custom-tag {
     display: inline-flex; align-items: center; gap: 4px;
     font-size: 9px; font-weight: 700;
     padding: 2px 8px; border-radius: 99px;
-    background: rgba(124,58,237,0.12);
-    color: #a78bfa;
-    border: 1px solid rgba(124,58,237,0.2);
+    background: rgba(124,58,237,0.08);
+    color: #7c3aed;
+    border: 1px solid rgba(124,58,237,0.18);
     text-transform: uppercase; letter-spacing: 0.05em;
   }
 
@@ -92,11 +85,11 @@
     left: 50%;
     width: 100%;
     height: 2px;
-    background: rgba(255,255,255,0.1);
+    background: rgba(17,17,17,0.08);
     /* Default line colour — grey/inactive */
   }
   .timeline-step.done:not(:last-child)::after {
-    background: rgba(74,222,128,0.4);
+    background: rgba(21,128,61,0.35);
     /* Green line when this step is completed */
   }
   .timeline-dot {
@@ -106,27 +99,27 @@
     font-size: 11px;
     position: relative;
     z-index: 1;
-    border: 2px solid rgba(255,255,255,0.1);
-    background: rgba(255,255,255,0.05);
-    color: rgba(255,255,255,0.3);
+    border: 2px solid rgba(17,17,17,0.10);
+    background: #F9F9F6;
+    color: rgba(17,17,17,0.3);
     /* Default dot — inactive grey */
   }
   .timeline-dot.done {
-    background: rgba(34,197,94,0.15);
-    border-color: rgba(74,222,128,0.4);
-    color: #4ade80;
+    background: rgba(34,197,94,0.10);
+    border-color: rgba(21,128,61,0.35);
+    color: #15803d;
     /* Green dot when this step is done */
   }
   .timeline-dot.current {
-    background: rgba(251,191,36,0.15);
-    border-color: rgba(251,191,36,0.4);
-    color: #fbbf24;
+    background: rgba(245,158,11,0.10);
+    border-color: rgba(180,83,9,0.35);
+    color: #b45309;
     /* Yellow/amber dot for the CURRENT step */
   }
   .timeline-dot.cancelled {
-    background: rgba(239,68,68,0.15);
-    border-color: rgba(239,68,68,0.4);
-    color: #f87171;
+    background: rgba(239,68,68,0.10);
+    border-color: rgba(185,28,28,0.35);
+    color: #b91c1c;
     /* Red dot if cancelled */
   }
   .timeline-label {
@@ -134,14 +127,14 @@
     text-transform: uppercase; letter-spacing: 0.07em;
     margin-top: 8px;
     text-align: center;
-    color: rgba(255,255,255,0.3);
+    color: rgba(17,17,17,0.3);
   }
-  .timeline-label.done    { color: #4ade80; }
-  .timeline-label.current { color: #fbbf24; }
-  .timeline-label.cancelled { color: #f87171; }
+  .timeline-label.done    { color: #15803d; }
+  .timeline-label.current { color: #b45309; }
+  .timeline-label.cancelled { color: #b91c1c; }
   .timeline-date {
     font-size: 9px;
-    color: rgba(255,255,255,0.2);
+    color: rgba(17,17,17,0.25);
     margin-top: 3px;
     text-align: center;
   }
@@ -152,7 +145,7 @@
     align-items: flex-start;
     gap: 14px;
     padding: 16px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(17,17,17,0.05);
   }
   .item-row:last-child { border-bottom: none; }
   .item-img {
@@ -160,13 +153,13 @@
     border-radius: 12px;
     object-fit: cover;
     flex-shrink: 0;
-    background: rgba(255,255,255,0.06);
+    background: #F9F9F6;
   }
   .item-img-placeholder {
     width: 64px; height: 64px;
     border-radius: 12px;
-    background: rgba(255,255,255,0.06);
-    border: 1px dashed rgba(255,255,255,0.12);
+    background: #F9F9F6;
+    border: 1px dashed rgba(17,17,17,0.12);
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
@@ -184,20 +177,20 @@
     background: transparent;
   }
   .btn-cancel-item {
-    color: #f87171;
+    color: #b91c1c;
     border-color: rgba(239,68,68,0.3);
   }
   .btn-cancel-item:hover {
-    background: rgba(239,68,68,0.1);
+    background: rgba(239,68,68,0.08);
     border-color: rgba(239,68,68,0.5);
   }
   .btn-return-item {
-    color: #c084fc;
-    border-color: rgba(168,85,247,0.3);
+    color: #7e22ce;
+    border-color: rgba(147,51,234,0.3);
   }
   .btn-return-item:hover {
-    background: rgba(168,85,247,0.1);
-    border-color: rgba(168,85,247,0.5);
+    background: rgba(147,51,234,0.08);
+    border-color: rgba(147,51,234,0.5);
   }
 
   /* ── Modal ── */
@@ -206,7 +199,7 @@
     position: fixed;
     inset: 0;
     z-index: 50;
-    background: rgba(0,0,0,0.7);
+    background: rgba(17,17,17,0.45);
     backdrop-filter: blur(4px);
     align-items: center;
     justify-content: center;
@@ -216,8 +209,8 @@
     display: flex;
   }
   .modal-box {
-    background: #1a2020;
-    border: 1px solid rgba(255,255,255,0.1);
+    background: #ffffff;
+    border: 1px solid rgba(17,17,17,0.08);
     border-radius: 20px;
     width: 100%;
     max-width: 440px;
@@ -225,7 +218,7 @@
   }
   .modal-header {
     padding: 18px 22px;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
+    border-bottom: 1px solid rgba(17,17,17,0.06);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -233,36 +226,36 @@
   .modal-close {
     width: 28px; height: 28px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.07);
+    background: #F9F9F6;
     border: none;
-    color: rgba(255,255,255,0.5);
+    color: rgba(17,17,17,0.5);
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     font-size: 12px;
     transition: background 0.15s;
   }
-  .modal-close:hover { background: rgba(255,255,255,0.12); }
+  .modal-close:hover { background: rgba(17,17,17,0.08); }
 
   /* breadcrumb separator */
-  .breadcrumb-sep { color: rgba(255,255,255,0.25); margin: 0 6px; }
+  .breadcrumb-sep { color: rgba(17,17,17,0.25); margin: 0 6px; }
 
   /* ── View btn (reused from list page) ── */
   .view-btn {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 8px 16px;
     border-radius: 10px;
-    border: 1.5px solid rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(17,17,17,0.14);
     background: transparent;
-    color: rgba(255,255,255,0.6);
+    color: rgba(17,17,17,0.6);
     font-size: 11px; font-weight: 700;
     text-decoration: none;
     transition: all 0.15s;
     white-space: nowrap;
   }
   .view-btn:hover {
-    border-color: rgba(255,255,255,0.35);
-    color: #fff;
-    background: rgba(255,255,255,0.06);
+    border-color: #2D4330;
+    color: #2D4330;
+    background: rgba(45,67,48,0.05);
   }
 </style>
 
@@ -270,13 +263,13 @@
 <!-- ══════════════════════════════════════════════════════
      BREADCRUMB
 ════════════════════════════════════════════════════════ -->
-<div class="container mx-auto px-6 pt-4 pb-2">
-  <nav class="flex items-center text-xs font-semibold text-white/40 flex-wrap">
-    <a href="{% url 'home' %}" class="hover:text-white transition">Home</a>
+<div class="container mx-auto px-6 pt-4 pb-2" style="background:#F9F9F6;">
+  <nav class="flex items-center text-xs font-semibold text-ink/40 flex-wrap">
+    <a href="{% url 'home' %}" class="hover:text-ink transition">Home</a>
     <span class="breadcrumb-sep">/</span>
-    <a href="{% url 'orders:order_list' %}" class="hover:text-white transition">My Orders</a>
+    <a href="{% url 'orders:order_list' %}" class="hover:text-ink transition">My Orders</a>
     <span class="breadcrumb-sep">/</span>
-    <span class="text-white/70 font-mono">{{ order.order_number }}</span>
+    <span class="text-ink/70 font-mono">{{ order.order_number }}</span>
   </nav>
 </div>
 
@@ -284,13 +277,13 @@
 <!-- ══════════════════════════════════════════════════════
      PAGE HEADER
 ════════════════════════════════════════════════════════ -->
-<div class="container mx-auto px-6 pt-6 pb-4">
+<div class="container mx-auto px-6 pt-6 pb-4" style="background:#F9F9F6;">
   <div class="flex items-start justify-between flex-wrap gap-4">
     <div>
-      <h1 class="text-2xl font-black text-white font-mono tracking-wider">
+      <h1 class="text-2xl font-black text-ink font-mono tracking-wider">
         {{ order.order_number }}
       </h1>
-      <p class="text-white/40 text-sm mt-1">
+      <p class="text-ink/40 text-sm mt-1">
         Placed on {{ order.created_at|date:"d M Y, h:i A" }}
         &nbsp;·&nbsp;
         {{ order.get_payment_method_display }}
@@ -324,7 +317,7 @@
      Left (lg:col-span-2): timeline + items
      Right (lg:col-span-1): address + price summary
 ════════════════════════════════════════════════════════ -->
-<div class="container mx-auto px-6 pb-12">
+<div class="container mx-auto px-6 pb-12" style="background:#F9F9F6;">
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
     <!-- ══ LEFT COLUMN ═══════════════════════════════════════════════ -->
@@ -340,14 +333,14 @@
           {% if order.status == 'cancelled' %}
           <!-- Cancelled state — simple message, no timeline steps -->
           <div class="flex flex-col items-center gap-3 py-4">
-            <div class="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/30
+            <div class="w-14 h-14 rounded-full bg-red-500/8 border border-red-500/25
                         flex items-center justify-center">
-              <i class="bi bi-x-lg text-2xl text-red-400"></i>
+              <i class="bi bi-x-lg text-2xl text-red-500"></i>
             </div>
-            <p class="text-red-400 font-bold text-sm">Order Cancelled</p>
+            <p class="text-red-600 font-bold text-sm">Order Cancelled</p>
             {% with last_log=status_logs.last %}
             {% if last_log and last_log.note %}
-            <p class="text-white/30 text-xs text-center max-w-xs">{{ last_log.note }}</p>
+            <p class="text-ink/40 text-xs text-center max-w-xs">{{ last_log.note }}</p>
             {% endif %}
             {% endwith %}
           </div>
@@ -468,7 +461,7 @@
                class="item-img">
           {% else %}
           <div class="item-img-placeholder">
-            <i class="bi bi-image text-white/20 text-lg"></i>
+            <i class="bi bi-image text-ink/20 text-lg"></i>
           </div>
           {% endif %}
 
@@ -478,26 +471,26 @@
 
               <!-- Left: name + variant tags -->
               <div class="min-w-0 flex-1">
-                <p class="text-sm font-bold text-white leading-snug mb-1">
+                <p class="text-sm font-bold text-ink leading-snug mb-1">
                   {{ item.product_name }}
                 </p>
 
                 <!-- Variant tags -->
                 <div class="flex flex-wrap items-center gap-1.5 mb-2">
                   {% if item.device_model %}
-                  <span class="text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+                  <span class="text-[10px] text-ink/40 bg-nav-bg px-2 py-0.5 rounded-full border border-ink/10">
                     {{ item.device_model }}
                   </span>
                   {% endif %}
                   {% if item.case_type %}
-                  <span class="text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+                  <span class="text-[10px] text-ink/40 bg-nav-bg px-2 py-0.5 rounded-full border border-ink/10">
                     {{ item.case_type }}
                   </span>
                   {% endif %}
                   {% if item.color %}
-                  <span class="flex items-center gap-1 text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+                  <span class="flex items-center gap-1 text-[10px] text-ink/40 bg-nav-bg px-2 py-0.5 rounded-full border border-ink/10">
                     {% if item.color_code %}
-                    <span class="w-2 h-2 rounded-full flex-shrink-0 border border-white/20"
+                    <span class="w-2 h-2 rounded-full flex-shrink-0 border border-ink/20"
                           style="background:{{ item.color_code }}"></span>
                     {% endif %}
                     {{ item.color }}
@@ -512,14 +505,14 @@
 
                 <!-- Customization details -->
                 {% if item.custom_text %}
-                <p class="text-[10px] text-purple-400/70 italic mb-1">
+                <p class="text-[10px] text-purple-600/70 italic mb-1">
                   <i class="bi bi-type mr-1"></i>"{{ item.custom_text }}"
                 </p>
                 {% endif %}
 
                 <!-- SKU -->
                 {% if item.variant_sku %}
-                <p class="text-[10px] text-white/20 font-mono">SKU: {{ item.variant_sku }}</p>
+                <p class="text-[10px] text-ink/25 font-mono">SKU: {{ item.variant_sku }}</p>
                 {% endif %}
 
                 <!-- Cancel / Return buttons -->
@@ -545,8 +538,8 @@
 
               <!-- Right: price + qty + item status -->
               <div class="text-right flex-shrink-0">
-                <p class="text-sm font-black text-white">₹{{ item.subtotal }}</p>
-                <p class="text-[10px] text-white/35 mt-0.5">
+                <p class="text-sm font-black text-ink">₹{{ item.subtotal }}</p>
+                <p class="text-[10px] text-ink/35 mt-0.5">
                   ₹{{ item.unit_price }} × {{ item.quantity }}
                 </p>
                 <div class="mt-2">
@@ -557,23 +550,23 @@
   {% elif item.item_status == 'returned' %}
   <span class="item-status-pill item-returned">Returned</span>
   {% elif item.item_status == 'return_requested' %}
-  <span class="item-status-pill" style="background:rgba(251,191,36,0.1);color:#fbbf24;border:1px solid rgba(251,191,36,0.2);">Return Requested</span>
+  <span class="item-status-pill" style="background:rgba(245,158,11,0.08);color:#b45309;border:1px solid rgba(245,158,11,0.2);">Return Requested</span>
   {% elif item.item_status == 'return_rejected' %}
-  <span class="item-status-pill" style="background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2);">Return Rejected</span>
+  <span class="item-status-pill" style="background:rgba(239,68,68,0.08);color:#b91c1c;border:1px solid rgba(239,68,68,0.2);">Return Rejected</span>
   {% endif %}
 </div>
                 {% if item.cancellation_reason %}
-                <p class="text-[9px] text-white/25 mt-1 max-w-[140px] text-right">
+                <p class="text-[9px] text-ink/25 mt-1 max-w-[140px] text-right">
                   Reason: {{ item.cancellation_reason }}
                 </p>
                 {% endif %}
                 {% if item.return_reason %}
-                <p class="text-[9px] text-purple-400/50 mt-1 max-w-[140px] text-right">
+                <p class="text-[9px] text-purple-600/50 mt-1 max-w-[140px] text-right">
                   Return: {{ item.return_reason }}
                 </p>
                 {% endif %}
                 {% if item.return_rejected_reason %}
-<p class="text-[9px] text-red-400/60 mt-1 max-w-[140px] text-right">
+<p class="text-[9px] text-red-600/60 mt-1 max-w-[140px] text-right">
   Rejected: {{ item.return_rejected_reason }}
 </p>
 {% endif %}
@@ -595,7 +588,7 @@
 
   {% for item in items %}
   {% if item.item_status == 'active' and item.variant %}
-  <div class="px-6 py-5 {% if not forloop.last %}border-b border-white/5{% endif %}">
+  <div class="px-6 py-5 {% if not forloop.last %}border-b border-ink/5{% endif %}">
     <div class="flex items-start gap-4">
 
       <!-- Image -->
@@ -604,13 +597,13 @@
            alt="{{ item.product_name }}"
            class="w-12 h-12 rounded-xl object-cover flex-shrink-0">
       {% else %}
-      <div class="w-12 h-12 rounded-xl bg-white/5 flex-shrink-0 flex items-center justify-center">
-        <i class="bi bi-image text-white/20"></i>
+      <div class="w-12 h-12 rounded-xl bg-nav-bg flex-shrink-0 flex items-center justify-center">
+        <i class="bi bi-image text-ink/20"></i>
       </div>
       {% endif %}
 
       <div class="flex-1 min-w-0">
-        <p class="text-sm font-bold text-white mb-3">{{ item.product_name }}</p>
+        <p class="text-sm font-bold text-ink mb-3">{{ item.product_name }}</p>
 
         {% if item.variant.product.pk in reviewed_product_ids %}
         <!-- Already reviewed -->
@@ -619,12 +612,12 @@
             {% for r in item.variant.product.reviews.all %}
               {% if r.user == request.user %}
                 {% for i in "12345" %}
-                  <i class="bi bi-star{% if forloop.counter <= r.rating %}-fill text-yellow-400{% else %} text-white/15{% endif %} text-sm"></i>
+                  <i class="bi bi-star{% if forloop.counter <= r.rating %}-fill text-yellow-500{% else %} text-ink/15{% endif %} text-sm"></i>
                 {% endfor %}
               {% endif %}
             {% endfor %}
           </div>
-          <span class="text-xs text-white/40 font-medium">Review submitted</span>
+          <span class="text-xs text-ink/40 font-medium">Review submitted</span>
         </div>
 
         {% else %}
@@ -638,7 +631,7 @@
             {% for i in "12345" %}
             <button type="button"
                     onclick="setRating({{ forloop.counter }}, '{{ item.pk }}')"
-                    class="star-btn text-2xl text-white/15 hover:text-yellow-400 transition"
+                    class="star-btn text-2xl text-ink/15 hover:text-yellow-500 transition"
                     data-value="{{ forloop.counter }}">
               <i class="bi bi-star-fill"></i>
             </button>
@@ -650,13 +643,13 @@
           <textarea name="comment"
                     rows="2"
                     placeholder="Share your experience (optional)..."
-                    class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10
-                           text-white text-xs placeholder-white/20 resize-none outline-none
-                           focus:border-white/25 transition mb-3"></textarea>
+                    class="w-full px-4 py-3 rounded-xl bg-nav-bg border border-ink/10
+                           text-ink text-xs placeholder-ink/25 resize-none outline-none
+                           focus:border-accent-hover transition mb-3"></textarea>
 
           <button type="submit"
-                  class="px-5 py-2 rounded-xl bg-white text-[#2F4F4F] text-xs font-black
-                         uppercase tracking-widest hover:bg-[#F2EFEA] transition">
+                  class="px-5 py-2 rounded-xl bg-accent-hover text-white text-xs font-black
+                         uppercase tracking-widest hover:bg-ink transition">
             Submit Review
           </button>
         </form>
@@ -683,13 +676,13 @@
           <div class="flex gap-4 {% if not forloop.last %}pb-5{% endif %}">
             <!-- Vertical line connecting log entries -->
             <div class="flex flex-col items-center">
-              <div class="w-2 h-2 rounded-full bg-white/30 mt-1.5 flex-shrink-0"></div>
+              <div class="w-2 h-2 rounded-full bg-accent-hover/50 mt-1.5 flex-shrink-0"></div>
               {% if not forloop.last %}
-              <div class="w-px flex-1 bg-white/10 mt-1"></div>
+              <div class="w-px flex-1 bg-ink/10 mt-1"></div>
               {% endif %}
             </div>
             <div class="pb-1">
-              <p class="text-xs font-bold text-white/70">
+              <p class="text-xs font-bold text-ink/70">
                 {% if log.old_status %}
                   {{ log.old_status|title }} → {{ log.new_status|title }}
                 {% else %}
@@ -697,9 +690,9 @@
                 {% endif %}
               </p>
               {% if log.note %}
-              <p class="text-[10px] text-white/35 mt-0.5">{{ log.note }}</p>
+              <p class="text-[10px] text-ink/40 mt-0.5">{{ log.note }}</p>
               {% endif %}
-              <p class="text-[10px] text-white/20 mt-1">
+              <p class="text-[10px] text-ink/25 mt-1">
                 {{ log.created_at|date:"d M Y, h:i A" }}
                 {% if log.changed_by %}
                 · by {{ log.changed_by.first_name|default:log.changed_by.email }}
@@ -727,21 +720,21 @@
             <span class="card-header-title">Delivery Address</span>
           </div>
           <div class="px-5 py-5">
-            <p class="text-xs font-black text-white/70 uppercase tracking-widest mb-3">
+            <p class="text-xs font-black text-ink/70 uppercase tracking-widest mb-3">
               <i class="bi bi-geo-alt mr-1"></i>Shipping To
             </p>
-            <p class="text-sm font-bold text-white">{{ order.shipping_full_name }}</p>
-            <p class="text-xs text-white/50 mt-1 leading-relaxed">
+            <p class="text-sm font-bold text-ink">{{ order.shipping_full_name }}</p>
+            <p class="text-xs text-ink/50 mt-1 leading-relaxed">
               {{ order.shipping_address_line_1 }}
               {% if order.shipping_address_line_2 %}
               , {{ order.shipping_address_line_2 }}
               {% endif %}
             </p>
-            <p class="text-xs text-white/50">
+            <p class="text-xs text-ink/50">
               {{ order.shipping_city }}, {{ order.shipping_state }} — {{ order.shipping_postal_code }}
             </p>
-            <p class="text-xs text-white/50">{{ order.shipping_country }}</p>
-            <p class="text-xs text-white/40 mt-2 flex items-center gap-1">
+            <p class="text-xs text-ink/50">{{ order.shipping_country }}</p>
+            <p class="text-xs text-ink/40 mt-2 flex items-center gap-1">
               <i class="bi bi-telephone text-[10px]"></i>
               {{ order.shipping_phone }}
             </p>
@@ -756,46 +749,46 @@
           </div>
           <div class="px-5 py-5 flex flex-col gap-3 text-sm">
 
-            <div class="flex justify-between text-white/50">
+            <div class="flex justify-between text-ink/50">
   <span>Original Price</span>
-  <span class="font-bold text-white/40 line-through">₹{{ original_subtotal }}</span>
+  <span class="font-bold text-ink/40 line-through">₹{{ original_subtotal }}</span>
 </div>
 
 {% if order.discount_amount > 0 %}
-<div class="flex justify-between text-green-400">
+<div class="flex justify-between text-accent-hover">
   <span>Discount</span>
   <span class="font-bold">− ₹{{ order.discount_amount }}</span>
 </div>
 {% endif %}
 
-<div class="flex justify-between text-white/50">
+<div class="flex justify-between text-ink/50">
   <span>Subtotal</span>
-  <span class="font-bold text-white">₹{{ order.subtotal }}</span>
+  <span class="font-bold text-ink">₹{{ order.subtotal }}</span>
 </div>
 
-            <div class="flex justify-between text-white/50">
+            <div class="flex justify-between text-ink/50">
               <span>Shipping</span>
               {% if order.shipping_charge == 0 %}
-              <span class="font-bold text-green-400">FREE</span>
+              <span class="font-bold text-accent-hover">FREE</span>
               {% else %}
-              <span class="font-bold text-white">₹{{ order.shipping_charge }}</span>
+              <span class="font-bold text-ink">₹{{ order.shipping_charge }}</span>
               {% endif %}
             </div>
 
-            <div class="border-t border-white/10 pt-3 flex justify-between">
-              <span class="font-black text-white">Total</span>
-              <span class="font-black text-white text-base">₹{{ order.total_amount }}</span>
+            <div class="border-t border-ink/10 pt-3 flex justify-between">
+              <span class="font-black text-ink">Total</span>
+              <span class="font-black text-ink text-base">₹{{ order.total_amount }}</span>
             </div>
 
             {% if order.discount_amount > 0 %}
-            <div class="bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-2.5 text-center">
-              <p class="text-green-400 text-xs font-bold">
+            <div class="bg-accent-hover/8 border border-accent-hover/20 rounded-xl px-4 py-2.5 text-center">
+              <p class="text-accent-hover text-xs font-bold">
                 🎉 You saved ₹{{ order.discount_amount }} on this order
               </p>
             </div>
             {% endif %}
 
-            <div class="flex items-center gap-2 text-white/25 text-xs mt-1">
+            <div class="flex items-center gap-2 text-ink/30 text-xs mt-1">
               <i class="bi bi-cash-coin"></i>
               <span>{{ order.get_payment_method_display }}</span>
             </div>
@@ -809,25 +802,25 @@
           {% if order.status in 'delivered cancelled' %}
           <a href="{% url 'orders:download_invoice' order.order_number %}"
              class="flex items-center justify-center gap-2 py-3 rounded-2xl
-                    border border-white/15 text-white/60 text-xs font-bold uppercase
-                    tracking-widest hover:border-white/35 hover:text-white
-                    hover:bg-white/5 transition">
+                    border border-ink/15 text-ink/60 text-xs font-bold uppercase
+                    tracking-widest hover:border-accent-hover hover:text-accent-hover
+                    hover:bg-accent-hover/5 transition">
             <i class="bi bi-file-earmark-pdf"></i>
             Download Invoice
           </a>
           {% endif %}
           <a href="{% url 'orders:order_list' %}"
              class="flex items-center justify-center gap-2 py-3 rounded-2xl
-                    border border-white/10 text-white/40 text-xs font-bold uppercase
-                    tracking-widest hover:border-white/25 hover:text-white/60
+                    border border-ink/10 text-ink/40 text-xs font-bold uppercase
+                    tracking-widest hover:border-ink/25 hover:text-ink/60
                     transition">
             <i class="bi bi-arrow-left text-xs"></i>
             Back to My Orders
           </a>
           <a href="{% url 'product_list' %}"
              class="flex items-center justify-center gap-2 py-3 rounded-2xl
-                    bg-white/5 border border-white/10 text-white/50 text-xs font-bold
-                    uppercase tracking-widest hover:bg-white/10 hover:text-white/70
+                    bg-nav-bg border border-ink/10 text-ink/50 text-xs font-bold
+                    uppercase tracking-widest hover:bg-ink/5 hover:text-ink/70
                     transition">
             <i class="bi bi-bag text-xs"></i>
             Continue Shopping
@@ -854,43 +847,43 @@
   <div class="modal-box">
     <div class="modal-header">
       <div>
-        <p class="text-sm font-black text-white">Cancel Order</p>
-        <p class="text-xs text-white/40 mt-0.5">{{ order.order_number }}</p>
+        <p class="text-sm font-black text-ink">Cancel Order</p>
+        <p class="text-xs text-ink/40 mt-0.5">{{ order.order_number }}</p>
       </div>
       <button class="modal-close" onclick="closeModal('cancelOrderModal')">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
     <div class="px-6 py-5">
-      <p class="text-sm text-white/60 mb-4">
+      <p class="text-sm text-ink/60 mb-4">
         Are you sure you want to cancel this entire order?
         Stock will be restored automatically.
       </p>
-      <label class="block text-xs font-bold text-white/40 uppercase tracking-widest mb-2">
-        Reason <span class="text-white/20 font-normal normal-case">(optional)</span>
+      <label class="block text-xs font-bold text-ink/40 uppercase tracking-widest mb-2">
+        Reason <span class="text-ink/25 font-normal normal-case">(optional)</span>
       </label>
       <textarea id="cancelOrderReason"
                 rows="3"
                 placeholder="Tell us why you're cancelling..."
-                class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10
-                       text-white text-sm placeholder-white/20 resize-none outline-none
-                       focus:border-white/25 transition"></textarea>
+                class="w-full px-4 py-3 rounded-xl bg-nav-bg border border-ink/10
+                       text-ink text-sm placeholder-ink/25 resize-none outline-none
+                       focus:border-accent-hover transition"></textarea>
       <div id="cancelOrderError"
-           class="hidden mt-3 text-red-400 text-xs font-bold"></div>
+           class="hidden mt-3 text-red-600 text-xs font-bold"></div>
       <div class="flex gap-3 mt-5">
         <button type="button"
                 onclick="closeModal('cancelOrderModal')"
-                class="flex-1 py-3 rounded-xl border border-white/10 text-white/40
-                       text-xs font-bold uppercase tracking-widest hover:border-white/20
-                       hover:text-white/60 transition">
+                class="flex-1 py-3 rounded-xl border border-ink/10 text-ink/40
+                       text-xs font-bold uppercase tracking-widest hover:border-ink/20
+                       hover:text-ink/60 transition">
           Keep Order
         </button>
         <button type="button"
                 id="confirmCancelOrder"
                 onclick="submitCancelOrder()"
-                class="flex-1 py-3 rounded-xl bg-red-500/20 border border-red-500/30
-                       text-red-400 text-xs font-bold uppercase tracking-widest
-                       hover:bg-red-500/30 transition">
+                class="flex-1 py-3 rounded-xl bg-red-500/10 border border-red-500/25
+                       text-red-600 text-xs font-bold uppercase tracking-widest
+                       hover:bg-red-500/20 transition">
           Yes, Cancel
         </button>
       </div>
@@ -904,43 +897,43 @@
   <div class="modal-box">
     <div class="modal-header">
       <div>
-        <p class="text-sm font-black text-white">Cancel Item</p>
-        <p class="text-xs text-white/40 mt-0.5" id="cancelItemName">—</p>
+        <p class="text-sm font-black text-ink">Cancel Item</p>
+        <p class="text-xs text-ink/40 mt-0.5" id="cancelItemName">—</p>
       </div>
       <button class="modal-close" onclick="closeModal('cancelItemModal')">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
     <div class="px-6 py-5">
-      <p class="text-sm text-white/60 mb-4">
+      <p class="text-sm text-ink/60 mb-4">
         Cancel just this item? The rest of your order will continue.
         Stock will be restored automatically.
       </p>
-      <label class="block text-xs font-bold text-white/40 uppercase tracking-widest mb-2">
-        Reason <span class="text-white/20 font-normal normal-case">(optional)</span>
+      <label class="block text-xs font-bold text-ink/40 uppercase tracking-widest mb-2">
+        Reason <span class="text-ink/25 font-normal normal-case">(optional)</span>
       </label>
       <textarea id="cancelItemReason"
                 rows="3"
                 placeholder="Tell us why you're cancelling this item..."
-                class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10
-                       text-white text-sm placeholder-white/20 resize-none outline-none
-                       focus:border-white/25 transition"></textarea>
+                class="w-full px-4 py-3 rounded-xl bg-nav-bg border border-ink/10
+                       text-ink text-sm placeholder-ink/25 resize-none outline-none
+                       focus:border-accent-hover transition"></textarea>
       <div id="cancelItemError"
-           class="hidden mt-3 text-red-400 text-xs font-bold"></div>
+           class="hidden mt-3 text-red-600 text-xs font-bold"></div>
       <div class="flex gap-3 mt-5">
         <button type="button"
                 onclick="closeModal('cancelItemModal')"
-                class="flex-1 py-3 rounded-xl border border-white/10 text-white/40
-                       text-xs font-bold uppercase tracking-widest hover:border-white/20
-                       hover:text-white/60 transition">
+                class="flex-1 py-3 rounded-xl border border-ink/10 text-ink/40
+                       text-xs font-bold uppercase tracking-widest hover:border-ink/20
+                       hover:text-ink/60 transition">
           Keep Item
         </button>
         <button type="button"
                 id="confirmCancelItem"
                 onclick="submitCancelItem()"
-                class="flex-1 py-3 rounded-xl bg-red-500/20 border border-red-500/30
-                       text-red-400 text-xs font-bold uppercase tracking-widest
-                       hover:bg-red-500/30 transition">
+                class="flex-1 py-3 rounded-xl bg-red-500/10 border border-red-500/25
+                       text-red-600 text-xs font-bold uppercase tracking-widest
+                       hover:bg-red-500/20 transition">
           Yes, Cancel
         </button>
       </div>
@@ -954,43 +947,43 @@
   <div class="modal-box">
     <div class="modal-header">
       <div>
-        <p class="text-sm font-black text-white">Return Item</p>
-        <p class="text-xs text-white/40 mt-0.5" id="returnItemName">—</p>
+        <p class="text-sm font-black text-ink">Return Item</p>
+        <p class="text-xs text-ink/40 mt-0.5" id="returnItemName">—</p>
       </div>
       <button class="modal-close" onclick="closeModal('returnItemModal')">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
     <div class="px-6 py-5">
-      <p class="text-sm text-white/60 mb-4">
+      <p class="text-sm text-ink/60 mb-4">
         Please tell us why you want to return this item.
         A reason is required for returns.
       </p>
-      <label class="block text-xs font-bold text-white/40 uppercase tracking-widest mb-2">
-        Reason <span class="text-red-400">*</span>
+      <label class="block text-xs font-bold text-ink/40 uppercase tracking-widest mb-2">
+        Reason <span class="text-red-500">*</span>
       </label>
       <textarea id="returnItemReason"
                 rows="3"
                 placeholder="e.g. Wrong size, damaged, not as described..."
-                class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10
-                       text-white text-sm placeholder-white/20 resize-none outline-none
-                       focus:border-white/25 transition"></textarea>
+                class="w-full px-4 py-3 rounded-xl bg-nav-bg border border-ink/10
+                       text-ink text-sm placeholder-ink/25 resize-none outline-none
+                       focus:border-accent-hover transition"></textarea>
       <div id="returnItemError"
-           class="hidden mt-3 text-red-400 text-xs font-bold"></div>
+           class="hidden mt-3 text-red-600 text-xs font-bold"></div>
       <div class="flex gap-3 mt-5">
         <button type="button"
                 onclick="closeModal('returnItemModal')"
-                class="flex-1 py-3 rounded-xl border border-white/10 text-white/40
-                       text-xs font-bold uppercase tracking-widest hover:border-white/20
-                       hover:text-white/60 transition">
+                class="flex-1 py-3 rounded-xl border border-ink/10 text-ink/40
+                       text-xs font-bold uppercase tracking-widest hover:border-ink/20
+                       hover:text-ink/60 transition">
           Cancel
         </button>
         <button type="button"
                 id="confirmReturn"
                 onclick="submitReturn()"
-                class="flex-1 py-3 rounded-xl bg-purple-500/20 border border-purple-500/30
-                       text-purple-400 text-xs font-bold uppercase tracking-widest
-                       hover:bg-purple-500/30 transition">
+                class="flex-1 py-3 rounded-xl bg-purple-500/10 border border-purple-500/25
+                       text-purple-700 text-xs font-bold uppercase tracking-widest
+                       hover:bg-purple-500/20 transition">
           Submit Return
         </button>
       </div>
@@ -1208,12 +1201,12 @@ function setRating(value, itemPk) {
     const icon = btn.querySelector('i');
     if (idx < value) {
       icon.className = 'bi bi-star-fill';
-      btn.classList.add('text-yellow-400');
-      btn.classList.remove('text-white/15');
+      btn.classList.add('text-yellow-500');
+      btn.classList.remove('text-ink/15');
     } else {
       icon.className = 'bi bi-star-fill';
-      btn.classList.remove('text-yellow-400');
-      btn.classList.add('text-white/15');
+      btn.classList.remove('text-yellow-500');
+      btn.classList.add('text-ink/15');
     }
   });
 }

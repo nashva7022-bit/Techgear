@@ -7,335 +7,192 @@
 {% block content %}
 
 <style>
-  :root { --teal:#2F4F4F; --teal-mid:#557373; --card:#DFE5F3; --accent:#F2EFEA; }
+  :root {
+    --bg: #F8F7F3;
+    --surface: #FFFFFF;
+    --ink: #14140F;
+    --accent: #2D4330;
+    --accent-deep: #1C2E20;
+    --gold: #A9824F;
+    --muted: rgba(20,20,15,0.45);
+    --border: rgba(20,20,15,0.08);
+  }
+
+  body { background-color: var(--bg); color: var(--ink); }
+
+  .wishlist-eyebrow {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    letter-spacing: 0.02em;
+  }
+
+  .wishlist-heading {
+    letter-spacing: -0.01em;
+  }
+
+  .wishlist-heading::after {
+    content: "";
+    display: block;
+    width: 46px;
+    height: 2px;
+    margin-top: 14px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
 
   .wish-card {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 20px;
-    overflow: hidden;
-    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.2s;
+    padding: 16px;
+    transition: transform 0.3s cubic-bezier(.2,.8,.2,1), box-shadow 0.3s ease, border-color 0.3s ease;
+    box-shadow: 0 1px 3px rgba(20,20,15,0.05);
     display: flex;
     flex-direction: column;
-    position: relative;
+    height: 100%;
   }
   .wish-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.25);
-    border-color: rgba(255,255,255,0.2);
+    border-color: rgba(169,130,79,0.35);
+    box-shadow: 0 16px 32px -12px rgba(20,20,15,0.14);
+    transform: translateY(-3px);
   }
-  .wish-card.unavailable { opacity: 0.5; }
+  .wish-card.unavailable { opacity: 0.6; }
+  .wish-card.unavailable:hover { transform: none; }
 
   .wish-img-wrap {
     height: 200px;
-    background: rgba(255,255,255,0.04);
+    border-radius: 14px;
     overflow: hidden;
+    background: rgba(20,20,15,0.03);
+    margin-bottom: 16px;
     position: relative;
   }
   .wish-img-wrap img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    transition: transform 0.4s ease;
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.5s cubic-bezier(.2,.8,.2,1);
   }
-  .wish-card:hover .wish-img-wrap img { transform: scale(1.06); }
+  .wish-card:hover .wish-img-wrap img { transform: scale(1.05); }
 
   .remove-wish-btn {
-    position: absolute;
-    top: 12px; right: 12px;
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.9);
-    border: none;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: all 0.15s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    color: #ef4444;
-    font-size: 14px;
-  }
-  .remove-wish-btn:hover {
-    background: #ef4444;
-    color: #fff;
-    transform: scale(1.1);
-  }
-
-  .avail-badge {
-    position: absolute;
-    top: 12px; left: 12px;
-    font-size: 9px; font-weight: 700;
-    padding: 4px 10px;
-    border-radius: 99px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .wish-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
-
-  .move-btn {
-    width: 100%;
-    padding: 11px;
-    border-radius: 12px;
-    background: #fff;
-    color: var(--teal);
-    font-size: 12px; font-weight: 800;
-    letter-spacing: 0.05em; text-transform: uppercase;
-    border: none; cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-    display: flex; align-items: center; justify-content: center; gap: 7px;
-    margin-top: auto;
-  }
-  .move-btn:hover { background: var(--accent); }
-  .move-btn:active { transform: scale(0.98); }
-  .move-btn:disabled {
-    background: rgba(255,255,255,0.1);
-    color: rgba(255,255,255,0.3);
-    cursor: not-allowed; transform: none;
-  }
-
-  .view-link {
-    display: inline-flex; align-items: center; justify-content: center;
+    position: absolute; top: 12px; right: 12px;
     width: 36px; height: 36px;
     border-radius: 50%;
-    border: 1.5px solid rgba(255,255,255,0.15);
-    color: rgba(255,255,255,0.5);
-    font-size: 14px;
-    text-decoration: none;
-    transition: all 0.15s;
-    flex-shrink: 0;
-  }
-  .view-link:hover { border-color: rgba(255,255,255,0.4); color: #fff; background: rgba(255,255,255,0.07); }
-
-  .stock-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-
-  /* Variant tag pills */
-  .variant-tag {
-    font-size: 10px; font-weight: 600;
-    padding: 3px 8px;
-    border-radius: 99px;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.12);
-    color: rgba(255,255,255,0.5);
-    display: inline-flex; align-items: center; gap: 4px;
-  }
-
-  .empty-icon-wrap {
-    width: 110px; height: 110px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(2px);
+    box-shadow: 0 2px 10px rgba(20,20,15,0.14);
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 28px;
+    color: var(--gold); font-size: 14px;
+    transition: all 0.2s;
+  }
+  .remove-wish-btn:hover { background: #B3402F; color: white; }
+
+  .avail-badge {
+    position: absolute; top: 12px; left: 12px;
+    font-size: 9px; font-weight: 800;
+    padding: 4px 9px; border-radius: 6px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    box-shadow: 0 2px 6px rgba(20,20,15,0.08);
   }
 
-  .shop-link {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 10px 20px; border-radius: 12px;
-    border: 1.5px solid rgba(255,255,255,0.15);
-    color: rgba(255,255,255,0.6); font-size: 12px; font-weight: 600;
-    text-decoration: none; transition: all 0.15s;
+  .wish-brand {
+    letter-spacing: 0.12em;
+    color: var(--gold);
   }
-  .shop-link:hover { border-color: rgba(255,255,255,0.35); color: #fff; background: rgba(255,255,255,0.05); }
 
-  .start-btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 14px 32px; border-radius: 14px;
-    background: #fff; color: var(--teal);
-    font-size: 13px; font-weight: 800;
-    letter-spacing: 0.05em; text-transform: uppercase;
-    text-decoration: none; transition: background 0.15s;
+  .move-btn {
+    width: 100%; padding: 12px; border-radius: 12px;
+    background: var(--accent); color: white;
+    font-size: 12px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background 0.2s ease, transform 0.15s ease;
   }
-  .start-btn:hover { background: var(--accent); }
+  .move-btn:hover { background: var(--accent-deep); }
+  .move-btn:active { transform: scale(0.98); }
 
-  .breadcrumb-sep { color: rgba(255,255,255,0.25); margin: 0 6px; }
+  .view-link {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .view-link:hover { border-color: var(--gold); color: var(--gold); background: rgba(169,130,79,0.06); }
+
+  .variant-pill {
+    font-size: 10px; padding: 4px 10px; border-radius: 99px;
+    background: rgba(20,20,15,0.04); color: var(--muted);
+    border: 1px solid var(--border);
+    letter-spacing: 0.02em;
+  }
+
+  .wish-price {
+    letter-spacing: -0.01em;
+  }
 </style>
 
-<!-- Breadcrumb -->
-<div class="container mx-auto px-6 pt-4 pb-2">
-  <nav class="flex items-center text-xs font-semibold text-white/40 flex-wrap">
-    <a href="{% url 'home' %}" class="hover:text-white transition">Home</a>
-    <span class="breadcrumb-sep">/</span>
-    <a href="{% url 'product_list' %}" class="hover:text-white transition">Products</a>
-    <span class="breadcrumb-sep">/</span>
-    <span class="text-white/70">Wishlist</span>
-  </nav>
-</div>
+<div class="container mx-auto px-6 py-10">
 
-<div class="container mx-auto px-6 py-8">
-
-  <!-- Header -->
-  <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
+  <div class="flex items-center justify-between mb-8">
     <div>
-      <h1 class="text-3xl font-bold font-serif text-white">My Wishlist</h1>
-      {% if items %}
-        <p class="text-white/40 text-sm mt-1">
-          {{ wishlist.total_items }} saved item{{ wishlist.total_items|pluralize }}
-        </p>
-      {% endif %}
-    </div>
-    <div class="flex items-center gap-3">
-      <a href="{% url 'product_list' %}" class="shop-link">
-        <i class="bi bi-bag text-xs"></i> Continue Shopping
-      </a>
-      {% if items %}
-      <a href="{% url 'cart' %}" class="shop-link">
-        <i class="bi bi-cart3 text-xs"></i> View Cart
-      </a>
-      {% endif %}
+      <p class="wishlist-eyebrow text-[11px] uppercase tracking-widest text-accent mb-2">TechGear / My Wishlist</p>
+      <h1 class="wishlist-heading text-3xl font-bold font-serif text-ink">My Wishlist</h1>
     </div>
   </div>
 
   {% if items %}
-
-  <!-- Grid -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
     {% for item in items %}
     <div class="wish-card {% if not item.is_available %}unavailable{% endif %}">
-
-      <!-- Image area -->
       <div class="wish-img-wrap">
-
         <a href="{% url 'product_detail' item.variant.product.slug %}?variant={{ item.variant.pk }}">
-          {% if item.primary_image %}
-            <img src="{{ item.primary_image.image.url }}" alt="{{ item.variant.product.name }}">
-          {% else %}
-            <div class="w-full h-full flex items-center justify-center">
-              <i class="bi bi-image text-5xl text-white/10"></i>
-            </div>
-          {% endif %}
+          <img src="{{ item.primary_image.image.url }}" alt="{{ item.variant.product.name }}">
         </a>
-
-        <!-- Availability badge -->
         {% if not item.is_available %}
-          <span class="avail-badge bg-red-500/20 text-red-400 border border-red-500/20">Unavailable</span>
+          <span class="avail-badge bg-red-100 text-red-600">Unavailable</span>
         {% elif item.variant.stock == 0 %}
-          <span class="avail-badge bg-yellow-500/20 text-yellow-400 border border-yellow-500/20">Out of Stock</span>
+          <span class="avail-badge bg-amber-100 text-amber-700">Out of Stock</span>
         {% endif %}
-
-        <!-- Remove from wishlist -->
         <form method="POST" action="{% url 'remove_from_wishlist' item.pk %}">
           {% csrf_token %}
-          <button type="submit" class="remove-wish-btn" title="Remove from wishlist">
-            <i class="bi bi-heart-fill"></i>
-          </button>
+          <button type="submit" class="remove-wish-btn"><i class="bi bi-heart-fill"></i></button>
         </form>
-
       </div>
 
-      <!-- Card body -->
-      <div class="wish-body">
+      <p class="wish-brand text-[10px] font-bold uppercase mb-1">{{ item.variant.product.get_brand_display }}</p>
+      <a href="{% url 'product_detail' item.variant.product.slug %}?variant={{ item.variant.pk }}" class="font-bold text-sm text-ink mb-3 block leading-snug">{{ item.variant.product.name }}</a>
 
-        <!-- Brand + category -->
-        <p class="text-[10px] font-bold text-white/35 uppercase tracking-widest mb-0.5">
-          {{ item.variant.product.get_brand_display }}
-          {% if item.variant.product.category %} · {{ item.variant.product.category.name }}{% endif %}
-        </p>
+      <div class="flex flex-wrap gap-1.5 mb-4">
+        <span class="variant-pill">{{ item.variant.get_color_display }}</span>
+        {% if item.variant.device_model %}<span class="variant-pill">{{ item.variant.device_model.name }}</span>{% endif %}
+      </div>
 
-        <!-- Product name -->
-        <a href="{% url 'product_detail' item.variant.product.slug %}?variant={{ item.variant.pk }}"
-           class="text-white font-bold text-sm leading-snug hover:text-white/75 transition line-clamp-2 block mb-2">
-          {{ item.variant.product.name }}
-        </a>
+      <div class="mt-auto">
+        {% effective_price item.variant as eff_price %}
+        <span class="wish-price font-black text-ink text-lg block mb-4">₹{{ eff_price }}</span>
 
-        <!-- Variant details — the specific variant they wishlisted -->
-        <div class="flex flex-wrap gap-1.5 mb-3">
-          {% if item.variant.device_model %}
-            <span class="variant-tag">
-              <i class="bi bi-phone text-[9px]"></i>
-              {{ item.variant.device_model.name }}
-            </span>
-          {% endif %}
-          {% if item.variant.case_type %}
-            <span class="variant-tag">{{ item.variant.get_case_type_display }}</span>
-          {% endif %}
-          <span class="variant-tag">
-            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 border border-white/20"
-                  style="background:{{ item.variant.color_code }}"></span>
-            {{ item.variant.get_color_display }}
-          </span>
-        </div>
-
-        <!-- Price — exact variant price -->
-<div class="mb-3">
-  {% effective_price item.variant as eff_price %}
-  {% discount_percent item.variant as disc_pct %}
-  {% if disc_pct > 0 %}
-    <span class="text-white font-black text-base">₹{{ eff_price }}</span>
-    <span class="text-white/30 text-xs line-through ml-1.5">₹{{ item.variant.price }}</span>
-    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green-400/15 text-green-400 border border-green-400/20 ml-1">
-      {{ disc_pct }}% OFF
-    </span>
-  {% else %}
-    <span class="text-white font-black text-base">₹{{ eff_price }}</span>
-  {% endif %}
-</div>
-        <!-- Stock status — exact variant stock -->
-        <div class="flex items-center gap-1.5 mb-4">
-          {% if item.variant.stock > 10 %}
-            <span class="stock-dot bg-green-400"></span>
-            <span class="text-[11px] font-semibold text-green-400">In Stock</span>
-          {% elif item.variant.stock > 0 %}
-            <span class="stock-dot bg-yellow-400"></span>
-            <span class="text-[11px] font-semibold text-yellow-400">Only {{ item.variant.stock }} left</span>
-          {% else %}
-            <span class="stock-dot bg-red-400"></span>
-            <span class="text-[11px] font-semibold text-red-400">Out of Stock</span>
-          {% endif %}
-        </div>
-
-        <!-- Action row -->
-        <div class="flex items-center gap-2 mt-auto">
-
+        <div class="flex gap-2">
           {% if item.is_available and item.variant.stock > 0 %}
             <form method="POST" action="{% url 'move_to_cart' item.pk %}" class="flex-1">
               {% csrf_token %}
-              <button type="submit" class="move-btn">
-                <i class="bi bi-bag-plus text-xs"></i> Move to Cart
-              </button>
+              <button type="submit" class="move-btn">Move to Cart</button>
             </form>
-          {% elif not item.is_available %}
-            <button class="move-btn flex-1" disabled>
-              <i class="bi bi-x-circle text-xs"></i> Unavailable
-            </button>
           {% else %}
-            <button class="move-btn flex-1" disabled>
-              <i class="bi bi-x-circle text-xs"></i> Out of Stock
-            </button>
+            <button class="move-btn opacity-50 cursor-not-allowed" disabled>Unavailable</button>
           {% endif %}
-
-          <!-- View exact variant on product page -->
-          <a href="{% url 'product_detail' item.variant.product.slug %}?variant={{ item.variant.pk }}"
-             class="view-link" title="View product">
-            <i class="bi bi-eye"></i>
-          </a>
-
+          <a href="{% url 'product_detail' item.variant.product.slug %}?variant={{ item.variant.pk }}" class="view-link"><i class="bi bi-arrow-up-right"></i></a>
         </div>
-
       </div>
     </div>
     {% endfor %}
-
   </div>
 
   {% else %}
-
-  <!-- Empty wishlist -->
-  <div class="flex flex-col items-center justify-center py-28 text-center">
-    <div class="empty-icon-wrap">
-      <i class="bi bi-heart text-4xl text-white/20"></i>
-    </div>
-    <h2 class="text-2xl font-bold font-serif text-white mb-2">Your wishlist is empty</h2>
-    <p class="text-white/40 text-sm mb-8 max-w-sm leading-relaxed">
-      Save items you love by clicking the heart icon on any product.
-      They'll appear here so you can find them easily later.
-    </p>
-    <a href="{% url 'product_list' %}" class="start-btn">
-      <i class="bi bi-bag-heart text-sm"></i> Discover Products
-    </a>
+  <div class="py-28 text-center">
+    <h2 class="text-2xl font-bold font-serif text-ink mb-2">Your wishlist is empty</h2>
+    <p class="text-muted text-sm mb-8">Save items you love to find them easily later.</p>
+    <a href="{% url 'product_list' %}" class="bg-ink text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-widest">Start Shopping</a>
   </div>
-
   {% endif %}
-
 </div>
-
 {% endblock %}

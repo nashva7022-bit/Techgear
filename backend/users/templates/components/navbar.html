@@ -75,7 +75,8 @@
                         <a href="{% url 'dashboard' %}" class="flex items-center px-5 py-3 text-sm hover:bg-site-bg"><i class="bi bi-person mr-3"></i> Profile</a>
                         <a href="{% url 'wallet:wallet' %}" class="flex items-center px-5 py-3 text-sm hover:bg-site-bg"><i class="bi bi-wallet2 mr-3"></i> Wallet</a>
                         <a href="#" class="flex items-center px-5 py-3 text-sm hover:bg-site-bg"><i class="bi bi-question-circle mr-3"></i> FAQs</a>
-                        <a href="{% url 'orders:order_list' %}" class="flex items-center px-5 py-3 text-sm hover:bg-site-bg"><i class="bi bi- mr-3"></i> My Orders</a>
+                        <a href="{% url 'orders:order_list' %}" class="flex items-center px-5 py-3 text-sm hover:bg-site-bg"><i class="bi bi-bag-check mr-3"></i> My Orders</a>
+<a href="{% url 'referrals:referral_dashboard' %}" class="flex items-center px-5 py-3 text-sm hover:bg-site-bg"><i class="bi bi-gift mr-3"></i> Referrals</a>
                         <form action="{% url 'logout' %}" method="POST" class="border-t border-ink/10">
                             {% csrf_token %}
                             <button class="w-full text-left px-5 py-3 text-sm text-red-500 hover:bg-red-50"><i class="bi bi-box-arrow-right mr-3"></i> Logout</button>

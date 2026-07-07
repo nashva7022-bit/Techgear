@@ -42,6 +42,7 @@ urlpatterns = [
     path('manage/coupons/', include('coupons.urls', namespace='coupons')),
    
     path('reports/', include('reports.urls')),
+    path('referrals/', include('referrals.urls', namespace='referrals')),
     
 ]
 if settings.DEBUG:

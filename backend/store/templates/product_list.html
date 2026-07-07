@@ -8,52 +8,51 @@
 <form style="display:none">{% csrf_token %}</form>
 
 <style>
-  /* ── Page-level variables matching TechGear palette ── */
   :root {
-    --teal:       #2F4F4F;
-    --teal-mid:   #557373;
-    --card:       #DFE5F3;
-    --accent:     #F2EFEA;
-    --text-dark:  #1a2e2e;
+    --bg:      #F9F9F6;
+    --surface: #FFFFFF;
+    --alt-bg:  #EFEDE6;
+    --accent:  #2D4330;
+    --ink:     #111111;
+    --muted:   rgba(17,17,17,0.45);
+    --border:  rgba(17,17,17,0.10);
   }
 
   /* Product card hover lift */
   .prod-card {
-    background: var(--card);
-    border-radius: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 22px;
     overflow: hidden;
-    transition: transform 0.3s cubic-bezier(.22,.68,0,1.2), box-shadow 0.3s ease;
+    transition: transform 0.3s cubic-bezier(.22,.68,0,1.2), box-shadow 0.3s ease, border-color 0.2s;
     display: flex;
     flex-direction: column;
   }
   .prod-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 24px 48px rgba(0,0,0,0.25);
+    box-shadow: 0 24px 48px rgba(45,67,48,0.14);
+    border-color: rgba(45,67,48,0.3);
   }
 
   /* Image zoom on hover */
-  .prod-img-wrap { overflow: hidden; }
-  .prod-img-wrap img {
-    transition: transform 0.5s ease;
-  }
-  .prod-card:hover .prod-img-wrap img {
-    transform: scale(1.07);
-  }
+  .prod-img-wrap { overflow: hidden; background: var(--alt-bg); }
+  .prod-img-wrap img { transition: transform 0.5s ease; }
+  .prod-card:hover .prod-img-wrap img { transform: scale(1.07); }
 
   /* Filter sidebar card */
   .filter-card {
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
     padding: 20px;
-    backdrop-filter: blur(8px);
+    margin-bottom: 12px;
   }
   .filter-label {
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.45);
+    color: var(--muted);
     margin-bottom: 12px;
     display: block;
   }
@@ -64,35 +63,35 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 14px;
+    padding: 7px 15px;
     border-radius: 99px;
-    border: 1.5px solid rgba(255,255,255,0.15);
+    border: 1.5px solid var(--border);
     font-size: 12px;
     font-weight: 500;
-    color: rgba(255,255,255,0.6);
+    color: var(--muted);
     cursor: pointer;
     transition: all 0.15s;
     user-select: none;
     white-space: nowrap;
   }
   .filter-pill:hover {
-    border-color: rgba(255,255,255,0.4);
-    color: #fff;
+    border-color: var(--accent);
+    color: var(--accent);
   }
   .filter-radio:checked + .filter-pill {
-    background: var(--card);
-    border-color: var(--card);
-    color: var(--teal);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
     font-weight: 700;
   }
 
   /* Sort select */
   .sort-select {
     appearance: none;
-    background: rgba(255,255,255,0.08);
-    border: 1.5px solid rgba(255,255,255,0.15);
-    border-radius: 10px;
-    color: #fff;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 11px;
+    color: var(--ink);
     font-size: 12px;
     font-weight: 600;
     padding: 9px 36px 9px 14px;
@@ -100,41 +99,37 @@
     cursor: pointer;
     transition: border-color 0.15s;
   }
-  .sort-select:focus { border-color: rgba(255,255,255,0.4); }
-  .sort-select option { background: var(--teal); color: #fff; }
+  .sort-select:focus { border-color: var(--accent); }
 
   /* Price input */
   .price-input {
     width: 100%;
-    padding: 8px 12px;
-    border-radius: 10px;
-    border: 1.5px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.07);
-    color: #fff;
+    padding: 9px 12px;
+    border-radius: 11px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--ink);
     font-size: 13px;
     outline: none;
     transition: border-color 0.15s;
   }
-  .price-input::placeholder { color: rgba(255,255,255,0.3); }
-  .price-input:focus { border-color: rgba(255,255,255,0.4); }
+  .price-input::placeholder { color: var(--muted); }
+  .price-input:focus { border-color: var(--accent); }
 
   /* Search input */
   .search-input {
     width: 100%;
-    padding: 10px 40px 10px 38px;
-    border-radius: 12px;
-    border: 1.5px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.07);
-    color: #fff;
+    padding: 11px 40px 11px 38px;
+    border-radius: 13px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--ink);
     font-size: 13px;
     outline: none;
     transition: border-color 0.15s, background 0.15s;
   }
-  .search-input::placeholder { color: rgba(255,255,255,0.35); }
-  .search-input:focus {
-    border-color: rgba(255,255,255,0.4);
-    background: rgba(255,255,255,0.1);
-  }
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--accent); background: var(--surface); }
 
   /* Badge */
   .badge {
@@ -148,19 +143,19 @@
 
   /* Wishlist btn */
   .wish-btn {
-    width: 34px; height: 34px;
+    width: 36px; height: 36px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.95);
     display: flex; align-items: center; justify-content: center;
     border: none; cursor: pointer;
     transition: background 0.15s, transform 0.15s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 10px rgba(17,17,17,0.12);
   }
   .wish-btn:hover { background: #fff; transform: scale(1.1); }
 
   /* Pagination */
   .page-item {
-    width: 36px; height: 36px;
+    width: 38px; height: 38px;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-size: 13px; font-weight: 600;
@@ -168,27 +163,27 @@
     transition: all 0.15s;
   }
   .page-item-inactive {
-    background: rgba(255,255,255,0.08);
-    border: 1.5px solid rgba(255,255,255,0.12);
-    color: rgba(255,255,255,0.6);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--muted);
   }
   .page-item-inactive:hover {
-    background: rgba(255,255,255,0.15);
-    color: #fff;
+    border-color: var(--accent);
+    color: var(--accent);
   }
   .page-item-active {
-    background: var(--card);
-    color: var(--teal);
+    background: var(--accent);
+    color: #fff;
     font-weight: 700;
   }
 
   /* Apply btn */
   .apply-btn {
     width: 100%;
-    padding: 9px;
-    border-radius: 10px;
-    background: var(--card);
-    color: var(--teal);
+    padding: 10px;
+    border-radius: 11px;
+    background: var(--accent);
+    color: #fff;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -198,14 +193,14 @@
     transition: background 0.15s, transform 0.1s;
     margin-top: 10px;
   }
-  .apply-btn:hover { background: var(--accent); }
+  .apply-btn:hover { background: var(--ink); }
   .apply-btn:active { transform: scale(0.98); }
 
   /* View btn on card */
   .view-btn {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px;
-    background: var(--teal);
+    width: 34px; height: 34px;
+    background: var(--accent);
     color: #fff;
     border-radius: 50%;
     font-size: 13px;
@@ -213,28 +208,32 @@
     transition: background 0.15s, transform 0.15s;
     flex-shrink: 0;
   }
-  .view-btn:hover { background: var(--text-dark); transform: scale(1.08); }
+  .view-btn:hover { background: var(--ink); transform: scale(1.08); }
+  .view-btn::before {
+    content: "\F341"; /* bootstrap-icons bi-arrow-up-right */
+    font-family: "bootstrap-icons";
+  }
 </style>
 
-<div class="container mx-auto px-6 py-10">
+<div class="container mx-auto px-6 py-10" style="background:var(--bg);">
 
   <!-- ── Page heading ── -->
   <div class="mb-8 flex items-end justify-between">
     <div>
-      <p class="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">
+      <p class="text-xs font-bold uppercase tracking-widest mb-1.5" style="color:var(--accent);">
         TechGear /
         {% if selected_category %}{{ selected_category.name }}
         {% elif search %}Search
         {% else %}All Products{% endif %}
       </p>
-      <h1 class="text-3xl font-bold font-serif text-white">
+      <h1 class="text-3xl md:text-4xl font-bold font-serif" style="color:var(--ink);">
         {% if selected_category %}{{ selected_category.name }}
         {% elif search %}Results for "{{ search }}"
         {% else %}Shop All{% endif %}
       </h1>
     </div>
-    <p class="text-white/40 text-sm mb-1">
-      <span class="text-white font-semibold">{{ page_obj.paginator.count }}</span>
+    <p class="text-sm mb-1" style="color:var(--muted);">
+      <span class="font-bold" style="color:var(--ink);">{{ page_obj.paginator.count }}</span>
       product{{ page_obj.paginator.count|pluralize }}
     </p>
   </div>
@@ -244,7 +243,7 @@
     <!-- ══════════════════════════════
          SIDEBAR
     ══════════════════════════════ -->
-    <aside class="w-60 flex-shrink-0 space-y-3 sticky top-28 self-start">
+    <aside class="w-60 flex-shrink-0 sticky top-28 self-start">
 
       <form method="GET" action="{% url 'product_list' %}" id="filterForm">
 
@@ -252,13 +251,13 @@
         <div class="filter-card">
           <span class="filter-label">Search</span>
           <div class="relative">
-            <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm"></i>
+            <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted);"></i>
             <input type="text" name="search" value="{{ search }}"
                    placeholder="Search products…"
                    class="search-input">
             {% if search %}
             <a href="?{% if category_slug %}category={{ category_slug }}&{% endif %}{% if brand %}brand={{ brand }}&{% endif %}sort={{ sort_by }}"
-               class="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition">
+               class="absolute right-3 top-1/2 -translate-y-1/2 transition" style="color:var(--muted);">
               <i class="bi bi-x-lg text-xs"></i>
             </a>
             {% endif %}
@@ -307,7 +306,7 @@
           <div class="flex items-center gap-2 mb-1">
             <input type="number" name="min_price" value="{{ min_price }}"
                    placeholder="Min ₹" class="price-input">
-            <span class="text-white/30 text-xs font-bold flex-shrink-0">to</span>
+            <span class="text-xs font-bold flex-shrink-0" style="color:var(--muted);">to</span>
             <input type="number" name="max_price" value="{{ max_price }}"
                    placeholder="Max ₹" class="price-input">
           </div>
@@ -322,9 +321,10 @@
       <!-- Clear all -->
       {% if has_filters %}
       <a href="{% url 'product_list' %}"
-         class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl
-                border border-white/15 text-white/50 text-xs font-bold
-                hover:border-white/30 hover:text-white transition uppercase tracking-widest">
+         class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border text-xs font-bold transition uppercase tracking-widest"
+         style="border-color:var(--border); color:var(--muted);"
+         onmouseover="this.style.borderColor='#2D4330'; this.style.color='#2D4330';"
+         onmouseout="this.style.borderColor='rgba(17,17,17,0.10)'; this.style.color='rgba(17,17,17,0.45)';">
         <i class="bi bi-x-circle"></i> Clear Filters
       </a>
       {% endif %}
@@ -338,10 +338,10 @@
 
       <!-- Sort + count bar -->
       <div class="flex items-center justify-between mb-6">
-        <p class="text-white/40 text-sm">
+        <p class="text-sm" style="color:var(--muted);">
           Showing
-          <span class="text-white font-semibold">{{ page_obj.start_index }}–{{ page_obj.end_index }}</span>
-          of <span class="text-white font-semibold">{{ page_obj.paginator.count }}</span>
+          <span class="font-semibold" style="color:var(--ink);">{{ page_obj.start_index }}–{{ page_obj.end_index }}</span>
+          of <span class="font-semibold" style="color:var(--ink);">{{ page_obj.paginator.count }}</span>
         </p>
 
         <form method="GET" action="{% url 'product_list' %}" class="flex items-center gap-2">
@@ -350,7 +350,7 @@
           <input type="hidden" name="brand"     value="{{ brand }}">
           <input type="hidden" name="min_price" value="{{ min_price }}">
           <input type="hidden" name="max_price" value="{{ max_price }}">
-          <span class="text-white/40 text-xs font-semibold uppercase tracking-widest">Sort</span>
+          <span class="text-xs font-bold uppercase tracking-widest" style="color:var(--muted);">Sort</span>
           <div class="relative">
             <select name="sort" onchange="this.form.submit()" class="sort-select">
               <option value="newest"     {% if sort_by == 'newest'     %}selected{% endif %}>Newest</option>
@@ -359,7 +359,7 @@
               <option value="name_asc"   {% if sort_by == 'name_asc'   %}selected{% endif %}>A → Z</option>
               <option value="name_desc"  {% if sort_by == 'name_desc'  %}selected{% endif %}>Z → A</option>
             </select>
-            <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-white/40 text-xs pointer-events-none"></i>
+            <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-xs pointer-events-none" style="color:var(--muted);"></i>
           </div>
         </form>
       </div>
@@ -367,13 +367,13 @@
       {% if page_obj %}
 
       <!-- ── Product Grid ── -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for product in page_obj %}
         {% with variant=product.active_variant %}
         <div class="prod-card">
 
           <!-- Image area -->
-          <div class="prod-img-wrap relative h-52 bg-white/10">
+          <div class="prod-img-wrap relative h-52">
             <a href="{% url 'product_detail' product.slug %}">
               {% if variant and variant.primary_image %}
               <img src="{{ variant.primary_image.image.url }}"
@@ -381,37 +381,33 @@
                    class="w-full h-full object-cover">
               {% else %}
               <div class="w-full h-full flex items-center justify-center">
-                <i class="bi bi-image text-5xl text-site-bg/20"></i>
+                <i class="bi bi-image text-5xl" style="color:var(--muted);opacity:0.4;"></i>
               </div>
               {% endif %}
             </a>
 
-
-
-            
             <!-- Wishlist heart — toggles instantly via AJAX -->
-<button type="button"
-        class="wish-btn absolute top-3 right-3"
-        data-product-id="{{ product.pk }}"
-        title="{% if product.pk in wishlist_ids %}Remove from wishlist{% else %}Add to wishlist{% endif %}"
-        onclick="ajaxToggleWishlistCard({{ product.pk }}, this)">
-  <i class="bi {% if product.pk in wishlist_ids %}bi-heart-fill text-red-500{% else %}bi-heart text-[#557373]{% endif %} text-sm"></i>
-</button>
+            <button type="button"
+                    class="wish-btn absolute top-3 right-3"
+                    data-product-id="{{ product.pk }}"
+                    title="{% if product.pk in wishlist_ids %}Remove from wishlist{% else %}Add to wishlist{% endif %}"
+                    onclick="ajaxToggleWishlistCard({{ product.pk }}, this)">
+              <i class="bi {% if product.pk in wishlist_ids %}bi-heart-fill text-red-500{% else %}bi-heart text-ink-muted{% endif %} text-sm" style="{% if product.pk not in wishlist_ids %}color:rgba(17,17,17,0.4);{% endif %}"></i>
+            </button>
           </div>
 
           <!-- Card body -->
           <div class="p-5 flex flex-col flex-1">
 
-            <!-- Badges — on cream background so colors are always visible -->
+            <!-- Badges -->
             {% if product.is_trending or product.is_featured or product.is_customizable %}
             <div class="flex flex-wrap gap-1.5 mb-2.5">
               {% if product.is_trending %}
-              <span class="badge" style="background:#e8f0f0;color:#2F4F4F;border:1px solid #b8d0d0;">Trending</span>
+              <span class="badge" style="background:rgba(45,67,48,0.1);color:#2D4330;border:1px solid rgba(45,67,48,0.25);">Trending</span>
               {% endif %}
               {% if product.is_featured %}
               <span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;">Featured</span>
               {% endif %}
-              
               {% if product.is_customizable %}
               <span class="badge" style="background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;">Custom</span>
               {% endif %}
@@ -419,14 +415,14 @@
             {% endif %}
 
             <!-- Brand + category -->
-            <p class="text-[10px] font-bold text-site-bg/50 uppercase tracking-widest mb-1">
+            <p class="text-[10px] font-bold uppercase tracking-widest mb-1" style="color:var(--muted);">
               {{ product.get_brand_display }}{% if product.category %} · {{ product.category.name }}{% endif %}
             </p>
 
             <!-- Name -->
             <a href="{% url 'product_detail' product.slug %}"
-               class="text-site-bg font-bold text-[15px] leading-snug mb-3
-                      hover:text-site-bg/70 transition line-clamp-2">
+               class="font-bold text-[15px] leading-snug mb-3 transition line-clamp-2"
+               style="color:var(--ink);">
               {{ product.name }}
             </a>
 
@@ -437,18 +433,18 @@
   {% if rv %}
     {% effective_price rv as eff_price %}
     {% discount_percent rv as disc_pct %}
-    <p class="text-site-bg font-black text-lg leading-none">₹{{ eff_price }}</p>
+    <p class="font-bold font-serif text-lg leading-none" style="color:var(--ink);">₹{{ eff_price }}</p>
     {% if disc_pct > 0 %}
-      <p class="text-site-bg/40 text-xs line-through leading-none mt-0.5">₹{{ rv.price }}</p>
-      <span class="text-[9px] font-bold text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full mt-1 inline-block">{{ disc_pct }}% OFF</span>
+      <p class="text-xs line-through leading-none mt-0.5" style="color:var(--muted);">₹{{ rv.price }}</p>
+      <span class="text-[9px] font-bold text-green-700 bg-green-50 px-1.5 py-0.5 rounded-full mt-1 inline-block border border-green-200">{{ disc_pct }}% OFF</span>
     {% endif %}
   {% else %}
-    <p class="text-site-bg font-black text-lg leading-none">—</p>
+    <p class="font-bold text-lg leading-none" style="color:var(--ink);">—</p>
   {% endif %}
 {% endwith %}
               </div>
               <a href="{% url 'product_detail' product.slug %}{% if variant %}?variant={{ variant.pk }}{% endif %}" class="view-btn" title="View Product">
-                
+                <i class="bi bi-arrow-up-right"></i>
               </a>
             </div>
           </div>
@@ -460,7 +456,7 @@
 
       <!-- ── Pagination ── -->
       {% if page_obj.paginator.num_pages > 1 %}
-      <div class="flex items-center justify-end mt-10 pt-6 border-t border-white/10">
+      <div class="flex items-center justify-end mt-10 pt-6 border-t" style="border-color:var(--border);">
         <div class="flex items-center gap-2">
 
           {% if page_obj.has_previous %}
@@ -493,14 +489,13 @@
       {% else %}
       <!-- Empty state -->
       <div class="flex flex-col items-center justify-center py-28 text-center">
-        <div class="w-20 h-20 rounded-full bg-white/8 border border-white/10
-                    flex items-center justify-center mb-6">
-          <i class="bi bi-box-seam text-3xl text-white/25"></i>
+        <div class="w-20 h-20 rounded-full flex items-center justify-center mb-6" style="background:var(--alt-bg); border:1px solid var(--border);">
+          <i class="bi bi-box-seam text-3xl" style="color:var(--muted);"></i>
         </div>
-        <h3 class="text-xl font-bold font-serif text-white mb-2">
+        <h3 class="text-xl font-bold font-serif mb-2" style="color:var(--ink);">
           {% if has_filters %}No products match your filters{% else %}No products yet{% endif %}
         </h3>
-        <p class="text-white/40 text-sm mb-7 max-w-xs leading-relaxed">
+        <p class="text-sm mb-7 max-w-xs leading-relaxed" style="color:var(--muted);">
           {% if has_filters %}
             Try adjusting your search terms or clearing the filters.
           {% else %}
@@ -509,8 +504,9 @@
         </p>
         {% if has_filters %}
         <a href="{% url 'product_list' %}"
-           class="px-7 py-3 bg-card-bg text-site-bg rounded-full font-bold text-sm
-                  hover:bg-accent-hover transition">
+           class="px-7 py-3 rounded-full font-bold text-sm transition text-white"
+           style="background:var(--accent);"
+           onmouseover="this.style.background='#111111'" onmouseout="this.style.background='#2D4330'">
           <i class="bi bi-x-circle mr-2"></i>Clear All Filters
         </a>
         {% endif %}
@@ -534,7 +530,7 @@ async function ajaxToggleWishlistCard(productId, btn) {
   icon.classList.toggle('bi-heart-fill', !wasWishlisted);
   icon.classList.toggle('bi-heart', wasWishlisted);
   icon.classList.toggle('text-red-500', !wasWishlisted);
-  icon.classList.toggle('text-[#557373]', wasWishlisted);
+  icon.style.color = wasWishlisted ? 'rgba(17,17,17,0.4)' : '';
   btn.title = wasWishlisted ? 'Add to wishlist' : 'Remove from wishlist';
   btn.disabled = true;
 
@@ -553,7 +549,7 @@ async function ajaxToggleWishlistCard(productId, btn) {
       icon.classList.toggle('bi-heart-fill', data.in_wishlist);
       icon.classList.toggle('bi-heart', !data.in_wishlist);
       icon.classList.toggle('text-red-500', data.in_wishlist);
-      icon.classList.toggle('text-[#557373]', !data.in_wishlist);
+      icon.style.color = data.in_wishlist ? '' : 'rgba(17,17,17,0.4)';
       btn.title = data.in_wishlist ? 'Remove from wishlist' : 'Add to wishlist';
       showCardToast(data.message, data.in_wishlist ? 'success' : 'info');
       if (data.wishlist_count !== undefined) updateWishlistBadge(data.wishlist_count);
@@ -561,11 +557,13 @@ async function ajaxToggleWishlistCard(productId, btn) {
       // revert on failure
       icon.classList.toggle('bi-heart-fill', wasWishlisted);
       icon.classList.toggle('bi-heart', !wasWishlisted);
+      icon.style.color = wasWishlisted ? '' : 'rgba(17,17,17,0.4)';
       showCardToast(data.error || 'Could not update wishlist.', 'error');
     }
   } catch {
     icon.classList.toggle('bi-heart-fill', wasWishlisted);
     icon.classList.toggle('bi-heart', !wasWishlisted);
+    icon.style.color = wasWishlisted ? '' : 'rgba(17,17,17,0.4)';
     showCardToast('Something went wrong.', 'error');
   } finally {
     btn.disabled = false;
@@ -582,13 +580,13 @@ function updateWishlistBadge(count) {
 function showCardToast(message, type = 'info') {
   const existing = document.getElementById('listToast');
   if (existing) existing.remove();
-  const colors = { success: 'rgba(34,197,94,0.92)', error: 'rgba(239,68,68,0.92)', info: 'rgba(99,102,241,0.92)' };
+  const colors = { success: 'rgba(45,67,48,0.95)', error: 'rgba(220,38,38,0.95)', info: 'rgba(17,17,17,0.9)' };
   const toast = document.createElement('div');
   toast.id = 'listToast';
   toast.style.cssText = `
     position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(10px);
     padding:13px 22px; border-radius:14px; font-size:13px; font-weight:600; z-index:9999;
-    box-shadow:0 8px 32px rgba(0,0,0,0.35); background:${colors[type] || colors.info};
+    box-shadow:0 8px 32px rgba(17,17,17,0.2); background:${colors[type] || colors.info};
     color:#fff; opacity:0; transition:opacity 0.25s ease, transform 0.25s ease;
     white-space:nowrap; pointer-events:none;
   `;

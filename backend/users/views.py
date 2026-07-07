@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 # SECURE SESSION HELPER
-
+#removing old temporary passwords and keys
 def clear_auth_sessions(request):
     keys_to_remove =['otp_user_id', 'reset_user_id', 'otp_verified', 'resend_count', 'new_email_pending']
     for key in keys_to_remove:
@@ -57,7 +57,7 @@ def landing(request):
     for product in top_products:
         product.first_variant = product.variants.first()
 
-    # Fallback if no featured products yet
+    
     if not top_products.exists():
         top_products = Product.objects.filter(
             is_active=True,
@@ -88,7 +88,7 @@ def signup(request):
 
     if request.method == "POST" and form.is_valid():
 
-        # 1. RATE LIMIT (only valid attempts counted)
+        #  RATE LIMIT (only valid attempts counted)
         ip = request.META.get('REMOTE_ADDR')
         rate_key = f'signup_rate:{ip}'
         attempts = cache.get(rate_key, 0)
@@ -104,21 +104,21 @@ def signup(request):
         password = form.cleaned_data['password']
         full_name = form.cleaned_data['full_name']
 
-        #  SAFE NAME SPLIT
+        
         parts = full_name.split()
         first_name = parts[0] if parts else "User"
         last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
 
-        #  2. ACTIVE USER → LOGIN
+        #   ACTIVE USER → LOGIN
         if User.objects.filter(email=email, is_active=True).exists():
             messages.info(request, "Account already exists. Please login.")
             return redirect('login')
 
-        # 🔹 3. INACTIVE USER (SAFE RESUME)
+        #   INACTIVE USER
         inactive_user = User.objects.filter(email=email, is_active=False).first()
 
         if inactive_user:
-            # OTP RATE LIMIT (30 sec)
+           
             recent_otp = OTP.objects.filter(
                 user=inactive_user,
                 created_at__gte=timezone.now() - timedelta(seconds=30)
@@ -144,10 +144,10 @@ def signup(request):
                 messages.error(request, "Mail error. Try again.")
                 return redirect('signup')
 
-        #  4. NEW USER FLOW
+        #   NEW USER FLOW
         user = None
 
-        # 4. NEW USER FLOW
+        
         try:
             with transaction.atomic():
                 # Create the user but keep them inactive
@@ -162,34 +162,41 @@ def signup(request):
                     is_verified=False
                 )
                 
-                # Generate and save OTP record BEFORE sending the email
-                # This ensures if the DB fails, no email is sent.
+                
                 generate_and_send_otp(user, email, purpose='signup')
 
-            # 5. SESSION SETUP (Only happens if transaction succeeds)
+            #  SESSION 
+
             request.session.cycle_key()
             request.session['otp_user_id'] = user.id
-            request.session.set_expiry(600) # Give them 10 mins to verify
 
+            #referral
+
+            referral_code_input = form.cleaned_data.get('referral_code', '').strip().upper()
+            if referral_code_input:
+                request.session['pending_referral_code'] = referral_code_input
+            request.session.set_expiry(600) #10 minutes
             messages.info(request, "Verification code sent to " + email)
             return redirect('verify_otp')
 
         except (SMTPException, BadHeaderError, OSError) as e:
             logger.error(f"Mail failure for {email}: {str(e)}")
-            # No need to manually delete user if transaction.atomic() 
-            # rolled back the user creation!
+            
             messages.error(request, "We couldn't send the code. Please check your email or try again.")
             return redirect('signup')
         
         except IntegrityError:
             messages.info(request, "This email is already pending verification. Please check your inbox.")
             return redirect('login')
-    return render(request,'auth/signup.html', {'form': form})
+    ref_code = request.GET.get('ref', '').strip().upper()    
+    return render(request,'auth/signup.html', {'form': form,'ref_code': ref_code,})
+
+
 #verify otp
 
 @never_cache
 def verify_otp(request):
-    # 1. IDENTIFY THE USER
+    #  IDENTIFY THE USER
     user_id = request.session.get('otp_user_id')
     user = User.objects.filter(id=user_id).first() if user_id else None
 
@@ -200,11 +207,11 @@ def verify_otp(request):
         messages.error(request, "Session expired. Please login to continue.")
         return redirect('login')
 
-    # 2. STATUS CHECK
+    #  STATUS CHECK
     if user.is_verified and user.is_active:
         return redirect('home')
 
-    # 3. GET OTP DATA
+    #  GET OTP DATA
     otp_obj = OTP.objects.filter(user=user, purpose='signup').order_by('-created_at').first()
 
     remaining_time = 0
@@ -212,10 +219,10 @@ def verify_otp(request):
         elapsed = (timezone.now() - otp_obj.created_at).total_seconds()
         remaining_time = max(0, 120 - int(elapsed))
 
-    # 4. HANDLE POST
+   
     if request.method == "POST":
 
-        # Case: Expired — auto resend
+        # Expired  resend
         if not otp_obj or remaining_time <= 0:
             if otp_obj:
                 otp_obj.delete()
@@ -235,7 +242,7 @@ def verify_otp(request):
                 'user_email': user.email
             })
 
-        # Case: Format check
+        #  Format check
         otp = "".join(request.POST.getlist('otp_digit')).strip()
         if len(otp) != 6:
             messages.error(request, "Please enter the full 6-digit code.")
@@ -244,7 +251,7 @@ def verify_otp(request):
                 'user_email': user.email
             })
 
-        # Case: Correct code
+        
         if check_password(otp, otp_obj.otp):
             with transaction.atomic():
                 user.is_verified = True
@@ -252,18 +259,30 @@ def verify_otp(request):
                 user.save()
                 otp_obj.delete()
 
+                
+                pending_referral = request.session.pop('pending_referral_code', None)
+                if pending_referral:
+                    from referrals.services import validate_referral_code, apply_referral_on_signup
+                    referral_code_obj, _ = validate_referral_code(pending_referral, user.email)
+                    if referral_code_obj:
+                        apply_referral_on_signup(user, referral_code_obj)
+
+                #referral code- new users
+                from referrals.services import get_or_create_referral_code
+                get_or_create_referral_code(user)
+
             request.session.pop('otp_user_id', None)
             messages.success(request, "Email verified! Please login with your password.")
             return redirect('login')
 
-        # Case: Wrong code
+       
         messages.error(request, "Invalid code. Please try again.")
         return render(request, 'auth/verify_otp.html', {
             'remaining_time': remaining_time,
-            'user_email': user.email
+            'user_email': user.email,
         })
 
-    # 5. HANDLE GET
+    
     return render(request, 'auth/verify_otp.html', {
         'remaining_time': remaining_time,
         'user_email': user.email
@@ -278,20 +297,20 @@ def login_view(request):
         email = request.POST.get('email', '').strip().lower()
         password = request.POST.get('password')
 
-        # 1. Look up the user first to check status
+        
         user_check = User.objects.filter(email=email).first()
 
         if user_check:
-            # 2. Check if Blocked (Prioritize this)
+           
             if getattr(user_check, 'is_blocked', False):
                 messages.error(request, "This account has been suspended.")
                 return render(request, 'auth/login.html', {'email': email})
 
-            # 3. Check if Unverified 
+            
             if not user_check.is_verified:
                 request.session.cycle_key()
                 request.session['otp_user_id'] = user_check.id
-                # Check if we should resend or just redirect
+                
                 otp_exists = OTP.objects.filter(user=user_check, purpose='signup', 
                                               created_at__gte=timezone.now() - timedelta(minutes=2)).exists()
                 if not otp_exists:
@@ -302,13 +321,13 @@ def login_view(request):
                 
                 return redirect('verify_otp')
 
-        # 4. Standard Authentication for verified users
+        #verified users-auth
         user = authenticate(request, username=email, password=password)
         if not user:
             messages.error(request, "Invalid email or password.")
             return render(request, 'auth/login.html', {'email': email})
 
-        # 5. Final Success
+        
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         messages.success(request, f"Welcome back!")
         return redirect('home')
@@ -330,19 +349,19 @@ def forgot_password(request):
         user = User.objects.filter(email=email).first()
 
         if user:
-            # 1. Clear old OTPs and send new one
+            # Clear old OTPs and send new one
             OTP.objects.filter(user=user).delete()
             generate_and_send_otp(user, email, purpose='password_reset')
 
-            # 2. Set the session securely
+            
             request.session['reset_user_id'] = user.id
             request.session.set_expiry(300)
             
-            # 3. Redirect to the OTP page
+            
             messages.success(request, "An OTP has been sent to your email.")
             return redirect('forgot_otp')
         else:
-            #  FIX: Tell the user if the email is wrong!
+           
             messages.error(request, "No account found with this email address.")
             return redirect('forgot_password')
 
@@ -483,7 +502,7 @@ def home(request):
 @login_required
 @never_cache
 def dashboard(request):
-    """ DISPLAY ONLY - Shows profile details and primary address """
+    
     primary_address = request.user.addresses.all().order_by('-created_at').first()
     return render(request, "profile/dashboard.html", {
         "user": request.user,
@@ -493,7 +512,7 @@ def dashboard(request):
 @login_required
 @never_cache
 def edit_profile(request):
-    """ SEPARATE PAGE - Handle Full Name, Phone, and Photo """
+   
     if request.method == "POST":
         form = EditProfileForm(request.POST, request.FILES, instance=request.user)
         #profile remove
@@ -550,7 +569,7 @@ def change_email_request(request):
             all_otps = OTP.objects.filter(user=request.user)
             print(f"DEBUG all OTPs for user: {list(all_otps.values('id', 'purpose', 'created_at'))}")
             
-            # Setup session for verification
+            
             request.session['otp_user_id'] = request.user.id 
 #It saves the new email in a temporary spot (session) 
             request.session['new_email_pending'] = new_email
@@ -573,8 +592,6 @@ def verify_email(request):
         return redirect("dashboard")
 
     otp_obj = OTP.objects.filter(user=request.user, purpose='email_change').order_by('-created_at').first()
-
-    # Calculate remaining time for the template timer
     remaining_time = 0
     
     if otp_obj:
@@ -594,7 +611,7 @@ def verify_email(request):
         age_seconds = (timezone.now() - otp_obj.created_at).total_seconds()
         if age_seconds > 60:
             otp_obj.delete()
-            # Auto-send a fresh OTP instead of making them go back
+            
             generate_and_send_otp(request.user, new_email, purpose='email_change')
             
             
@@ -644,15 +661,14 @@ def verify_email(request):
 
 @require_POST
 def resend_otp(request):
-    # 1. IDENTIFY BY PRIORITY (Fixes the "Crossover" bug)
-    # Check for Email Change first because the user is AUTHENTICATED here
+    
     if 'new_email_pending' in request.session:
         user = request.user
         purpose = 'email_change'
         target_email = request.session['new_email_pending']
         redirect_url = 'verify_email'
         
-    # Check for Forgot Password second
+    
     elif 'reset_user_id' in request.session:
         user_id = request.session.get('reset_user_id')
         user = get_object_or_404(User, id=user_id)
@@ -660,7 +676,7 @@ def resend_otp(request):
         target_email = user.email
         redirect_url = 'forgot_otp'
         
-    # Check for Signup last (Session-based)
+   
     elif 'otp_user_id' in request.session:
         user_id = request.session.get('otp_user_id')
         user = get_object_or_404(User, id=user_id)
@@ -672,20 +688,20 @@ def resend_otp(request):
         messages.error(request, "Session expired. Please try again.")
         return redirect('login')
 
-    # 2. SECURITY: COOLDOWN CHECK
+    #  COOLDOWN CHECK
     otp_obj = OTP.objects.filter(user=user, purpose=purpose).order_by('-created_at').first()
     if otp_obj and (timezone.now() - otp_obj.created_at).total_seconds() < 60:
         messages.warning(request, "Please wait 60 seconds before requesting a new code.")
         return redirect(redirect_url)
 
-    # 3. SECURITY: RATE LIMIT
+    #  RATE LIMIT
     rate_key = f'resend_limit:{purpose}:{user.id}'
     count = cache.get(rate_key, 0)
     if count >= 5:
         messages.error(request, "Too many requests. Try again later.")
         return redirect(redirect_url)
 
-    # 4. EXECUTION
+   
     # Use a transaction to ensure old OTP is gone and new one is sent
     with transaction.atomic():
         OTP.objects.filter(user=user, purpose=purpose).delete()
@@ -699,7 +715,7 @@ def resend_otp(request):
 
 @login_required
 def manage_addresses(request):
-    addresses = request.user.addresses.all() # Ordering is handled by Model Meta
+    addresses = request.user.addresses.all() 
     return render(request, "profile/manage_addresses.html", {
         "addresses": addresses,
         "form": AddressForm()
@@ -709,10 +725,10 @@ def manage_addresses(request):
 @login_required
 @require_POST
 def set_default_address(request, pk):
-    #this finds the specific address you clicked on
+   
     address = get_object_or_404(Address, pk=pk, user=request.user)
     address.is_default = True
-    address.save() # The model save method handles unsetting the old one
+    address.save() 
     messages.success(request, f"{address} is now your default address.")
     return redirect('manage_addresses')
 

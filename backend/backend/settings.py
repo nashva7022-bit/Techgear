@@ -32,6 +32,7 @@ ORDERS_PER_PAGE = 10
 PRODUCTS_PER_PAGE = 4
 CATEGORIES_PER_PAGE = 5
 USERS_PER_PAGE = 20
+REFERRALS_PER_PAGE=5
 
 STORAGES = {
     "default": {
@@ -69,6 +70,7 @@ INSTALLED_APPS = [
     'offers',
     'coupons',
     'reports',
+    'referrals',
 
     
 

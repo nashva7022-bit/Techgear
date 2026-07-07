@@ -7,113 +7,119 @@
 
 <style>
   :root {
-    --teal:     #2F4F4F;
-    --teal-mid: #557373;
-    --card:     #DFE5F3;
-    --accent:   #F2EFEA;
+    --bg:      #F9F9F6;
+    --surface: #FFFFFF;
+    --alt-bg:  #EFEDE6;
+    --accent:  #2D4330;
+    --ink:     #111111;
+    --muted:   rgba(17,17,17,0.45);
+    --border:  rgba(17,17,17,0.10);
   }
 
+  body { background-color: var(--bg); color: var(--ink); }
+
   .addr-card {
-    border: 2px solid rgba(255,255,255,0.1);
+    border: 2px solid var(--border);
     border-radius: 16px;
     padding: 18px 20px;
     cursor: pointer;
     transition: border-color 0.2s, background 0.2s;
-    background: rgba(255,255,255,0.04);
+    background: var(--surface);
+    box-shadow: 0 1px 3px rgba(17,17,17,0.04);
     position: relative;
   }
-  .addr-card:hover { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.07); }
-  .addr-card.selected { border-color: #fff; background: rgba(255,255,255,0.09); }
+  .addr-card:hover { border-color: rgba(45,67,48,0.3); background: rgba(45,67,48,0.03); }
+  .addr-card.selected { border-color: var(--accent); background: rgba(45,67,48,0.05); }
   .addr-card input[type="radio"] { display: none; }
 
   .addr-tick {
     position: absolute; top: 14px; right: 14px;
     width: 22px; height: 22px; border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.25); background: transparent;
+    border: 2px solid var(--border); background: transparent;
     display: flex; align-items: center; justify-content: center;
     transition: all 0.2s; font-size: 11px; color: transparent;
   }
-  .addr-card.selected .addr-tick { background: #fff; border-color: #fff; color: var(--teal); }
+  .addr-card.selected .addr-tick { background: var(--accent); border-color: var(--accent); color: #fff; }
 
   .default-badge {
     font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 99px;
-    background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.6);
-    border: 1px solid rgba(255,255,255,0.15); letter-spacing: 0.08em; text-transform: uppercase;
+    background: var(--alt-bg); color: var(--muted);
+    border: 1px solid var(--border); letter-spacing: 0.08em; text-transform: uppercase;
   }
 
   .selected-payment {
-  border-color: rgba(255,255,255,0.4) !important;
-  background: rgba(255,255,255,0.09) !important;
-}
+    border-color: var(--accent) !important;
+    background: rgba(45,67,48,0.05) !important;
+  }
 
   .addr-edit-btn {
     position: absolute; bottom: 14px; right: 14px;
     font-size: 10px; font-weight: 700;
-    color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.12); border-radius: 6px;
+    color: var(--muted); background: var(--alt-bg);
+    border: 1px solid var(--border); border-radius: 6px;
     padding: 3px 10px; cursor: pointer; transition: all 0.15s;
     text-transform: uppercase; letter-spacing: 0.06em; z-index: 10;
   }
-  .addr-edit-btn:hover { color: #fff; background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); }
+  .addr-edit-btn:hover { color: var(--ink); background: rgba(45,67,48,0.1); border-color: rgba(45,67,48,0.3); }
 
   .add-addr-btn {
-    border: 2px dashed rgba(255,255,255,0.2); border-radius: 16px; padding: 18px 20px;
+    border: 2px dashed rgba(45,67,48,0.25); border-radius: 16px; padding: 18px 20px;
     cursor: pointer; transition: border-color 0.2s, background 0.2s;
     background: transparent; width: 100%;
     display: flex; align-items: center; justify-content: center; gap: 10px;
-    color: rgba(255,255,255,0.4); font-size: 13px; font-weight: 600;
+    color: var(--muted); font-size: 13px; font-weight: 600;
   }
 
   .addr-delete-btn {
-  position: absolute;
-  bottom: 14px;
-  right: 90px;
-  font-size: 10px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.35);
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 6px;
-  padding: 3px 10px;
-  cursor: pointer;
-  transition: all 0.15s;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
+    position: absolute;
+    bottom: 14px;
+    right: 90px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    background: var(--alt-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
 
-.addr-delete-btn:hover {
-  color: #f87171;
-  border-color: rgba(248,113,113,0.3);
-  background: rgba(248,113,113,0.08);
-}
-  .add-addr-btn:hover { border-color: rgba(255,255,255,0.4); color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.04); }
-  
+  .addr-delete-btn:hover {
+    color: #dc2626;
+    border-color: rgba(220,38,38,0.3);
+    background: rgba(220,38,38,0.06);
+  }
+  .add-addr-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(45,67,48,0.04); }
 
-  .checkout-item { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
+
+  .checkout-item { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
   .checkout-item:last-child { border-bottom: none; }
-  .checkout-item-img { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: rgba(255,255,255,0.06); }
-  .checkout-item-img-placeholder { width: 56px; height: 56px; border-radius: 10px; background: rgba(255,255,255,0.06); border: 1px dashed rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .checkout-item-img { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: var(--alt-bg); }
+  .checkout-item-img-placeholder { width: 56px; height: 56px; border-radius: 10px; background: var(--alt-bg); border: 1px dashed var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
-  .summary-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 24px; position: sticky; top: 100px; }
+  .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 24px; position: sticky; top: 100px; box-shadow: 0 1px 3px rgba(17,17,17,0.04); }
 
-  .place-btn { width: 100%; padding: 16px; border-radius: 14px; background: #fff; color: var(--teal); font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; border: none; cursor: pointer; transition: background 0.15s, transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-  .place-btn:hover { background: var(--accent); }
+  .place-btn { width: 100%; padding: 16px; border-radius: 14px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; border: none; cursor: pointer; transition: background 0.15s, transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .place-btn:hover { background: #111111; }
   .place-btn:active { transform: scale(0.98); }
-  .place-btn:disabled { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.3); cursor: not-allowed; transform: none; }
+  .place-btn:disabled { background: rgba(17,17,17,0.08); color: var(--muted); cursor: not-allowed; transform: none; }
 
-  .divider { height: 1px; background: rgba(255,255,255,0.08); margin: 16px 0; }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
 
   /* WALLET TOGGLE */
   .wallet-box {
-    border: 1.5px solid rgba(255,255,255,0.12);
+    border: 1.5px solid var(--border);
     border-radius: 14px;
     padding: 14px 16px;
-    background: rgba(255,255,255,0.04);
+    background: var(--surface);
     transition: border-color 0.2s, background 0.2s;
   }
   .wallet-box.active {
-    border-color: rgba(99,252,199,0.35);
-    background: rgba(99,252,199,0.05);
+    border-color: rgba(45,67,48,0.35);
+    background: rgba(45,67,48,0.05);
   }
   .wallet-toggle {
     position: relative;
@@ -124,11 +130,11 @@
   .wallet-toggle-track {
     position: absolute; inset: 0;
     border-radius: 99px;
-    background: rgba(255,255,255,0.12);
+    background: var(--border);
     cursor: pointer;
     transition: background 0.2s;
   }
-  .wallet-toggle input:checked + .wallet-toggle-track { background: #63fcc7; }
+  .wallet-toggle input:checked + .wallet-toggle-track { background: var(--accent); }
   .wallet-toggle-thumb {
     position: absolute;
     top: 3px; left: 3px;
@@ -137,45 +143,46 @@
     background: #fff;
     transition: transform 0.2s;
     pointer-events: none;
+    box-shadow: 0 1px 3px rgba(17,17,17,0.2);
   }
   .wallet-toggle input:checked ~ .wallet-toggle-thumb { transform: translateX(16px); }
 
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(17,17,17,0.5); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
   .modal-overlay.open { opacity: 1; pointer-events: all; }
-  .modal-box { background: #1e3535; border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 28px; width: 100%; max-width: 500px; transform: translateY(20px); transition: transform 0.25s; max-height: 90vh; overflow-y: auto; }
+  .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 500px; transform: translateY(20px); transition: transform 0.25s; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(17,17,17,0.18); }
   .modal-overlay.open .modal-box { transform: translateY(0); }
 
   .modal-field { margin-bottom: 16px; }
-  .modal-label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.4); margin-bottom: 6px; }
-  .modal-input { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.07); color: #fff; font-size: 13px; outline: none; transition: border-color 0.15s; box-sizing: border-box; }
-  .modal-input:focus { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.1); }
-  .modal-input::placeholder { color: rgba(255,255,255,0.3); }
-  .modal-select { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.07); color: #fff; font-size: 13px; outline: none; cursor: pointer; appearance: none; transition: border-color 0.15s; box-sizing: border-box; }
-  .modal-select option { background: #2F4F4F; color: #fff; }
+  .modal-label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; }
+  .modal-input { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--bg); color: var(--ink); font-size: 13px; outline: none; transition: border-color 0.15s; box-sizing: border-box; }
+  .modal-input:focus { border-color: var(--accent); background: var(--surface); }
+  .modal-input::placeholder { color: var(--muted); }
+  .modal-select { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--bg); color: var(--ink); font-size: 13px; outline: none; cursor: pointer; appearance: none; transition: border-color 0.15s; box-sizing: border-box; }
+  .modal-select option { background: #fff; color: var(--ink); }
 
-  .modal-save-btn { width: 100%; padding: 13px; border-radius: 12px; background: #fff; color: var(--teal); font-size: 13px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; border: none; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-  .modal-save-btn:hover { background: var(--accent); }
-  .modal-cancel-btn { width: 100%; padding: 11px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.12); background: transparent; color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; margin-top: 8px; }
-  .modal-cancel-btn:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+  .modal-save-btn { width: 100%; padding: 13px; border-radius: 12px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; border: none; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .modal-save-btn:hover { background: #111111; }
+  .modal-cancel-btn { width: 100%; padding: 11px; border-radius: 12px; border: 1.5px solid var(--border); background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; margin-top: 8px; }
+  .modal-cancel-btn:hover { border-color: rgba(45,67,48,0.4); color: var(--ink); }
 
-  .field-error { font-size: 11px; color: #f87171; font-weight: 600; margin-top: 4px; }
-  .cod-badge { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); }
-  .breadcrumb-sep { color: rgba(255,255,255,0.25); margin: 0 6px; }
-  .warn-banner { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.25); border-radius: 12px; padding: 12px 16px; font-size: 12px; color: #fbbf24; display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+  .field-error { font-size: 11px; color: #dc2626; font-weight: 600; margin-top: 4px; }
+  .cod-badge { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface); box-shadow: 0 1px 3px rgba(17,17,17,0.04); }
+  .breadcrumb-sep { color: var(--muted); margin: 0 6px; }
+  .warn-banner { background: rgba(217,119,6,0.08); border: 1px solid rgba(217,119,6,0.25); border-radius: 12px; padding: 12px 16px; font-size: 12px; color: #b45309; display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
 </style>
 
 <div class="container mx-auto px-6 pt-4 pb-2">
-  <nav class="flex items-center text-xs font-semibold text-white/40 flex-wrap">
-    <a href="{% url 'home' %}" class="hover:text-white transition">Home</a>
+  <nav class="flex items-center text-xs font-semibold text-ink/40 flex-wrap">
+    <a href="{% url 'home' %}" class="hover:text-ink transition">Home</a>
     <span class="breadcrumb-sep">/</span>
-    <a href="{% url 'cart' %}" class="hover:text-white transition">Cart</a>
+    <a href="{% url 'cart' %}" class="hover:text-ink transition">Cart</a>
     <span class="breadcrumb-sep">/</span>
-    <span class="text-white/70">Checkout</span>
+    <span class="text-ink/70">Checkout</span>
   </nav>
 </div>
 
 <div class="container mx-auto px-6 py-8">
-  <h1 class="text-3xl font-bold font-serif text-white mb-8">Checkout</h1>
+  <h1 class="text-3xl font-bold font-serif text-ink mb-8">Checkout</h1>
 
   <div class="flex flex-col lg:flex-row gap-8 items-start">
 
@@ -183,8 +190,8 @@
 
       <div class="mb-8">
         <div class="flex items-center gap-3 mb-4">
-          <span class="w-7 h-7 rounded-full bg-white text-[var(--teal)] text-xs font-black flex items-center justify-center flex-shrink-0">1</span>
-          <h2 class="text-base font-bold text-white uppercase tracking-wider">Delivery Address</h2>
+          <span class="w-7 h-7 rounded-full bg-[var(--accent)] text-white text-xs font-black flex items-center justify-center flex-shrink-0">1</span>
+          <h2 class="text-base font-bold text-ink uppercase tracking-wider">Delivery Address</h2>
         </div>
 
         {% if not addresses %}
@@ -208,17 +215,17 @@
             <div class="flex items-start gap-3 pr-8">
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-1 flex-wrap">
-                  <span class="text-sm font-bold text-white js-name">{{ address.full_name }}</span>
+                  <span class="text-sm font-bold text-ink js-name">{{ address.full_name }}</span>
                   <span class="default-badge js-label">{{ address.address_label }}</span>
-                  <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-green-400/15 text-green-400 border border-green-400/20 uppercase js-default-badge {% if not address.is_default %}hidden{% endif %}">Default</span>
+                  <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 uppercase js-default-badge {% if not address.is_default %}hidden{% endif %}">Default</span>
                 </div>
-                <p class="text-xs text-white/55 leading-relaxed js-lines">
+                <p class="text-xs text-ink/55 leading-relaxed js-lines">
                   {{ address.address_line_1 }}{% if address.address_line_2 %}, {{ address.address_line_2 }}{% endif %}
                 </p>
-                <p class="text-xs text-white/55 js-location">
+                <p class="text-xs text-ink/55 js-location">
                   {{ address.city }}, {{ address.state }} — {{ address.postal_code }}
                 </p>
-                <p class="text-xs text-white/40 mt-1 js-phone-display">
+                <p class="text-xs text-ink/40 mt-1 js-phone-display">
                   <i class="bi bi-telephone mr-1"></i>{{ address.phone }}
                 </p>
               </div>
@@ -254,8 +261,8 @@
 
       <div class="mb-8">
   <div class="flex items-center gap-3 mb-4">
-    <span class="w-7 h-7 rounded-full bg-white text-[var(--teal)] text-xs font-black flex items-center justify-center flex-shrink-0">2</span>
-    <h2 class="text-base font-bold text-white uppercase tracking-wider">Payment Method</h2>
+    <span class="w-7 h-7 rounded-full bg-[var(--accent)] text-white text-xs font-black flex items-center justify-center flex-shrink-0">2</span>
+    <h2 class="text-base font-bold text-ink uppercase tracking-wider">Payment Method</h2>
   </div>
   <div class="space-y-3" id="paymentMethods">
 
@@ -263,15 +270,15 @@
     <div class="cod-badge cursor-pointer payment-option selected-payment"
          id="pm-cod"
          onclick="selectPayment('cod')">
-      <div class="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center flex-shrink-0">
-        <i class="bi bi-cash-coin text-white text-lg"></i>
+      <div class="w-10 h-10 rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 flex items-center justify-center flex-shrink-0">
+        <i class="bi bi-cash-coin text-[var(--accent)] text-lg"></i>
       </div>
       <div class="flex-1">
-        <p class="text-sm font-bold text-white">Cash on Delivery</p>
-        <p class="text-xs text-white/40 mt-0.5">Pay when your order arrives at your door</p>
+        <p class="text-sm font-bold text-ink">Cash on Delivery</p>
+        <p class="text-xs text-ink/40 mt-0.5">Pay when your order arrives at your door</p>
       </div>
-      <div class="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0" id="pm-cod-tick">
-        <div class="w-2.5 h-2.5 rounded-full bg-[var(--teal)]"></div>
+      <div class="w-5 h-5 rounded-full bg-[var(--accent)] flex items-center justify-center flex-shrink-0" id="pm-cod-tick">
+        <div class="w-2.5 h-2.5 rounded-full bg-white"></div>
       </div>
     </div>
 
@@ -279,15 +286,15 @@
     <div class="cod-badge cursor-pointer payment-option"
          id="pm-razorpay"
          onclick="selectPayment('razorpay')">
-      <div class="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center flex-shrink-0">
-        <i class="bi bi-credit-card text-white text-lg"></i>
+      <div class="w-10 h-10 rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 flex items-center justify-center flex-shrink-0">
+        <i class="bi bi-credit-card text-[var(--accent)] text-lg"></i>
       </div>
       <div class="flex-1">
-        <p class="text-sm font-bold text-white">Pay Online</p>
-        <p class="text-xs text-white/40 mt-0.5">UPI, Cards, Net Banking via Razorpay</p>
+        <p class="text-sm font-bold text-ink">Pay Online</p>
+        <p class="text-xs text-ink/40 mt-0.5">UPI, Cards, Net Banking via Razorpay</p>
       </div>
-      <div class="w-5 h-5 rounded-full border-2 border-white/25 flex items-center justify-center flex-shrink-0" id="pm-razorpay-tick">
-        <div class="w-2.5 h-2.5 rounded-full bg-[var(--teal)] hidden"></div>
+      <div class="w-5 h-5 rounded-full border-2 border-ink/15 flex items-center justify-center flex-shrink-0" id="pm-razorpay-tick">
+        <div class="w-2.5 h-2.5 rounded-full bg-[var(--accent)] hidden"></div>
       </div>
     </div>
 
@@ -296,25 +303,25 @@
 
       <div class="mb-8">
         <div class="flex items-center gap-3 mb-4">
-          <span class="w-7 h-7 rounded-full bg-white text-[var(--teal)] text-xs font-black flex items-center justify-center flex-shrink-0">3</span>
-          <h2 class="text-base font-bold text-white uppercase tracking-wider">Wallet</h2>
+          <span class="w-7 h-7 rounded-full bg-[var(--accent)] text-white text-xs font-black flex items-center justify-center flex-shrink-0">3</span>
+          <h2 class="text-base font-bold text-ink uppercase tracking-wider">Wallet</h2>
         </div>
 
         <div class="wallet-box" id="walletBox">
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center flex-shrink-0">
-                <i class="bi bi-wallet2 text-white text-lg"></i>
+              <div class="w-10 h-10 rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 flex items-center justify-center flex-shrink-0">
+                <i class="bi bi-wallet2 text-[var(--accent)] text-lg"></i>
               </div>
               <div>
-                <p class="text-sm font-bold text-white">
+                <p class="text-sm font-bold text-ink">
                   TechGear Wallet
                   {% if wallet_balance <= 0 %}
-                  <span class="text-[10px] font-semibold text-white/30 ml-1 normal-case">(No balance)</span>
+                  <span class="text-[10px] font-semibold text-ink/30 ml-1 normal-case">(No balance)</span>
                   {% endif %}
                 </p>
-                <p class="text-xs text-white/50 mt-0.5">
-                  Available: <span class="font-bold text-white">₹{{ wallet_balance }}</span>
+                <p class="text-xs text-ink/50 mt-0.5">
+                  Available: <span class="font-bold text-ink">₹{{ wallet_balance }}</span>
                 </p>
               </div>
             </div>
@@ -326,27 +333,27 @@
               <div class="wallet-toggle-thumb"></div>
             </label>
             {% else %}
-            <span class="text-[10px] text-white/25 font-semibold uppercase tracking-wider">Empty</span>
+            <span class="text-[10px] text-ink/25 font-semibold uppercase tracking-wider">Empty</span>
             {% endif %}
           </div>
 
           {% if wallet_balance > 0 %}
-          <div id="walletInfo" class="hidden mt-3 pt-3 border-t border-white/8">
+          <div id="walletInfo" class="hidden mt-3 pt-3 border-t border-ink/8">
             <div class="flex justify-between items-center text-xs">
-              <span class="text-white/50">Wallet deduction</span>
-              <span class="font-bold text-emerald-400">− ₹<span id="walletDeductDisplay">{{ wallet_applicable }}</span></span>
+              <span class="text-ink/50">Wallet deduction</span>
+              <span class="font-bold text-emerald-600">− ₹<span id="walletDeductDisplay">{{ wallet_applicable }}</span></span>
             </div>
             <div class="flex justify-between items-center text-xs mt-1.5">
-              <span class="text-white/50">Remaining to pay (COD)</span>
-              <span class="font-bold text-white">₹<span id="codRemainDisplay">0</span></span>
+              <span class="text-ink/50">Remaining to pay (COD)</span>
+              <span class="font-bold text-ink">₹<span id="codRemainDisplay">0</span></span>
             </div>
             {% if wallet_applicable >= total_amount %}
-            <p class="text-[10px] text-emerald-400/70 mt-2 flex items-center gap-1">
+            <p class="text-[10px] text-emerald-600/80 mt-2 flex items-center gap-1">
               <i class="bi bi-check-circle-fill"></i>
               Your wallet covers the full order — no cash needed at delivery!
             </p>
             {% else %}
-            <p class="text-[10px] text-white/30 mt-2">
+            <p class="text-[10px] text-ink/30 mt-2">
               ₹{{ wallet_applicable }} from wallet + ₹<span id="codRemainDisplay2">{{ total_amount|floatformat:2 }}</span> via COD
             </p>
             {% endif %}
@@ -357,28 +364,28 @@
       <!-- STEP 4: COUPON -->
 <div class="mb-8">
   <div class="flex items-center gap-3 mb-4">
-    <span class="w-7 h-7 rounded-full bg-white text-[var(--teal)] text-xs font-black flex items-center justify-center flex-shrink-0">4</span>
-    <h2 class="text-base font-bold text-white uppercase tracking-wider">Coupon</h2>
+    <span class="w-7 h-7 rounded-full bg-[var(--accent)] text-white text-xs font-black flex items-center justify-center flex-shrink-0">4</span>
+    <h2 class="text-base font-bold text-ink uppercase tracking-wider">Coupon</h2>
   </div>
 
   <!-- Applied state -->
   <div id="couponAppliedBox"
-       class="{% if not coupon_code %}hidden{% endif %} flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10">
+       class="{% if not coupon_code %}hidden{% endif %} flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border border-emerald-200 bg-emerald-50">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
-        <i class="bi bi-ticket-perforated-fill text-emerald-400 text-sm"></i>
+      <div class="w-9 h-9 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center flex-shrink-0">
+        <i class="bi bi-ticket-perforated-fill text-emerald-600 text-sm"></i>
       </div>
       <div>
-        <p class="text-sm font-black text-emerald-400 tracking-wider font-mono" id="appliedCodeLabel">
+        <p class="text-sm font-black text-emerald-700 tracking-wider font-mono" id="appliedCodeLabel">
           {% if coupon_code %}{{ coupon_code }}{% endif %}
         </p>
-        <p class="text-[10px] text-emerald-400/70 mt-0.5">
+        <p class="text-[10px] text-emerald-700/70 mt-0.5">
           ₹<span id="appliedDiscountLabel">{% if coupon_discount %}{{ coupon_discount }}{% endif %}</span> off applied
         </p>
       </div>
     </div>
     <button type="button" onclick="removeCoupon()"
-            class="text-[10px] font-bold text-white/40 hover:text-red-400 transition uppercase tracking-widest px-3 py-1.5 rounded-lg border border-white/10 hover:border-red-400/30">
+            class="text-[10px] font-bold text-ink/40 hover:text-red-500 transition uppercase tracking-widest px-3 py-1.5 rounded-lg border border-ink/10 hover:border-red-300">
       Remove
     </button>
   </div>
@@ -391,30 +398,30 @@
              placeholder="Enter coupon code"
              maxlength="30"
              style="text-transform:uppercase"
-             class="flex-1 px-4 py-3 rounded-xl border border-white/15 bg-white/5 text-white text-sm font-mono font-bold placeholder-white/25 outline-none focus:border-white/35 transition tracking-widest">
+             class="flex-1 px-4 py-3 rounded-xl border border-ink/15 bg-white text-ink text-sm font-mono font-bold placeholder-ink/25 outline-none focus:border-[var(--accent)] transition tracking-widest">
       <button type="button"
               id="applyCouponBtn"
               onclick="applyCoupon()"
-              class="px-5 py-3 rounded-xl bg-white text-[var(--teal)] text-xs font-black uppercase tracking-widest hover:bg-[var(--accent)] transition flex-shrink-0">
+              class="px-5 py-3 rounded-xl bg-[var(--accent)] text-white text-xs font-black uppercase tracking-widest hover:bg-[#111111] transition flex-shrink-0">
         Apply
       </button>
-      
+
     </div>
     {% if available_coupons %}
     <div class="mt-4">
-      <p class="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3">
+      <p class="text-[10px] font-bold text-ink/30 uppercase tracking-widest mb-3">
         Available Offers
       </p>
       <div class="flex flex-col gap-2">
         {% for coupon in available_coupons %}
         <div class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border
-                    {% if coupon.applicable %}border-white/15 bg-white/4{% else %}border-white/5 bg-white/2 opacity-50{% endif %}">
+                    {% if coupon.applicable %}border-ink/10 bg-ink/3{% else %}border-ink/5 bg-ink/2 opacity-50{% endif %}">
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2 flex-wrap mb-1">
-              <span class="text-xs font-black text-white font-mono tracking-wider">{{ coupon.code }}</span>
+              <span class="text-xs font-black text-ink font-mono tracking-wider">{{ coupon.code }}</span>
               <span class="text-[9px] font-bold px-2 py-0.5 rounded-full
-                          {% if coupon.applicable %}bg-emerald-500/15 text-emerald-400 border border-emerald-500/20
-                          {% else %}bg-white/5 text-white/25 border border-white/10{% endif %}">
+                          {% if coupon.applicable %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                          {% else %}bg-ink/5 text-ink/25 border border-ink/10{% endif %}">
                 {% if coupon.discount_type == 'percentage' %}
                   {{ coupon.discount_value }}% OFF{% if coupon.max_discount_cap %} · max ₹{{ coupon.max_discount_cap }}{% endif %}
                 {% else %}
@@ -423,16 +430,16 @@
               </span>
             </div>
             {% if coupon.description %}
-            <p class="text-[10px] text-white/35 mb-1">{{ coupon.description }}</p>
+            <p class="text-[10px] text-ink/35 mb-1">{{ coupon.description }}</p>
             {% endif %}
             {% if coupon.applicable %}
               {% if coupon.min_order_amount > 0 %}
-              <p class="text-[10px] text-white/25">Min order ₹{{ coupon.min_order_amount }} · Expires {{ coupon.end_date|date:"d M Y" }}</p>
+              <p class="text-[10px] text-ink/25">Min order ₹{{ coupon.min_order_amount }} · Expires {{ coupon.end_date|date:"d M Y" }}</p>
               {% else %}
-              <p class="text-[10px] text-white/25">Expires {{ coupon.end_date|date:"d M Y" }}</p>
+              <p class="text-[10px] text-ink/25">Expires {{ coupon.end_date|date:"d M Y" }}</p>
               {% endif %}
             {% else %}
-              <p class="text-[10px] text-amber-400/70">
+              <p class="text-[10px] text-amber-600/80">
                 <i class="bi bi-lock-fill mr-1"></i>Add ₹{{ coupon.amount_needed }} more to unlock
               </p>
             {% endif %}
@@ -440,11 +447,11 @@
           {% if coupon.applicable %}
           <button type="button"
                   onclick="fillCoupon('{{ coupon.code }}')"
-                  class="text-[10px] font-black text-[var(--teal)] bg-white px-3 py-1.5 rounded-lg hover:bg-[var(--accent)] transition flex-shrink-0">
+                  class="text-[10px] font-black text-white bg-[var(--accent)] px-3 py-1.5 rounded-lg hover:bg-[#111111] transition flex-shrink-0">
             Apply
           </button>
           {% else %}
-          <span class="text-[10px] text-white/20 font-semibold flex-shrink-0 whitespace-nowrap">
+          <span class="text-[10px] text-ink/20 font-semibold flex-shrink-0 whitespace-nowrap">
             Locked
           </span>
           {% endif %}
@@ -453,7 +460,7 @@
       </div>
     </div>
     {% endif %}
-    <p id="couponError" class="hidden mt-2 text-xs text-red-400 font-semibold flex items-center gap-1.5">
+    <p id="couponError" class="hidden mt-2 text-xs text-red-500 font-semibold flex items-center gap-1.5">
       <i class="bi bi-exclamation-circle-fill"></i>
       <span id="couponErrorText"></span>
     </p>
@@ -462,15 +469,15 @@
 
       <div>
         <div class="flex items-center gap-3 mb-4">
-          <span class="w-7 h-7 rounded-full bg-white text-[var(--teal)] text-xs font-black flex items-center justify-center flex-shrink-0">5</span>
-          <h2 class="text-base font-bold text-white uppercase tracking-wider">
+          <span class="w-7 h-7 rounded-full bg-[var(--accent)] text-white text-xs font-black flex items-center justify-center flex-shrink-0">5</span>
+          <h2 class="text-base font-bold text-ink uppercase tracking-wider">
             Order Items
-            <span class="text-white/30 font-normal normal-case text-sm ml-1">
+            <span class="text-ink/30 font-normal normal-case text-sm ml-1">
               ({{ cart_items|length }} item{{ cart_items|length|pluralize }})
             </span>
           </h2>
         </div>
-        <div class="bg-white/5 border border-white/8 rounded-2xl overflow-hidden">
+        <div class="bg-white border border-ink/8 rounded-2xl overflow-hidden">
           {% for item in cart_items %}
           <div class="checkout-item px-5 flex items-center gap-4">
             {% if item.variant.images.all %}
@@ -479,27 +486,27 @@
                  class="checkout-item-img">
             {% else %}
             <div class="checkout-item-img-placeholder">
-              <i class="bi bi-image text-white/20"></i>
+              <i class="bi bi-image text-ink/20"></i>
             </div>
             {% endif %}
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-bold text-white leading-snug line-clamp-1">{{ item.variant.product.name }}</p>
+              <p class="text-sm font-bold text-ink leading-snug line-clamp-1">{{ item.variant.product.name }}</p>
               <div class="flex flex-wrap items-center gap-1.5 mt-1">
                 {% if item.variant.device_model %}
-                <span class="text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">{{ item.variant.device_model.name }}</span>
+                <span class="text-[10px] text-ink/40 bg-ink/5 px-2 py-0.5 rounded-full border border-ink/10">{{ item.variant.device_model.name }}</span>
                 {% endif %}
-                <span class="flex items-center gap-1 text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
-                  <span class="w-2.5 h-2.5 rounded-full inline-block border border-white/20" style="background:{{ item.variant.color.color_code }}"></span>
+                <span class="flex items-center gap-1 text-[10px] text-ink/40 bg-ink/5 px-2 py-0.5 rounded-full border border-ink/10">
+                  <span class="w-2.5 h-2.5 rounded-full inline-block border border-ink/15" style="background:{{ item.variant.color.color_code }}"></span>
                   {{ item.variant.color.name }}
                 </span>
               </div>
             </div>
             <div class="text-right flex-shrink-0">
-              <p class="text-sm font-black text-white">₹{{ item.discounted_total }}</p>
+              <p class="text-sm font-black text-ink">₹{{ item.discounted_total }}</p>
               {% if item.discount_pct > 0 %}
-              <p class="text-[10px] text-emerald-400 font-semibold">Saved {{ item.discount_pct }}%</p>
+              <p class="text-[10px] text-emerald-600 font-semibold">Saved {{ item.discount_pct }}%</p>
               {% endif %}
-              <p class="text-[10px] text-white/35 mt-0.5">₹{{ item.effective_price }} × {{ item.quantity }}</p>
+              <p class="text-[10px] text-ink/35 mt-0.5">₹{{ item.effective_price }} × {{ item.quantity }}</p>
             </div>
           </div>
           {% endfor %}
@@ -510,15 +517,15 @@
 
     <div class="w-full lg:w-80 flex-shrink-0">
       <div class="summary-card">
-        <h2 class="text-xs font-bold text-white uppercase tracking-widest mb-5">Order Summary</h2>
+        <h2 class="text-xs font-bold text-ink uppercase tracking-widest mb-5">Order Summary</h2>
 
         <div class="space-y-3 mb-2">
           {% for item in cart_items %}
           <div class="flex items-start justify-between gap-3">
-            <span class="text-xs text-white/50 flex-1 leading-relaxed line-clamp-2">
-              {{ item.variant.product.name }}<span class="text-white/25"> × {{ item.quantity }}</span>
+            <span class="text-xs text-ink/50 flex-1 leading-relaxed line-clamp-2">
+              {{ item.variant.product.name }}<span class="text-ink/25"> × {{ item.quantity }}</span>
             </span>
-            <span class="text-xs font-semibold text-white flex-shrink-0">₹{{ item.discounted_total }}</span>
+            <span class="text-xs font-semibold text-ink flex-shrink-0">₹{{ item.discounted_total }}</span>
           </div>
           {% endfor %}
         </div>
@@ -527,74 +534,74 @@
 
         <div class="space-y-2 mb-2">
           <div class="flex justify-between items-center">
-    <span class="text-xs text-white/50">Original Price</span>
-    <span class="text-sm font-bold text-white">
+    <span class="text-xs text-ink/50">Original Price</span>
+    <span class="text-sm font-bold text-ink">
         ₹{{ subtotal|add:total_offer_discount }}
     </span>
 </div>
 
           {% if total_offer_discount > 0 %}
           <div class="flex justify-between items-center" id="summaryOfferDiscountRow">
-            <span class="text-xs text-emerald-400 flex items-center gap-1">
+            <span class="text-xs text-emerald-600 flex items-center gap-1">
               <i class="bi bi-tags-fill"></i> Offer Discount
             </span>
-            <span class="text-xs font-bold text-emerald-400">− ₹{{ total_offer_discount }}</span>
+            <span class="text-xs font-bold text-emerald-600">− ₹{{ total_offer_discount }}</span>
           </div>
           {% endif %}
 
           <!-- add after the offer discount row -->
 <div class="flex justify-between items-center" id="summaryCouponRow"
      {% if not coupon_discount %}style="display:none"{% endif %}>
-  <span class="text-xs text-emerald-400 flex items-center gap-1">
+  <span class="text-xs text-emerald-600 flex items-center gap-1">
     <i class="bi bi-ticket-perforated-fill"></i>
     Coupon (<span id="summaryCouponCode">{{ coupon_code }}</span>)
   </span>
-  <span class="text-xs font-bold text-emerald-400">
+  <span class="text-xs font-bold text-emerald-600">
     − ₹<span id="summaryCouponAmt">{{ coupon_discount }}</span>
   </span>
 </div>
 
           {% if customization_total > 0 %}
           <div class="flex justify-between items-center">
-            <span class="text-xs text-purple-300/80 flex items-center gap-1.5">
+            <span class="text-xs text-purple-600/80 flex items-center gap-1.5">
               <i class="bi bi-palette2"></i> Personalisation
             </span>
-            <span class="text-xs font-semibold text-purple-300/80">+ ₹{{ customization_total }}</span>
+            <span class="text-xs font-semibold text-purple-600/80">+ ₹{{ customization_total }}</span>
           </div>
           {% endif %}
 
           <div class="flex justify-between items-center">
-            <span class="text-xs text-white/50">Shipping</span>
-            <span class="text-xs font-semibold text-green-400">
+            <span class="text-xs text-ink/50">Shipping</span>
+            <span class="text-xs font-semibold text-green-600">
               {% if shipping_charge == 0 %}Free{% else %}₹{{ shipping_charge }}{% endif %}
             </span>
           </div>
 
           <div class="flex justify-between items-center" id="summaryWalletRow" style="display:none !important;">
-            <span class="text-xs text-emerald-400 flex items-center gap-1">
+            <span class="text-xs text-emerald-600 flex items-center gap-1">
               <i class="bi bi-wallet2 text-xs"></i> Wallet
             </span>
-            <span class="text-xs font-semibold text-emerald-400">− ₹<span id="summaryWalletAmt">0</span></span>
+            <span class="text-xs font-semibold text-emerald-600">− ₹<span id="summaryWalletAmt">0</span></span>
           </div>
         </div>
 
         <div class="divider"></div>
 
        <div class="flex justify-between items-center mb-2">
-          <span class="text-sm font-bold text-white">Total</span>
-          <span class="text-xl font-black text-white" id="summaryTotalAmt">₹{{ total_amount }}</span>
+          <span class="text-sm font-bold text-ink">Total</span>
+          <span class="text-xl font-black text-ink" id="summaryTotalAmt">₹{{ total_amount }}</span>
         </div>
 
         <div id="summaryCodRow" class="flex justify-between items-center mb-4" style="display:none !important;">
-          <span class="text-xs text-white/40">Pay via COD</span>
-          <span class="text-sm font-bold text-white">₹<span id="summaryCodAmt">0</span></span>
+          <span class="text-xs text-ink/40">Pay via COD</span>
+          <span class="text-sm font-bold text-ink">₹<span id="summaryCodAmt">0</span></span>
         </div>
 
         <div class="mb-6"></div>
 
         {% if total_offer_discount > 0 or coupon_discount > 0 %}
-        <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl mb-4 text-center">
-          <p class="text-xs text-emerald-400 font-bold tracking-wide">
+        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl mb-4 text-center">
+          <p class="text-xs text-emerald-700 font-bold tracking-wide">
             <i class="bi bi-sparkles mr-1"></i>
             You're saving ₹<span id="totalSavingsAmt">{{ total_offer_discount|add:coupon_discount }}</span> on this order!
           </p>
@@ -618,20 +625,20 @@
         </form>
 
         {% if not addresses %}
-        <p class="text-[11px] text-white/30 text-center mt-3 leading-relaxed" id="addAddressPrompt">
+        <p class="text-[11px] text-ink/30 text-center mt-3 leading-relaxed" id="addAddressPrompt">
           Add a delivery address to place your order.
         </p>
         {% endif %}
 
         <div class="mt-5 space-y-2.5">
-          <div class="flex items-center gap-2 text-white/30 text-[11px]">
-            <i class="bi bi-shield-check text-green-400"></i> Secure checkout
+          <div class="flex items-center gap-2 text-ink/30 text-[11px]">
+            <i class="bi bi-shield-check text-green-600"></i> Secure checkout
           </div>
-          <div class="flex items-center gap-2 text-white/30 text-[11px]">
-            <i class="bi bi-truck text-blue-400"></i> Dispatched within 48 hours
+          <div class="flex items-center gap-2 text-ink/30 text-[11px]">
+            <i class="bi bi-truck text-blue-600"></i> Dispatched within 48 hours
           </div>
-          <div class="flex items-center gap-2 text-white/30 text-[11px]">
-            <i class="bi bi-arrow-counterclockwise text-yellow-400"></i> Easy 7-day returns
+          <div class="flex items-center gap-2 text-ink/30 text-[11px]">
+            <i class="bi bi-arrow-counterclockwise text-amber-600"></i> Easy 7-day returns
           </div>
         </div>
       </div>
@@ -646,17 +653,17 @@
 
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h3 class="text-base font-bold text-white" id="modalTitle">Add New Address</h3>
-        <p class="text-[11px] text-white/35 mt-0.5" id="modalSubtitle">This address will be saved to your account</p>
+        <h3 class="text-base font-bold text-ink" id="modalTitle">Add New Address</h3>
+        <p class="text-[11px] text-ink/35 mt-0.5" id="modalSubtitle">This address will be saved to your account</p>
       </div>
       <button onclick="closeAddressModal()"
-              class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/12 flex items-center justify-center text-white/40 hover:text-white transition">
+              class="w-8 h-8 rounded-full bg-ink/5 hover:bg-ink/10 flex items-center justify-center text-ink/40 hover:text-ink transition">
         <i class="bi bi-x text-lg"></i>
       </button>
     </div>
 
-    <div id="modalErrors" class="hidden mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
-      <p class="text-xs text-red-400 font-semibold" id="modalErrorText"></p>
+    <div id="modalErrors" class="hidden mb-4 p-3 rounded-xl bg-red-50 border border-red-200">
+      <p class="text-xs text-red-600 font-semibold" id="modalErrorText"></p>
     </div>
 
     <form id="addressForm">
@@ -681,7 +688,7 @@
           <p class="field-error hidden" id="err_address_line_1"></p>
         </div>
         <div class="modal-field col-span-2">
-          <label class="modal-label">Address Line 2 <span class="normal-case text-white/20 font-normal">(optional)</span></label>
+          <label class="modal-label">Address Line 2 <span class="normal-case text-ink/20 font-normal">(optional)</span></label>
           <input type="text" name="address_line_2" id="af_address_line_2" placeholder="Landmark, flat no." class="modal-input">
         </div>
         <div class="modal-field">
@@ -712,13 +719,13 @@
               <option value="Work">Work</option>
               <option value="Other">Other</option>
             </select>
-            <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-white/40 text-xs pointer-events-none"></i>
+            <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 text-xs pointer-events-none"></i>
           </div>
         </div>
         <div class="modal-field col-span-2">
           <label class="flex items-center gap-3 cursor-pointer">
-            <input type="checkbox" name="is_default" id="af_is_default" value="1" class="w-4 h-4 rounded accent-white cursor-pointer">
-            <span class="text-xs font-semibold text-white/60">Set as default address</span>
+            <input type="checkbox" name="is_default" id="af_is_default" value="1" class="w-4 h-4 rounded accent-[var(--accent)] cursor-pointer">
+            <span class="text-xs font-semibold text-ink/60">Set as default address</span>
           </label>
         </div>
       </div>
@@ -739,15 +746,15 @@
 
     <div class="text-center">
 
-      <div class="w-14 h-14 mx-auto rounded-full bg-red-500/10 flex items-center justify-center mb-4">
-        <i class="bi bi-trash3 text-red-400 text-xl"></i>
+      <div class="w-14 h-14 mx-auto rounded-full bg-red-50 flex items-center justify-center mb-4">
+        <i class="bi bi-trash3 text-red-500 text-xl"></i>
       </div>
 
-      <h3 class="text-white font-bold text-lg">
+      <h3 class="text-ink font-bold text-lg">
         Remove Address
       </h3>
 
-      <p class="text-white/40 text-sm mt-2">
+      <p class="text-ink/50 text-sm mt-2">
         Are you sure you want to remove this saved address?
       </p>
 
@@ -1015,13 +1022,13 @@ function selectPayment(method) {
     const dot  = tick.querySelector('div');
     if (m === method) {
       el.classList.add('selected-payment');
-      tick.classList.add('bg-white');
-      tick.classList.remove('border-2', 'border-white/25');
+      tick.classList.add('bg-[var(--accent)]');
+      tick.classList.remove('border-2', 'border-ink/15');
       if (dot) dot.classList.remove('hidden');
     } else {
       el.classList.remove('selected-payment');
-      tick.classList.remove('bg-white');
-      tick.classList.add('border-2', 'border-white/25');
+      tick.classList.remove('bg-[var(--accent)]');
+      tick.classList.add('border-2', 'border-ink/15');
       if (dot) dot.classList.add('hidden');
     }
   });

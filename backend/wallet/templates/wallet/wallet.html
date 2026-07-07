@@ -7,33 +7,40 @@
 
 <style>
   :root {
-    --teal:     #2F4F4F;
-    --teal-mid: #557373;
-    --card:     #DFE5F3;
-    --accent:   #F2EFEA;
+    --bg:      #F9F9F6;
+    --surface: #FFFFFF;
+    --alt-bg:  #EFEDE6;
+    --accent:  #2D4330;
+    --ink:     #111111;
+    --muted:   rgba(17,17,17,0.45);
+    --border:  rgba(17,17,17,0.10);
   }
+
+  body { background-color: var(--bg); color: var(--ink); }
 
   /* ── Transaction card ── */
   .txn-card {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.09);
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 20px;
     overflow: hidden;
+    box-shadow: 0 1px 3px rgba(17,17,17,0.04);
     transition: border-color 0.2s, box-shadow 0.2s;
   }
   .txn-card:hover {
-    border-color: rgba(255,255,255,0.18);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    border-color: rgba(45,67,48,0.3);
+    box-shadow: 0 8px 24px rgba(17,17,17,0.08);
   }
 
   /* ── Balance card ── */
   .balance-card {
-    background: linear-gradient(135deg, rgba(47,79,79,0.8), rgba(85,115,115,0.6));
-    border: 1px solid rgba(255,255,255,0.15);
+    background: linear-gradient(135deg, #2D4330, #3d5a41);
+    border: 1px solid rgba(17,17,17,0.10);
     border-radius: 24px;
     padding: 32px;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 8px 24px rgba(45,67,48,0.18);
   }
   .balance-card::before {
     content: '';
@@ -41,7 +48,7 @@
     top: -40px; right: -40px;
     width: 180px; height: 180px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.06);
   }
   .balance-card::after {
     content: '';
@@ -49,19 +56,19 @@
     bottom: -60px; left: -20px;
     width: 220px; height: 220px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.03);
+    background: rgba(255,255,255,0.05);
   }
 
   /* ── Transaction type badge ── */
   .txn-credit {
-    background: rgba(34,197,94,0.1);
-    color: #4ade80;
-    border: 1px solid rgba(34,197,94,0.2);
+    background: rgba(34,197,94,0.08);
+    color: #16a34a;
+    border: 1px solid rgba(34,197,94,0.25);
   }
   .txn-debit {
-    background: rgba(239,68,68,0.1);
-    color: #f87171;
-    border: 1px solid rgba(239,68,68,0.2);
+    background: rgba(220,38,38,0.06);
+    color: #dc2626;
+    border: 1px solid rgba(220,38,38,0.2);
   }
   .txn-badge {
     font-size: 9px; font-weight: 800;
@@ -72,10 +79,11 @@
 
   /* ── Stat mini cards ── */
   .stat-mini {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.09);
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 16px;
     padding: 16px 20px;
+    box-shadow: 0 1px 3px rgba(17,17,17,0.04);
   }
 
   /* ── View btn ── */
@@ -83,18 +91,18 @@
     display: inline-flex; align-items: center; gap: 6px;
     padding: 8px 16px;
     border-radius: 10px;
-    border: 1.5px solid rgba(255,255,255,0.15);
+    border: 1.5px solid var(--border);
     background: transparent;
-    color: rgba(255,255,255,0.6);
+    color: var(--muted);
     font-size: 11px; font-weight: 700;
     text-decoration: none;
     transition: all 0.15s;
     white-space: nowrap;
   }
   .view-btn:hover {
-    border-color: rgba(255,255,255,0.35);
-    color: #fff;
-    background: rgba(255,255,255,0.06);
+    border-color: rgba(45,67,48,0.4);
+    color: var(--ink);
+    background: rgba(45,67,48,0.05);
   }
 
   /* ── Pagination ── */
@@ -107,19 +115,19 @@
     transition: all 0.15s;
   }
   .page-inactive {
-    background: rgba(255,255,255,0.08);
-    border: 1.5px solid rgba(255,255,255,0.12);
-    color: rgba(255,255,255,0.6);
+    background: var(--alt-bg);
+    border: 1.5px solid var(--border);
+    color: var(--muted);
   }
-  .page-inactive:hover { background: rgba(255,255,255,0.15); color: #fff; }
+  .page-inactive:hover { background: rgba(45,67,48,0.12); color: var(--ink); }
   .page-active {
-    background: var(--card);
-    color: var(--teal);
+    background: var(--accent);
+    color: #fff;
     font-weight: 800;
   }
 
   /* breadcrumb */
-  .breadcrumb-sep { color: rgba(255,255,255,0.25); margin: 0 6px; }
+  .breadcrumb-sep { color: var(--muted); margin: 0 6px; }
 
   /* ── Empty state ── */
   .empty-wrap {
@@ -130,8 +138,8 @@
   .empty-icon {
     width: 90px; height: 90px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: var(--alt-bg);
+    border: 1px solid var(--border);
     display: flex; align-items: center; justify-content: center;
     margin-bottom: 24px;
   }
@@ -139,10 +147,10 @@
 
 <!-- Breadcrumb -->
 <div class="container mx-auto px-6 pt-4 pb-2">
-  <nav class="flex items-center text-xs font-semibold text-white/40 flex-wrap">
-    <a href="{% url 'home' %}" class="hover:text-white transition">Home</a>
+  <nav class="flex items-center text-xs font-semibold text-ink/40 flex-wrap">
+    <a href="{% url 'home' %}" class="hover:text-ink transition">Home</a>
     <span class="breadcrumb-sep">/</span>
-    <span class="text-white/70">My Wallet</span>
+    <span class="text-ink/70">My Wallet</span>
   </nav>
 </div>
 
@@ -151,8 +159,8 @@
   <!-- Page header -->
   <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
     <div>
-      <h1 class="text-3xl font-bold font-serif text-white">My Wallet</h1>
-      <p class="text-white/40 text-sm mt-1">Your TechGear store credits and transaction history</p>
+      <h1 class="text-3xl font-bold font-serif text-ink">My Wallet</h1>
+      <p class="text-ink/40 text-sm mt-1">Your TechGear store credits and transaction history</p>
     </div>
     <a href="{% url 'product_list' %}" class="view-btn">
       <i class="bi bi-bag text-xs"></i> Continue Shopping
@@ -176,7 +184,7 @@
         </p>
 
         <!-- Quick info row -->
-        <div class="flex flex-wrap gap-6 mt-6 pt-6 border-t border-white/10">
+        <div class="flex flex-wrap gap-6 mt-6 pt-6 border-t border-white/15">
           <div>
             <p class="text-[10px] font-bold text-white/35 uppercase tracking-widest mb-1">Total Credited</p>
             <p class="text-base font-black text-green-400">+ ₹{{ wallet.total_credited }}</p>
@@ -201,11 +209,11 @@
            max="100000"
            step="1"
            placeholder="Enter amount"
-           class="flex-1 px-4 py-3 rounded-xl border border-white/15 bg-white/5 
-                  text-white text-sm outline-none focus:border-white/35 transition">
+           class="flex-1 px-4 py-3 rounded-xl border border-ink/15 bg-white
+                  text-ink text-sm outline-none focus:border-[#2D4330] transition">
     <button type="submit"
-            class="px-5 py-3 rounded-xl bg-white text-[#2F4F4F] text-xs 
-                   font-black uppercase tracking-widest hover:bg-[#F2EFEA] transition">
+            class="px-5 py-3 rounded-xl bg-[#2D4330] text-white text-xs
+                   font-black uppercase tracking-widest hover:bg-[#111111] transition">
       Add Money
     </button>
   </div>
@@ -213,29 +221,29 @@
 
     <!-- How it works -->
     <div class="stat-mini flex flex-col justify-between">
-      <p class="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-4">How Wallet Works</p>
+      <p class="text-[10px] font-bold text-ink/40 uppercase tracking-widest mb-4">How Wallet Works</p>
       <div class="space-y-3">
         <div class="flex items-start gap-3">
-          <div class="w-7 h-7 rounded-full bg-green-500/15 border border-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <i class="bi bi-plus text-green-400 text-xs font-black"></i>
+          <div class="w-7 h-7 rounded-full bg-green-50 border border-green-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <i class="bi bi-plus text-green-600 text-xs font-black"></i>
           </div>
-          <p class="text-xs text-white/50 leading-relaxed">
+          <p class="text-xs text-ink/50 leading-relaxed">
             Returns approved by admin are credited to your wallet automatically.
           </p>
         </div>
         <div class="flex items-start gap-3">
-          <div class="w-7 h-7 rounded-full bg-blue-500/15 border border-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <i class="bi bi-wallet2 text-blue-400 text-xs"></i>
+          <div class="w-7 h-7 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <i class="bi bi-wallet2 text-blue-600 text-xs"></i>
           </div>
-          <p class="text-xs text-white/50 leading-relaxed">
+          <p class="text-xs text-ink/50 leading-relaxed">
             Use your balance at checkout — full or partial payment.
           </p>
         </div>
         <div class="flex items-start gap-3">
-          <div class="w-7 h-7 rounded-full bg-purple-500/15 border border-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <i class="bi bi-shield-check text-purple-400 text-xs"></i>
+          <div class="w-7 h-7 rounded-full bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <i class="bi bi-shield-check text-purple-600 text-xs"></i>
           </div>
-          <p class="text-xs text-white/50 leading-relaxed">
+          <p class="text-xs text-ink/50 leading-relaxed">
             Wallet credits never expire and are safe to use anytime.
           </p>
         </div>
@@ -246,7 +254,7 @@
 
   <!-- ── TRANSACTION HISTORY ── -->
   <div class="mb-5 flex items-center justify-between">
-    <h2 class="text-sm font-bold text-white/50 uppercase tracking-widest">Transaction History</h2>
+    <h2 class="text-sm font-bold text-ink/50 uppercase tracking-widest">Transaction History</h2>
   </div>
 
   {% if page_obj.object_list %}
@@ -254,17 +262,17 @@
   <div class="txn-card">
     {% for txn in page_obj %}
     <div class="flex items-center gap-4 px-6 py-4
-                {% if not forloop.last %}border-b border-white/5{% endif %}">
+                {% if not forloop.last %}border-b border-ink/5{% endif %}">
 
       <!-- Icon -->
       <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
                   {% if txn.transaction_type == 'credit' %}
-                    bg-green-500/10 border border-green-500/20
+                    bg-emerald-50 border border-emerald-200
                   {% else %}
-                    bg-red-500/10 border border-red-500/20
+                    bg-red-50 border border-red-200
                   {% endif %}">
         <i class="bi bi-{% if txn.transaction_type == 'credit' %}arrow-down-left{% else %}arrow-up-right{% endif %}
-                  {% if txn.transaction_type == 'credit' %}text-green-400{% else %}text-red-400{% endif %}
+                  {% if txn.transaction_type == 'credit' %}text-emerald-600{% else %}text-red-500{% endif %}
                   text-sm"></i>
       </div>
 
@@ -272,7 +280,7 @@
       <div class="flex-1 min-w-0">
         <div class="flex items-start justify-between gap-3 flex-wrap">
           <div class="min-w-0">
-            <p class="text-sm font-semibold text-white leading-snug">
+            <p class="text-sm font-semibold text-ink leading-snug">
               {{ txn.reason }}
             </p>
             <div class="flex items-center gap-2 mt-1 flex-wrap">
@@ -282,11 +290,11 @@
               </span>
               {% if txn.order %}
               <a href="{% url 'orders:order_detail' txn.order.order_number %}"
-                 class="text-[10px] text-white/30 font-mono hover:text-white/60 transition">
+                 class="text-[10px] text-ink/30 font-mono hover:text-ink/60 transition">
                 {{ txn.order.order_number }}
               </a>
               {% endif %}
-              <span class="text-[10px] text-white/25">
+              <span class="text-[10px] text-ink/25">
                 {{ txn.created_at|date:"d M Y, h:i A" }}
               </span>
             </div>
@@ -295,7 +303,7 @@
           <!-- Amount -->
           <div class="text-right flex-shrink-0">
             <p class="text-base font-black
-                      {% if txn.transaction_type == 'credit' %}text-green-400{% else %}text-red-400{% endif %}">
+                      {% if txn.transaction_type == 'credit' %}text-emerald-600{% else %}text-red-500{% endif %}">
               {% if txn.transaction_type == 'credit' %}+{% else %}−{% endif %}₹{{ txn.amount }}
             </p>
           </div>
@@ -308,7 +316,7 @@
 
   <!-- ── Pagination ── -->
   {% if page_obj.paginator.num_pages > 1 %}
-  <div class="flex items-center justify-center gap-2 mt-8 pt-6 border-t border-white/8">
+  <div class="flex items-center justify-center gap-2 mt-8 pt-6 border-t border-ink/8">
 
     {% if page_obj.has_previous %}
     <a href="?page={{ page_obj.previous_page_number }}"
@@ -340,10 +348,10 @@
   <!-- Empty state -->
   <div class="empty-wrap">
     <div class="empty-icon">
-      <i class="bi bi-wallet2 text-4xl text-white/20"></i>
+      <i class="bi bi-wallet2 text-4xl text-ink/20"></i>
     </div>
-    <h2 class="text-xl font-bold font-serif text-white mb-2">No transactions yet</h2>
-    <p class="text-white/40 text-sm mb-6 max-w-xs leading-relaxed">
+    <h2 class="text-xl font-bold font-serif text-ink mb-2">No transactions yet</h2>
+    <p class="text-ink/40 text-sm mb-6 max-w-xs leading-relaxed">
       Your wallet is empty. Credits appear here when returns are approved or when you receive rewards.
     </p>
     <a href="{% url 'orders:order_list' %}"
