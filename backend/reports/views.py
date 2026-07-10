@@ -7,6 +7,8 @@ from django.views.decorators.cache import never_cache
 from django.utils import timezone
 from django.db.models import Sum
 
+from django.core.paginator import Paginator
+from django.conf import settings
 
 @never_cache
 @staff_member_required(login_url='admin_login')
@@ -25,12 +27,12 @@ def sales_report(request):
         start_date = today
         end_date   = today
     elif period == 'weekly':
-        start_date = today - timedelta(days=today.weekday())  # Monday
-        end_date   = start_date + timedelta(days=6)            # Sunday
+        start_date = today - timedelta(days=today.weekday())
+        end_date   = start_date + timedelta(days=6)
     elif period == 'yearly':
         start_date = today.replace(month=1, day=1)
         end_date   = today.replace(month=12, day=31)
-    else:  # custom
+    else:
         try:
             start_date = datetime.strptime(custom_start, '%Y-%m-%d').date()
         except (ValueError, TypeError):
@@ -51,19 +53,16 @@ def sales_report(request):
     ).select_related('user').order_by('-created_at')
 
     sales_count = orders_in_range.count()
-    gross_amount = orders_in_range.aggregate(
-        r=Sum('subtotal')
-    )['r'] or Decimal('0.00')
-    coupon_discount_total = orders_in_range.aggregate(
-        r=Sum('coupon_discount')
-    )['r'] or Decimal('0.00')
-    total_discount_amount = orders_in_range.aggregate(
-        r=Sum('discount_amount')
-    )['r'] or Decimal('0.00')
+    gross_amount = orders_in_range.aggregate(r=Sum('subtotal'))['r'] or Decimal('0.00')
+    coupon_discount_total = orders_in_range.aggregate(r=Sum('coupon_discount'))['r'] or Decimal('0.00')
+    total_discount_amount = orders_in_range.aggregate(r=Sum('discount_amount'))['r'] or Decimal('0.00')
     offer_discount_total = total_discount_amount - coupon_discount_total
-    net_revenue = orders_in_range.aggregate(
-        r=Sum('total_amount')
-    )['r'] or Decimal('0.00')
+    net_revenue = orders_in_range.aggregate(r=Sum('total_amount'))['r'] or Decimal('0.00')
+
+    # Pagination 
+    print("Total orders:", orders_in_range.count())
+    paginator = Paginator(orders_in_range, getattr(settings, 'REPORTS_PER_PAGE', 5))
+    page_obj = paginator.get_page(request.GET.get('page'))
 
     context = {
         'period': period,
@@ -75,17 +74,17 @@ def sales_report(request):
         'coupon_discount_total': coupon_discount_total,
         'total_discount_amount': total_discount_amount,
         'net_revenue': net_revenue,
-        'orders': orders_in_range,
+        'orders': page_obj,
+        'page_obj': page_obj,
         'today': today,
     }
     return render(request, 'reports/sales_report.html', context)
-
 
 from django.http import HttpResponse
 
 
 def _get_report_data(request):
-    """Shared logic to compute report data from GET params — reused by HTML, PDF, Excel views."""
+    
     from orders.models import Order
 
     today = timezone.now().date()

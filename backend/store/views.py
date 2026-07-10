@@ -15,6 +15,7 @@ from products.models import (
     BRAND_CHOICES, CASE_TYPE_CHOICES
 )
 from .models import Cart, CartItem, Wishlist, WishlistItem,Review
+#cart creating helper
 
 def get_or_create_cart(user):
     cart, _ = Cart.objects.get_or_create(user=user)
@@ -23,6 +24,7 @@ def get_or_create_cart(user):
 def get_or_create_wishlist(user):
     wishlist, _ = Wishlist.objects.get_or_create(user=user)
     return wishlist
+#for nav display
 
 def _cart_count(user):
     try:
@@ -86,18 +88,22 @@ def product_list(request):
         products = products.annotate(
             min_variant_price=Min('variants__price')
         ).order_by('min_variant_price')
+
     elif sort_by == 'price_desc':
         products = products.annotate(
             min_variant_price=Min('variants__price')
         ).order_by('-min_variant_price')
+
     elif sort_by == 'name_asc':
         products = products.order_by('name')
+
     elif sort_by == 'name_desc':
         products = products.order_by('-name')
+
     else:
         products = products.order_by('-created_at')
 
-   
+ #to highlight  
     wishlist     = get_or_create_wishlist(request.user)
     wishlist_ids = set(
         wishlist.items.values_list('variant__product_id', flat=True)
@@ -166,6 +172,7 @@ def product_detail(request, slug):
             'color_label': v.get_color_display(),
             'color_code': v.color_code,
             'price': str(v.price),
+            #offer
             'effective_price': str(eff_price),
             'discount_pct': str(disc_pct),
             'stock': v.stock,
@@ -182,6 +189,7 @@ def product_detail(request, slug):
     if not selected_variant:
         selected_variant = active_variants.first()
 
+    #you may also like
     related_products = Product.objects.filter(
         category=product.category,
         is_active=True,
@@ -189,7 +197,7 @@ def product_detail(request, slug):
     ).exclude(pk=product.pk).prefetch_related('variants__images')[:4]
 
     wishlist    = get_or_create_wishlist(request.user)
-    in_wishlist = wishlist.items.filter(variant=selected_variant).exists()
+    in_wishlist = wishlist.items.filter(variant=selected_variant).exists()#checks like selected variant is already in wish
 
     case_type_choices = CASE_TYPE_CHOICES if product.is_customizable else []
 
@@ -211,7 +219,7 @@ def product_detail(request, slug):
         'avg_rating':        round(avg_rating, 1) if avg_rating else None,
         'review_count':      reviews.count(),
         'from_wishlist': request.GET.get('from_wishlist', False),
-        'breadcrumbs': [
+        'breadcrumbs': [#shows nav path
             {'name': 'Home',     'url': 'home'},
             {'name': 'Products', 'url': 'product_list'},
             {'name': product.category.name if product.category else 'Products', 'url': None},
@@ -251,6 +259,7 @@ def add_to_cart(request):
         quantity = 1
 
     quantity = max(1, quantity)
+    
     is_ajax  = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     variant = ProductVariant.objects.filter(
@@ -330,11 +339,7 @@ def add_to_cart(request):
             messages.error(request, f"Only {variant.stock} units available in stock.")
             return redirect('product_detail', slug=variant.product.slug)
         
-        print("CUSTOM TEXT =", custom_text)
-        print("CUSTOM IMAGE =", custom_image)
-        print("HAS CUSTOMIZATION =", has_customization)
-        print("IS CUSTOMIZABLE =", variant.product.is_customizable)
-        print("CUSTOMIZATION CHARGE =", customization_charge)
+        #creates cart obj
 
         cart_item = CartItem(
             cart=cart,
@@ -406,22 +411,28 @@ def update_cart(request, item_id):
 
         original_total = sum(i.original_subtotal for i in all_items)
 
-        discount_total = original_total - cart_total  
+        customization_total = sum(
+            i.customization_charge for i in all_items
+        )
+
+        original_product_total = original_total - customization_total
+
+        discount_total = original_total - cart_total 
         total_items = sum(i.quantity for i in all_items)
 
         return JsonResponse({
-    'ok': True,
-    'deleted': False,
-    'quantity': cart_item.quantity,
-    'subtotal': float(subtotal),
-    'cart_total': float(cart_total),
+            'ok': True,
+            'deleted': False,
+            'quantity': cart_item.quantity,
+            'subtotal': float(subtotal),
+            'cart_total': float(cart_total),
 
-    'original_total': float(original_total),      # add
-    'discount_total': float(discount_total),      # add
+            'original_total': float(original_total),
+            'original_product_total': float(original_product_total),
+            'discount_total': float(discount_total),
 
-    'total_items': total_items,
-})
-
+            'total_items': total_items,
+        })
     return redirect('cart')
 
 
@@ -444,7 +455,6 @@ def update_cart_customisation(request, item_id):
         CartItem, pk=item_id, cart__user=request.user
     )
 
- 
     if not cart_item.variant.product.is_customizable:
         messages.error(request, "This item cannot be customised.")
         return redirect('cart')
@@ -453,19 +463,25 @@ def update_cart_customisation(request, item_id):
     custom_image = request.FILES.get('custom_image')
     remove_image = request.POST.get('remove_custom_image') == '1'
 
- 
     cart_item.custom_text = custom_text
 
- 
     if remove_image:
         cart_item.custom_image = None
     elif custom_image:
         cart_item.custom_image = custom_image
 
+    
+    has_customization = bool(cart_item.custom_text) or bool(cart_item.custom_image)
+
+    if has_customization:
+        from admin_panel.models import SiteSettings
+        cart_item.customization_charge = SiteSettings.get().customization_fee
+    else:
+        cart_item.customization_charge = 0
+
     cart_item.save()
     messages.success(request, "Personalisation updated.")
     return redirect('cart')
-
 
 
 # WISHLIST VIEWS

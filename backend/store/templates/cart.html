@@ -361,8 +361,10 @@
        <div class="divider"></div>
 
 <div class="flex justify-between items-center mb-2">
-  <span class="text-xs text-ink/50">Original Price</span>
-  <span class="text-ink" id="originalTotal">₹{{ cart.original_total }}</span>
+  <span class="text-xs text-ink/50">Original Product Price</span>
+  <span class="text-ink" id="originalTotal">
+      ₹{{ cart.original_product_total }}
+  </span>
 </div>
 
 <div class="flex justify-between items-center mb-2">
@@ -371,20 +373,26 @@
     -₹{{ cart.total_discount }}
   </span>
 </div>
+{% if cart.customization_total > 0 %}
+<div class="flex justify-between items-center mb-2">
+  <span class="text-xs text-purple-600">Personalisation Fee</span>
+  <span class="text-purple-600">
+    +₹{{ cart.customization_total }}
+  </span>
+</div>
+{% endif %}
 
 <div class="flex justify-between items-center mb-2">
-  <span class="text-xs text-ink/50">Subtotal</span>
-  <span class="text-ink" id="cartTotal">₹{{ cart.total_price }}</span>
+  <span class="text-xs text-ink/50">Shipping</span>
+  <span class="text-xs font-semibold text-green-600">Calculated at checkout</span>
 </div>
-        <div class="flex justify-between items-center mb-2">
-          <span class="text-xs text-ink/50">Shipping</span>
-          <span class="text-xs font-semibold text-green-600">Calculated at checkout</span>
-        </div>
-        <div class="divider"></div>
-        <div class="flex justify-between items-center mb-6">
-          <span class="text-sm font-bold text-ink">Total</span>
-          <span class="text-xl font-black text-ink" id="cartTotalBig">₹{{ cart.total_price }}</span>
-        </div>
+<div class="divider"></div>
+<div class="flex justify-between items-center mb-1">
+  <span class="text-sm font-bold text-ink">Subtotal</span>
+  <span class="text-xl font-black text-ink" id="cartTotal">₹{{ cart.total_price }}</span>
+</div>
+<p class="text-[11px] text-ink/35 mb-5">Final total including shipping shown at checkout</p>
+
 
         {% if cart.has_unavailable or cart.has_out_of_stock %}
           <button class="checkout-btn" disabled>
@@ -538,6 +546,8 @@ async function updateQty(itemId, action, currentQty, maxQty) {
       }
       const summaryLine = document.getElementById(`summary-line-${itemId}`);
       if (summaryLine) summaryLine.remove();
+      location.reload()
+      return
     } else {
       const newQty = data.quantity;
       if (qtyEl)      qtyEl.textContent      = newQty;
@@ -552,7 +562,7 @@ async function updateQty(itemId, action, currentQty, maxQty) {
       if (el) el.textContent = `₹${data.cart_total.toFixed(2)}`;
     });
     document.getElementById('originalTotal').textContent =
-  `₹${data.original_total.toFixed(2)}`;
+  `₹${data.original_product_total.toFixed(2)}`;
 
 document.getElementById('discountTotal').textContent =
   `-₹${data.discount_total.toFixed(2)}`;

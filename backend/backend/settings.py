@@ -18,7 +18,8 @@ DEBUG = os.getenv("DEBUG", "True") == "True"
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost','habitant-gruffly-zips.ngrok-free.dev', '*']
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://habitant-gruffly-zips.ngrok-free.dev',  # your ngrok URL
+    'https://habitant-gruffly-zips.ngrok-free.dev',  #ngrok URL
+    'http://127.0.0.1', 'http://localhost'
 ]
 
 #  Cloudinary configuration
@@ -28,11 +29,14 @@ cloudinary.config(
     api_secret=os.getenv('CLOUDINARY_API_SECRET'),
 )
 ORDERS_PER_PAGE = 10
-
 PRODUCTS_PER_PAGE = 4
 CATEGORIES_PER_PAGE = 5
 USERS_PER_PAGE = 20
 REFERRALS_PER_PAGE=5
+REPORTS_PER_PAGE = 5
+OFFERS_PER_PAGE = 5
+COUPONS_PER_PAGE=5
+
 
 STORAGES = {
     "default": {
@@ -82,7 +86,7 @@ INSTALLED_APPS = [
     'axes',
 ]
 
-SITE_ID = 1
+SITE_ID = 2
 
 AUTHENTICATION_BACKENDS = [
     'axes.backends.AxesBackend',
@@ -200,5 +204,5 @@ CSRF_COOKIE_HTTPONLY = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
-CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1', 'http://localhost']
+
 SESSION_SAVE_EVERY_REQUEST = True

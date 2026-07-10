@@ -527,7 +527,7 @@ def return_order_item(order_item: OrderItem, returned_by, reason: str) -> OrderI
 
 
 
-# APPROVE RETURN (admin action)
+# APPROVE RETURN 
 
 
 def approve_return(order_item: OrderItem, approved_by) -> OrderItem:

@@ -31,9 +31,9 @@ urlpatterns =[
     path('profile/verify-email/', views.verify_email, name='verify_email'),
 
     path('addresses/', views.manage_addresses, name='manage_addresses'),
-        path('addresses/add/', views.add_address, name='add_address'),
-        path('addresses/edit/<int:address_id>/', views.edit_address, name='edit_address'),
-        path('addresses/delete/<int:address_id>/', views.delete_address, name='delete_address'),
+    path('addresses/add/', views.add_address, name='add_address'),
+    path('addresses/edit/<int:address_id>/', views.edit_address, name='edit_address'),
+    path('addresses/delete/<int:address_id>/', views.delete_address, name='delete_address'),
     path('addresses/set-default/<int:pk>/', views.set_default_address, name='set_default_address'),
 
 ]

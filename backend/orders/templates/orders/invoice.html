@@ -629,22 +629,44 @@
     <div class="totals-box">
 
      <div class="totals-row">
-  <span class="totals-label">Original Price</span>
-  <span class="totals-value" style="text-decoration:line-through; color:#9ca3af;">
-    ₹{{ original_subtotal }}
-  </span>
+    <span class="totals-label">Original Product Price</span>
+    <span class="totals-value" style="text-decoration:line-through; color:#9ca3af;">
+        ₹{{ original_product_total }}
+    </span>
 </div>
 
-{% if order.discount_amount > 0 %}
+{% if offer_discount > 0 %}
 <div class="totals-row">
-  <span class="totals-label">Discount</span>
-  <span class="totals-value discount">− ₹{{ order.discount_amount }}</span>
+    <span class="totals-label">Offer Discount</span>
+    <span class="totals-value discount">
+        − ₹{{ offer_discount }}
+    </span>
+</div>
+{% endif %}
+
+{% if order.coupon_discount > 0 %}
+<div class="totals-row">
+    <span class="totals-label">Coupon Discount</span>
+    <span class="totals-value discount">
+        − ₹{{ order.coupon_discount }}
+    </span>
+</div>
+{% endif %}
+
+{% if customization_total > 0 %}
+<div class="totals-row">
+    <span class="totals-label">Personalisation Fee</span>
+    <span class="totals-value" style="color:#7c3aed;">
+        + ₹{{ customization_total }}
+    </span>
 </div>
 {% endif %}
 
 <div class="totals-row">
-  <span class="totals-label">Subtotal</span>
-  <span class="totals-value">₹{{ order.subtotal }}</span>
+    <span class="totals-label">Subtotal</span>
+    <span class="totals-value">
+        ₹{{ order.subtotal }}
+    </span>
 </div>
       <div class="totals-row">
         <span class="totals-label">Shipping</span>

@@ -33,7 +33,7 @@ def get_or_create_wallet(user):
 @never_cache
 def admin_login(request):
     if request.user.is_authenticated and request.user.is_superuser:
-        return redirect('admin_user_management')
+        return redirect('admin_dashboard')
 
     if request.method == 'POST':
         form = AdminLoginForm(request.POST)
@@ -47,7 +47,7 @@ def admin_login(request):
             if user is not None and user.is_superuser and user.is_staff:
                 login(request, user)
                 messages.success(request, f"Welcome back, {user.first_name}!")
-                return redirect('admin_user_management')
+                return redirect('admin_dashboard')
             else:
                 messages.error(request, "Invalid credentials or not authorized.")
 
@@ -57,7 +57,7 @@ def admin_login(request):
     return render(request, 'admin_panel/login.html', {'form': form})
 
 #  DASHBOARD VIEW
-# Replace your entire admin_dashboard view with this
+
 
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
@@ -129,7 +129,7 @@ def admin_dashboard(request):
         user__date_joined__date__lt=this_month,
     ).values('user').distinct().count()
     
-    #  CHART — Weekly / Monthly / Yearly aggregation
+    #  CHART 
     chart_labels  = []
     chart_orders  = []
     chart_revenue = []
@@ -139,7 +139,7 @@ def admin_dashboard(request):
         chart_filter = 'weekly'
 
     if chart_filter == 'weekly':
-    # Last 7 days, daily buckets
+    # Last 7 days
         for i in range(6, -1, -1):
             day = today - timedelta(days=i)
             label = day.strftime('%d %b')
@@ -154,7 +154,7 @@ def admin_dashboard(request):
             chart_revenue.append(float(day_revenue))
 
     elif chart_filter == 'monthly':
-    # Current month, daily buckets
+    # Current month, daily 
         days_in_month = (
             (this_month.replace(month=this_month.month % 12 + 1, day=1)
             if this_month.month != 12
@@ -181,7 +181,7 @@ def admin_dashboard(request):
             chart_revenue.append(float(day_revenue))
 
     else:  # yearly
-    # Last 12 months, monthly buckets
+    
         for i in range(11, -1, -1):
             month_date = (this_month.replace(day=1) - timedelta(days=1))
             for _ in range(i):
@@ -248,7 +248,7 @@ def admin_dashboard(request):
         .order_by('-total_qty')[:10]
     )
 
-    # Map brand value to label
+   
     brand_map = dict(BRAND_CHOICES)
     best_brands_display = [
         {
@@ -262,7 +262,7 @@ def admin_dashboard(request):
     # RECENT ORDERS (last 8) 
     recent_orders = Order.objects.select_related('user').order_by('-created_at')[:8]
 
-    #  ORDER STATUS BREAKDOWN 
+    
     status_counts = {
         'pending':          Order.objects.filter(status='pending').count(),
         'shipped':          Order.objects.filter(status='shipped').count(),
@@ -318,12 +318,12 @@ def admin_dashboard(request):
 @never_cache
 @staff_member_required(login_url='admin_login')
 def user_list(request):
-    # 1. Base Query
+    
     users_query = User.objects.filter(is_superuser=False).annotate(
         order_count=Count('order')
     )
 
-    # 2. Search
+   
     query = request.GET.get('search', '').strip()
     if query:
         users_query = users_query.filter(
@@ -332,18 +332,18 @@ def user_list(request):
             Q(last_name__icontains=query)
         )
 
-    # 3. Sorting
+    
     sort = request.GET.get('sort', '-date_joined')
     if sort not in ['-date_joined', 'date_joined']:
         sort = '-date_joined'
     users_query = users_query.order_by(sort)
 
-    # 4. Pagination
+    
     paginator = Paginator(users_query, 10)
     page_number = request.GET.get('page')
     users = paginator.get_page(page_number)
 
-    # 5. Stats (Using the base_stats variable to avoid repeating filter logic)
+    
     base_stats = User.objects.filter(is_superuser=False)
     
     context = {
@@ -356,18 +356,18 @@ def user_list(request):
         'admin_users': User.objects.filter(is_superuser=True).count(),
     }
 
-    # 6. Detail Drawer Logic
+    
     view_user_id = request.GET.get('view_user')
     if view_user_id:
         selected_user = get_object_or_404(User, id=view_user_id)
         context['selected_user'] = selected_user
         context['user_addresses'] = selected_user.addresses.all().order_by('-is_default')
 
-    # 7. AJAX Check for Live Search
+    
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return render(request, 'admin_panel/partials/user_table.html', context)
 
-    # 8. Standard Return (Make sure this is outside the IF and correctly indented)
+    
     return render(request, 'admin_panel/user_management.html', context)
 # BLOCK / UNBLOCK USER
 
@@ -382,8 +382,7 @@ def toggle_user_status(request, user_id):
     if user.is_superuser:
         messages.error(request, "You cannot block an administrator.")
         return redirect('admin_user_management')
-#It flips the current status to the opposite
-    # Toggle block
+
     user.is_blocked = not user.is_blocked
 
     if user.is_blocked:
@@ -450,7 +449,7 @@ def admin_wallet_list(request):
             Q(user__last_name__icontains=search)
         )
 
-    paginator   = Paginator(wallets, 20)
+    paginator   = Paginator(wallets, 5)
     page_number = request.GET.get('page')
     page_obj    = paginator.get_page(page_number)
 

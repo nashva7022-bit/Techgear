@@ -1,6 +1,4 @@
-from django.db import models
 
-# Create your models here.
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -8,11 +6,7 @@ from django.db import transaction as db_transaction
 
 
 class Wallet(models.Model):
-    """
-    One wallet per user. Stores current usable balance.
-    Never update balance directly — always use .credit() or .debit()
-    so a transaction record is always created automatically.
-    """
+    
     user    = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -71,10 +65,7 @@ class Wallet(models.Model):
 
 
 class WalletTransaction(models.Model):
-    """
-    Every credit or debit creates one record here.
-    Think of it as a bank passbook — never edit or delete these.
-    """
+    
     TRANSACTION_TYPE_CHOICES = [
         ('credit', 'Credit'),  # money IN  — refunds, referral rewards
         ('debit',  'Debit'),   # money OUT — used at checkout
@@ -98,7 +89,7 @@ class WalletTransaction(models.Model):
     created_at       = models.DateTimeField(default=timezone.now)
 
     class Meta:
-        ordering = ['-created_at']  # newest first — like a bank statement
+        ordering = ['-created_at']  
 
     def __str__(self):
         symbol = '+' if self.transaction_type == 'credit' else '-'

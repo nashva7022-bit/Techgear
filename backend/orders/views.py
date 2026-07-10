@@ -83,6 +83,7 @@ def _build_checkout_context(request, cart, cart_items, addresses, wallet_balance
 
     shipping_charge = Decimal("0.00")
     pre_coupon_total = subtotal + shipping_charge
+    original_product_total = subtotal - customization_total + total_offer_discount
 
      
     applied_coupon = request.session.get("applied_coupon")
@@ -141,6 +142,7 @@ def _build_checkout_context(request, cart, cart_items, addresses, wallet_balance
         "address_form": AddressForm(),
         # Totals
         "subtotal": subtotal,
+        "original_product_total": original_product_total,
         "total_offer_discount": total_offer_discount,
         "customization_total": customization_total,
         "shipping_charge": shipping_charge,
@@ -396,7 +398,19 @@ def _serialize_address(addr):
 @never_cache
 def order_success(request, order_number):
     order = get_object_or_404(Order, order_number=order_number, user=request.user)
-    return render(request, "orders/order_success.html", {"order": order})
+    offer_discount = order.discount_amount - order.coupon_discount
+
+    
+    
+
+    return render(
+    request,
+    "orders/order_success.html",
+    {
+        "order": order,
+        "offer_discount": offer_discount,
+    }
+)
 
 
 # ORDER LIST
@@ -434,23 +448,39 @@ def order_detail(request, order_number):
     order = get_object_or_404(Order, order_number=order_number, user=request.user)
     items = order.items.select_related("variant").prefetch_related("variant__images")
     status_logs = order.status_logs.all()
+    offer_discount = order.discount_amount - order.coupon_discount
+
+
+    customization_total = sum(
+        item.customization_charge
+        for item in items
+    )   
+
+    original_product_total = (
+        order.subtotal
+        + offer_discount
+        +order.coupon_discount
+        - customization_total
+    )      
 
     reviewed_product_ids = set(
         Review.objects.filter(user=request.user).values_list("product_id", flat=True)
     )
 
     return render(
-        request,
-        "orders/order_detail.html",
-        {
-            "order": order,
-            "items": items,
-            "status_logs": status_logs,
-            "reviewed_product_ids": reviewed_product_ids,
-            
-            "original_subtotal": order.subtotal + order.discount_amount,
-        },
-    )
+    request,
+    "orders/order_detail.html",
+    {
+        "order": order,
+        "items": items,
+        "status_logs": status_logs,
+        "reviewed_product_ids": reviewed_product_ids,
+
+        "offer_discount": offer_discount,
+        "customization_total": customization_total,
+        "original_product_total": original_product_total,
+    },
+)
 
 
 # CANCEL ENTIRE ORDER
@@ -557,13 +587,32 @@ def download_invoice(request, order_number):
         )
         return redirect("orders:order_detail", order_number=order_number)
 
+    items = order.items.all()
+
+    offer_discount = order.discount_amount - order.coupon_discount
+
+    customization_total = sum(
+        item.customization_charge
+        for item in items
+    )
+
+    original_product_total = (
+        order.subtotal
+        + offer_discount
+        + order.coupon_discount
+        - customization_total
+    )
+
     html_string = render_to_string(
         "orders/invoice.html",
         {
             "order": order,
-            "items": order.items.all(),
+            "items": items,
             "status_logs": order.status_logs.all(),
-            "original_subtotal": order.subtotal + order.discount_amount,
+
+            "offer_discount": offer_discount,
+            "customization_total": customization_total,
+            "original_product_total": original_product_total,
         },
     )
     pdf = HTML(

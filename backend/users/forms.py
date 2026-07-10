@@ -57,10 +57,10 @@ class SignupForm(forms.ModelForm):
                 self.add_error('confirm_password', "Passwords do not match.")
             else:
                 try:
-                    # Explicitly validate against Django's security standards
+                    
                     validate_password(password)
                 except ValidationError as e:
-                    # Shows the specific reason (e.g., "Too common") on the password field
+                   
                     self.add_error('password', e)
         return cleaned_data
 
@@ -161,7 +161,7 @@ class ChangeEmailForm(forms.Form):
         label="Email Address",
         widget=forms.EmailInput(attrs={
             'placeholder': 'name@company.com',
-            # Tailwind classes for Standard, Curved, and Spaced look
+            
            'class': 'w-full px-5 py-4 rounded-xl border border-ink/15 bg-white text-ink focus:ring-2 focus:ring-accent-hover outline-none transition duration-200 text-lg'
         })
     )

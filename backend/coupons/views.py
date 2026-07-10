@@ -7,6 +7,8 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.utils import timezone
+from django.conf import settings
+from django.core.paginator import Paginator
 
 from .models import Coupon
 
@@ -15,8 +17,14 @@ from .models import Coupon
 def coupon_list(request):
     coupons = Coupon.objects.all().order_by('-created_at')
     today   = timezone.now().date()#checks validity(todays date)
+
+
+    paginator   = Paginator(coupons, settings.COUPONS_PER_PAGE)
+    page_number = request.GET.get('page')
+    page_obj    = paginator.get_page(page_number)
     context = {
-        'coupons':      coupons,
+        'coupons':      page_obj,
+        'page_obj':     page_obj,
         'today':        today,
         'active_count': sum(1 for c in coupons if c.is_currently_valid),
         'total_uses':   sum(c.times_used for c in coupons),

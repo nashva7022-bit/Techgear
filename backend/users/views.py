@@ -88,7 +88,7 @@ def signup(request):
 
     if request.method == "POST" and form.is_valid():
 
-        #  RATE LIMIT (only valid attempts counted)
+        #  RATE LIMIT 
         ip = request.META.get('REMOTE_ADDR')
         rate_key = f'signup_rate:{ip}'
         attempts = cache.get(rate_key, 0)
@@ -109,12 +109,12 @@ def signup(request):
         first_name = parts[0] if parts else "User"
         last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
 
-        #   ACTIVE USER → LOGIN
+
         if User.objects.filter(email=email, is_active=True).exists():
             messages.info(request, "Account already exists. Please login.")
             return redirect('login')
 
-        #   INACTIVE USER
+    
         inactive_user = User.objects.filter(email=email, is_active=False).first()
 
         if inactive_user:
@@ -196,7 +196,7 @@ def signup(request):
 
 @never_cache
 def verify_otp(request):
-    #  IDENTIFY THE USER
+    
     user_id = request.session.get('otp_user_id')
     user = User.objects.filter(id=user_id).first() if user_id else None
 
@@ -211,7 +211,7 @@ def verify_otp(request):
     if user.is_verified and user.is_active:
         return redirect('home')
 
-    #  GET OTP DATA
+    
     otp_obj = OTP.objects.filter(user=user, purpose='signup').order_by('-created_at').first()
 
     remaining_time = 0
@@ -471,7 +471,7 @@ def home(request):
         category__is_active=True
     ).prefetch_related('variants__images').order_by('-created_at')[:4]
 
-# Fallback if no featured products marked yet
+
     if not featured_products.exists():
         featured_products = Product.objects.filter(
             is_active=True,
@@ -484,7 +484,7 @@ def home(request):
         category__is_active=True
     ).prefetch_related('variants__images').order_by('-created_at')[:4]
 
-# Fallback if no trending products marked yet
+
     if not trending_products.exists():
         trending_products = Product.objects.filter(
             is_active=True,
@@ -515,7 +515,7 @@ def edit_profile(request):
    
     if request.method == "POST":
         form = EditProfileForm(request.POST, request.FILES, instance=request.user)
-        #profile remove
+        
         if form.is_valid():
             if request.POST.get("remove_image") == "true" and request.user.profile_image:
                 request.user.profile_image.delete(save=False)
@@ -526,7 +526,7 @@ def edit_profile(request):
         else:
             for error in form.errors.values():
                 messages.error(request, error)
-                #the current datas will be there,no need to retype
+                
     else:
         form = EditProfileForm(instance=request.user)
         
@@ -571,12 +571,12 @@ def change_email_request(request):
             
             
             request.session['otp_user_id'] = request.user.id 
-#It saves the new email in a temporary spot (session) 
+
             request.session['new_email_pending'] = new_email
             
             return redirect("verify_email")
     else:
-        # If it's a GET request, we need to provide a form
+       
         form = ChangeEmailForm()
 
     
@@ -746,7 +746,7 @@ def add_address(request):
             messages.success(request, "New address added!")
             return redirect("manage_addresses")
         
-        # If invalid, keep drawer open
+      
         addresses = request.user.addresses.all()
         return render(request, "profile/manage_addresses.html", {
             "addresses": addresses,
@@ -766,7 +766,7 @@ def edit_address(request, address_id):
             messages.success(request, "Address updated successfully.")
             return redirect("manage_addresses")
         
-        # If invalid, pass address_instance to keep the drawer identifying the correct ID
+        
         addresses = request.user.addresses.all()
         return render(request, "profile/manage_addresses.html", {
             "addresses": addresses,

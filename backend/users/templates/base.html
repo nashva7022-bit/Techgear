@@ -33,7 +33,13 @@
                 'nav-bg': '#EFEDE6',       // deeper cream for section alternation — was graphite
                 'card-bg': '#FFFFFF',      // white product cards — was off-white
                 'accent-hover': '#2D4330', // deep olive/forest green — was electric blue
-                'ink': '#111111',          // NEW — charcoal text color, since white text won't work on cream
+                'ink': '#111111',  // NEW — charcoal text color, since white text won't work on cream
+                // Message colors
+                'success-bg': '#DCE8DE',      // soft sage green
+                'success-text': '#2D4330',    // same olive as your accent
+
+                'error-bg': '#F1DFDB',        // muted rose/clay
+                'error-text': '#7A3E34',      // warm brown-red
             },
             fontFamily: {
                 'serif': ['Playfair Display', 'serif'],   // swapped from Lora — more high-fashion
@@ -54,8 +60,12 @@
     {% if messages %}
     <div class="fixed top-24 right-5 z-[100] w-80 space-y-3">
         {% for message in messages %}
-            <div class="msg flex items-center justify-between p-4 rounded-xl shadow-lg 
-                {% if message.tags == 'error' %}bg-red-500{% else %}bg-green-600{% endif %}">
+           <div class="msg flex items-center justify-between p-4 rounded-xl shadow-md border
+    {% if message.tags == 'error' %}
+        bg-error-bg text-error-text border-[#D7B8B0]
+    {% else %}
+        bg-success-bg text-success-text border-[#BFD0C2]
+    {% endif %}">
                 <span class="text-sm font-bold">{{ message }}</span>
                 <button onclick="this.parentElement.remove()" class="ml-3 font-bold text-lg hover:opacity-70">×</button>
             </div>

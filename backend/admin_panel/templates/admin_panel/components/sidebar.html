@@ -93,6 +93,14 @@
       {% endif %}
     </a>
 
+    <a href="{% url 'reports:sales_report' %}"
+   class="sidebar-link {% if 'report' in request.resolver_match.url_name %}active{% endif %}">
+  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6h6v6M9 17H7a2 2 0 01-2-2V5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2h-2M9 17h6"/>
+  </svg>
+  <span>Reports</span>
+</a>
+
     <a href="{% url 'admin_orders:inventory_list' %}"
        class="sidebar-link {% if request.resolver_match.url_name == 'inventory_list' %}active{% endif %}">
       <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

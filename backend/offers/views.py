@@ -9,6 +9,9 @@ from datetime import datetime
 
 from .models import ProductOffer, CategoryOffer
 from products.models import Product, Category
+from django.conf import settings
+from django.core.paginator import Paginator
+from itertools import chain
 
 
 @staff_member_required(login_url='admin_login')
@@ -16,6 +19,12 @@ from products.models import Product, Category
 def offer_list(request):
     product_offers = ProductOffer.objects.select_related('product').order_by('-created_at')
     category_offers = CategoryOffer.objects.select_related('category').order_by('-created_at')
+
+    offers = sorted(
+        chain(product_offers, category_offers),
+        key=lambda x: x.created_at,
+        reverse=True
+    )
     today = timezone.now().date()
 
     live_product_offers = product_offers.filter(
@@ -26,9 +35,22 @@ def offer_list(request):
     ).count()
     live_count = live_product_offers + live_category_offers
 
+    product_paginator = Paginator(product_offers, settings.OFFERS_PER_PAGE)
+    product_page_obj = product_paginator.get_page(
+        request.GET.get('product_page')
+    )
+
+    category_paginator = Paginator(category_offers, settings.OFFERS_PER_PAGE)
+    category_page_obj = category_paginator.get_page(
+        request.GET.get('category_page')
+    )
+
+
     context = {
-        'product_offers': product_offers,
-        'category_offers': category_offers,
+        'product_offers': product_page_obj,
+        'category_offers': category_page_obj,
+        'product_page_obj': product_page_obj,
+        'category_page_obj': category_page_obj,
         'today': today,
         'live_count': live_count,
     }

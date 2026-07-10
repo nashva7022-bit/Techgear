@@ -751,20 +751,29 @@
 
             <div class="flex justify-between text-ink/50">
   <span>Original Price</span>
-  <span class="font-bold text-ink/40 line-through">₹{{ original_subtotal }}</span>
+  <span class="font-bold text-ink/40 line-through">₹{{ original_product_total }}</span>
+  
+</div>
+<div class="flex justify-between text-purple-600">
+  <span>Personalization Fee</span>
+  <span class="font-bold">₹{{ customization_total }}</span>
+  
 </div>
 
-{% if order.discount_amount > 0 %}
+{% if offer_discount > 0 %}
 <div class="flex justify-between text-accent-hover">
-  <span>Discount</span>
-  <span class="font-bold">− ₹{{ order.discount_amount }}</span>
+  <span>Offer Discount</span>
+  <span class="font-bold">− ₹{{ offer_discount }}</span>
 </div>
 {% endif %}
 
-<div class="flex justify-between text-ink/50">
-  <span>Subtotal</span>
-  <span class="font-bold text-ink">₹{{ order.subtotal }}</span>
+{% if order.coupon_discount > 0 %}
+<div class="flex justify-between text-accent-hover">
+  <span>Coupon Discount</span>
+  <span class="font-bold">− ₹{{ order.coupon_discount }}</span>
 </div>
+{% endif %}
+
 
             <div class="flex justify-between text-ink/50">
               <span>Shipping</span>
@@ -783,7 +792,7 @@
             {% if order.discount_amount > 0 %}
             <div class="bg-accent-hover/8 border border-accent-hover/20 rounded-xl px-4 py-2.5 text-center">
               <p class="text-accent-hover text-xs font-bold">
-                🎉 You saved ₹{{ order.discount_amount }} on this order
+                🎉 You saved ₹{{ order.discount_amount }} on this orderr
               </p>
             </div>
             {% endif %}

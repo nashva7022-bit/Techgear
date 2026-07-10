@@ -3,9 +3,7 @@ from django.contrib import messages
 from functools import wraps
 
 def admin_required(view_func):
-    """
-    Custom decorator to allow access only to staff members.
-    """
+    
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
         if request.user.is_authenticated and request.user.is_staff:

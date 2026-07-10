@@ -78,7 +78,7 @@
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-50">
-      {% for offer in product_offers %}
+      {% for offer in product_page_obj %}
       <tr class="hover:bg-gray-50 transition">
         <td class="px-6 py-4">
           <p class="text-sm font-bold text-gray-900">{{ offer.product.name }}</p>
@@ -136,6 +136,32 @@
       {% endfor %}
     </tbody>
   </table>
+  {% if product_page_obj.paginator.num_pages > 1 %}
+<div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+    <p class="text-xs text-gray-400">
+        Page {{ product_page_obj.number }}
+        of {{ product_page_obj.paginator.num_pages }}
+    </p>
+
+    <div class="flex items-center gap-2">
+        {% if product_page_obj.has_previous %}
+        <a href="?product_page={{ product_page_obj.previous_page_number }}"
+           class="page-btn">
+            Prev
+        </a>
+        {% endif %}
+
+        {% if product_page_obj.has_next %}
+        <a href="?product_page={{ product_page_obj.next_page_number }}"
+           class="page-btn">
+            Next
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+
   {% else %}
   <div class="py-16 text-center">
     <div class="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -177,7 +203,7 @@
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-50">
-      {% for offer in category_offers %}
+      {% for offer in category_page_obj %}
       <tr class="hover:bg-gray-50 transition">
         <td class="px-6 py-4">
           <p class="text-sm font-bold text-gray-900">{{ offer.category.name }}</p>
@@ -244,6 +270,33 @@
       {% endfor %}
     </tbody>
   </table>
+
+  {% if category_page_obj.paginator.num_pages > 1 %}
+<div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+    <p class="text-xs text-gray-400">
+        Page {{ category_page_obj.number }}
+        of {{ category_page_obj.paginator.num_pages }}
+    </p>
+
+    <div class="flex items-center gap-2">
+
+        {% if category_page_obj.has_previous %}
+        <a href="?category_page={{ category_page_obj.previous_page_number }}"
+           class="px-3 py-1.5 border border-gray-200 rounded-lg text-[10px] font-bold uppercase tracking-widest text-gray-600 hover:bg-black hover:text-white transition">
+            Prev
+        </a>
+        {% endif %}
+
+        {% if category_page_obj.has_next %}
+        <a href="?category_page={{ category_page_obj.next_page_number }}"
+           class="px-3 py-1.5 border border-gray-200 rounded-lg text-[10px] font-bold uppercase tracking-widest text-gray-600 hover:bg-black hover:text-white transition">
+            Next
+        </a>
+        {% endif %}
+
+    </div>
+</div>
+{% endif %}
   {% else %}
   <div class="py-16 text-center">
     <div class="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">

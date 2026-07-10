@@ -1,4 +1,4 @@
-from django.db import models
+
 
 # Create your models here.
 from django.db import models
@@ -49,7 +49,7 @@ class Coupon(models.Model):
 
 
 class CouponUsage(models.Model):
-    """Tracks which user used which coupon, enforcing one-use-per-user."""
+   
     coupon     = models.ForeignKey(Coupon, on_delete=models.CASCADE, related_name='usages')
     user       = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='coupon_usages')
     order      = models.ForeignKey('orders.Order', on_delete=models.SET_NULL, null=True, blank=True, related_name='coupon_usage')

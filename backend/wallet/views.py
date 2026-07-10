@@ -24,10 +24,7 @@ def get_or_create_wallet(user):
 @login_required
 @never_cache
 def wallet_view(request):
-    """
-    Shows the user their wallet balance and full transaction history.
-    Paginated at 10 per page — newest first.
-    """
+  
     wallet       = get_or_create_wallet(request.user)
     transactions = wallet.transactions.select_related('order').all()
 
@@ -47,10 +44,7 @@ def wallet_view(request):
 @login_required
 @never_cache
 def wallet_topup_initiate(request):
-    """
-    Creates a Razorpay order for wallet top-up.
-    Called via POST with amount from the wallet page.
-    """
+    
     if request.method != 'POST':
         return redirect('wallet:wallet')
 
@@ -150,6 +144,6 @@ def wallet_topup_callback(request):
 @login_required
 @require_POST
 def wallet_topup_failed(request):
-    """Called by JS when Razorpay modal is dismissed."""
+    
     request.session.pop('pending_wallet_topup', None)
     return JsonResponse({'ok': True})

@@ -36,12 +36,22 @@ class Cart(models.Model):
             for item in self.items.all()
             if item.is_available
         )
+    
+    @property
+    def original_product_total(self):
+        return self.original_total - self.customization_total
 
     @property
     def total_discount(self):
         return self.original_total - self.total_price
     
-    
+    @property
+    def customization_total(self):
+        return sum(
+            item.customization_charge
+            for item in self.items.all()
+            if item.is_available
+        )
     @property
     def has_out_of_stock(self):
         return any(not item.is_in_stock for item in self.items.all())

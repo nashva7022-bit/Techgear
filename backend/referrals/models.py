@@ -20,10 +20,7 @@ def generate_referral_code():
 
 
 class ReferralCode(models.Model):
-    """
-    One referral code per user — created automatically on signup.
-    Used for both the shareable URL (?ref=CODE) and manual code entry.
-    """
+   
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -41,11 +38,7 @@ class ReferralCode(models.Model):
 
 
 class ReferralUsage(models.Model):
-    """
-    Records when a new user signs up using a referral code.
-    OneToOne on referred_user enforces: a user can only be referred once.
-    referrer_rewarded tracks whether the referrer has received their reward yet.
-    """
+    
     referrer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
