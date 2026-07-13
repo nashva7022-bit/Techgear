@@ -72,7 +72,7 @@
                             <div class="w-10 h-10 rounded-full bg-accent-hover text-white flex items-center justify-center font-bold uppercase">{{ user.first_name|first }}</div>
                             <div><p class="font-bold text-sm">{{ user.first_name }}</p><p class="text-xs text-ink/40">Account</p></div>
                         </div>
-                        <a href="{% url 'dashboard' %}" class="flex items-center px-5 py-3 text-sm hover:bg-site-bg"><i class="bi bi-person mr-3"></i> Profile</a>
+                        <a href="{% url 'profile' %}" class="flex items-center px-5 py-3 text-sm hover:bg-site-bg"><i class="bi bi-person mr-3"></i> Profile</a>
                         <a href="{% url 'wallet:wallet' %}" class="flex items-center px-5 py-3 text-sm hover:bg-site-bg"><i class="bi bi-wallet2 mr-3"></i> Wallet</a>
                         <a href="#" class="flex items-center px-5 py-3 text-sm hover:bg-site-bg"><i class="bi bi-question-circle mr-3"></i> FAQs</a>
                         <a href="{% url 'orders:order_list' %}" class="flex items-center px-5 py-3 text-sm hover:bg-site-bg"><i class="bi bi-bag-check mr-3"></i> My Orders</a>

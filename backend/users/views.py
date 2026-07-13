@@ -507,11 +507,11 @@ def dashboard(request):
 
     
     primary_address = request.user.addresses.all().order_by('-created_at').first()
-    orders_count=Order.objects.filter(user=request.user)
+   
     return render(request, "profile/dashboard.html", {
         "user": request.user,
         "primary_address": primary_address,
-        "orders_count":orders_count
+       
     })
 
 @login_required
@@ -527,7 +527,7 @@ def edit_profile(request):
                 request.user.profile_image = None
             form.save()
             messages.success(request, "Profile updated successfully.")
-            return redirect("dashboard")
+            return redirect("profile")
         else:
             for error in form.errors.values():
                 messages.error(request, error)
@@ -552,7 +552,7 @@ def change_password(request):
             request.user.save()
             update_session_auth_hash(request, request.user) # Keeps user logged in
             messages.success(request, "Password updated successfully.")
-            return redirect("dashboard")
+            return redirect("profile")
         
     else:
         form = ChangePasswordForm(request.user)
@@ -594,7 +594,7 @@ def change_email_request(request):
 def verify_email(request):
     new_email = request.session.get("new_email_pending")
     if not new_email:
-        return redirect("dashboard")
+        return redirect("profile")
 
     otp_obj = OTP.objects.filter(user=request.user, purpose='email_change').order_by('-created_at').first()
     remaining_time = 0
@@ -647,7 +647,7 @@ def verify_email(request):
             otp_obj.delete()
             request.session.pop("new_email_pending", None)
             messages.success(request, "Email updated successfully.")
-            return redirect("dashboard")
+            return redirect("profile")
         else:
             otp_obj.attempts += 1
             otp_obj.save()

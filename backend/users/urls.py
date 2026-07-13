@@ -21,7 +21,7 @@ urlpatterns =[
     path('password-reset-sent/', views.password_reset_sent, name='password_reset_sent'),
 
 
-    path('dashboard/', views.dashboard, name='dashboard'),
+    path('profile/', views.dashboard, name='profile'),
 
     path('profile/edit/', views.edit_profile, name='edit_profile'),
    
