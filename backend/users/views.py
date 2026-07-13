@@ -27,7 +27,7 @@ from smtplib import SMTPException
 from django.db.models import F
 from products.models import Category,Product,BRAND_CHOICES
 
-
+from orders.models import Order
 logger = logging.getLogger(__name__)
 
 
@@ -131,7 +131,7 @@ def signup(request):
             try:
                 OTP.objects.filter(user=inactive_user,purpose='signup').delete()
                 generate_and_send_otp(inactive_user, email,purpose='signup')
-
+                #gene a new sess id
                 request.session.cycle_key()
                 request.session['otp_user_id'] = inactive_user.id
                 request.session.set_expiry(600)
@@ -174,7 +174,7 @@ def signup(request):
 
             referral_code_input = form.cleaned_data.get('referral_code', '').strip().upper()
             if referral_code_input:
-                request.session['pending_referral_code'] = referral_code_input
+                request.session['pending_referral_code'] = referral_code_input #stores temp
             request.session.set_expiry(600) #10 minutes
             messages.info(request, "Verification code sent to " + email)
             return redirect('verify_otp')
@@ -333,6 +333,8 @@ def login_view(request):
         return redirect('home')
 
     return render(request, 'auth/login.html')
+
+
 #logout
 @require_POST
 def logout_view(request):
@@ -367,7 +369,7 @@ def forgot_password(request):
 
     return render(request, 'auth/forgot_password.html')
 
-
+#forgot-otp
 @never_cache
 def forgot_otp(request):
     user_id = request.session.get('reset_user_id')
@@ -502,11 +504,14 @@ def home(request):
 @login_required
 @never_cache
 def dashboard(request):
+
     
     primary_address = request.user.addresses.all().order_by('-created_at').first()
+    orders_count=Order.objects.filter(user=request.user)
     return render(request, "profile/dashboard.html", {
         "user": request.user,
-        "primary_address": primary_address
+        "primary_address": primary_address,
+        "orders_count":orders_count
     })
 
 @login_required

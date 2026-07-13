@@ -14,7 +14,7 @@ from .forms import AdminLoginForm
 
 from django.contrib.auth.decorators import login_required
 
-from wallet.models import Wallet, WalletTransaction  #
+from wallet.models import Wallet, WalletTransaction 
 User = get_user_model()
 
 
@@ -69,13 +69,13 @@ import json
 @staff_member_required(login_url='admin_login')
 def admin_dashboard(request):
     from orders.models import Order, OrderItem
-    from products.models import Product, Category, BRAND_CHOICES
+    from products.models import Product, Category, BRAND_CHOICES, ProductVariant
 
     today      = timezone.now().date()
     this_month = today.replace(day=1)
     last_month = (this_month - timedelta(days=1)).replace(day=1)
 
-    #  TOP STAT CARDS 
+    
     total_orders   = Order.objects.count()
     total_revenue  = Order.objects.filter(
         status__in=['pending','shipped','out_for_delivery','delivered']
@@ -85,16 +85,11 @@ def admin_dashboard(request):
     pending_orders = Order.objects.filter(status='pending').count()
     delivered_orders = Order.objects.filter(status='delivered').count()
 
-
-
-
-    from products.models import ProductVariant
-
+    
     low_stock_count = ProductVariant.objects.filter(
         product__is_active=True, is_active=True, stock__gt=0, stock__lte=10
     ).count()
 
-      
 
     pending_returns_count = OrderItem.objects.filter(item_status='return_requested').count()
     out_of_stock_count = ProductVariant.objects.filter(
@@ -206,7 +201,7 @@ def admin_dashboard(request):
             chart_revenue.append(float(month_revenue_val))
     
 
-    #BEST SELLING PRODUCTS (Top 10)
+   
     best_products = (
         OrderItem.objects
         .filter(order__status__in=['pending','shipped','out_for_delivery','delivered'])
@@ -218,7 +213,7 @@ def admin_dashboard(request):
         .order_by('-total_qty')[:10]
     )
 
-    #BEST SELLING CATEGORIES (Top 10) 
+   
     best_categories = (
         OrderItem.objects
         .filter(
@@ -233,7 +228,7 @@ def admin_dashboard(request):
         .order_by('-total_qty')[:10]
     )
 
-    # BEST SELLING BRANDS (Top 10)
+    
     best_brands = (
         OrderItem.objects
         .filter(
@@ -259,7 +254,7 @@ def admin_dashboard(request):
         for b in best_brands
     ]
 
-    # RECENT ORDERS (last 8) 
+
     recent_orders = Order.objects.select_related('user').order_by('-created_at')[:8]
 
     
@@ -273,7 +268,6 @@ def admin_dashboard(request):
 
     context = {
         'wallet_liability': wallet_liability,
-        # Stat cards
         'total_orders':        total_orders,
         'total_revenue':       total_revenue,
         'total_users':         total_users,
@@ -281,20 +275,20 @@ def admin_dashboard(request):
         'delivered_orders':    delivered_orders,
         'month_revenue':       month_revenue,
         'last_month_revenue':  last_month_revenue,
-        #out of stock and lowstock
+        
         'low_stock_count': low_stock_count,
         'out_of_stock_count': out_of_stock_count,
-        #pending return
+        
         'pending_returns_count': pending_returns_count,
 
         'aov': aov,
-        #new returning customers
+        
         'new_customers_this_month': new_customers_this_month,
         'returning_customers_this_month': returning_customers_this_month,
 
         'chart_filter': chart_filter,
 
-        # Chart data (JSON for JS)
+        
         'chart_labels':   json.dumps(chart_labels),
         'chart_orders':   json.dumps(chart_orders),
         'chart_revenue':  json.dumps(chart_revenue),
@@ -304,15 +298,16 @@ def admin_dashboard(request):
         'best_categories': best_categories,
         'best_brands':     best_brands_display,
 
-        # Recent orders
+        
         'recent_orders': recent_orders,
 
-        # Status breakdown
+        
         'status_counts': status_counts,
 
         'today': today,
     }
     return render(request, 'admin_panel/dashboard.html', context)
+
 #  USER MANAGEMENT 
 
 @never_cache
@@ -369,6 +364,7 @@ def user_list(request):
 
     
     return render(request, 'admin_panel/user_management.html', context)
+
 # BLOCK / UNBLOCK USER
 
 @never_cache
@@ -406,6 +402,7 @@ def admin_logout(request):
     logout(request)
     messages.success(request, "Logged out successfully.")
     return redirect('admin_login')
+
 
 @staff_member_required(login_url='admin_login')
 @never_cache
@@ -463,9 +460,7 @@ def admin_wallet_list(request):
 @staff_member_required(login_url='admin_login')
 @never_cache
 def admin_wallet_detail(request, user_id):
-    """
-    Admin page — shows one user's wallet and full transaction history.
-    """
+    
     from django.contrib.auth import get_user_model
     User   = get_user_model()
     user   = get_object_or_404(User, pk=user_id)
@@ -486,10 +481,7 @@ def admin_wallet_detail(request, user_id):
 @staff_member_required(login_url='admin_login')
 @never_cache
 def admin_wallet_credit(request, user_id):
-    """
-    Admin manually credits a user's wallet.
-    Used for compensation, promotional credits, referral rewards etc.
-    """
+    
     User   = get_user_model()
     user   = get_object_or_404(User, pk=user_id)
     wallet = get_or_create_wallet(user)
@@ -522,8 +514,6 @@ def admin_wallet_credit(request, user_id):
 
 
 
-
-
 #  REFERRAL MANAGEMENT 
 @never_cache
 @staff_member_required(login_url='admin_login')
@@ -536,7 +526,7 @@ def admin_referral_list(request):
         .order_by('-created_at')
     )
 
-    # Search by referrer OR referred email 
+    
     search = request.GET.get('search', '').strip()
     if search:
         usages = usages.filter(
@@ -544,7 +534,7 @@ def admin_referral_list(request):
             Q(referred_user__email__icontains=search)
         )
 
-    # Filter: all / pending / completed 
+   
     status_filter = request.GET.get('status', 'all')
     if status_filter == 'pending':
         usages = usages.filter(referrer_rewarded=False)
@@ -566,7 +556,7 @@ def admin_referral_list(request):
         t=Sum('referred_reward_amount')
     )['t'] or 0
 
-    # Most active referrers (top 10 by number of people invited)
+    
     top_referrers = (
         all_usages.filter(referrer__isnull=False)
         .values('referrer__email')
@@ -577,8 +567,8 @@ def admin_referral_list(request):
         .order_by('-invited')[:10]
     )
 
-    # Pagination 
-    paginator = Paginator(usages, 20)
+    
+    paginator = Paginator(usages, 3)
     page_obj  = paginator.get_page(request.GET.get('page'))
 
     settings_obj = SiteSettings.get()
@@ -598,7 +588,7 @@ def admin_referral_list(request):
     return render(request, 'admin_panel/referral_list.html', context)
 
 
-#  REFERRAL MANAGEMENT 
+
 @never_cache
 @staff_member_required(login_url='admin_login')
 def admin_referral_settings(request):
@@ -633,7 +623,7 @@ def admin_referral_settings(request):
     })
 
 
-#  REFERRAL MANAGEMENT — MANUALLY MARK A REFERRAL AS REWARDED
+#  REFERRAL MANAGEMENT 
 @never_cache
 @staff_member_required(login_url='admin_login')
 @require_POST

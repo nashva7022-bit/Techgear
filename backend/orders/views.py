@@ -269,14 +269,14 @@ def checkout(request):
                 )
 
 
-                    if razorpay_data is None and order_or_none is not None:
+                    if razorpay_data is None and order_or_none is not None:#wallet coveres full
                         request.session.pop("applied_coupon", None)
                         return redirect(
                             "orders:order_success",
                             order_number=order_or_none.order_number,
                         )
 
-                    if razorpay_data is not None:
+                    if razorpay_data is not None:#wall havent cover full
                         rp_order = razorpay_data["razorpay_order"]
                         
                         razorpay_order_id = (
@@ -305,7 +305,7 @@ def checkout(request):
                                 "amount": int(
                                     Decimal(str(razorpay_data["razorpay_amount"]))
                                     * 100
-                                ),
+                                ),#prefills
                                 "order_number": razorpay_order_id,
                                 "user_name": request.user.get_full_name()
                                 or request.user.email,
@@ -399,9 +399,6 @@ def _serialize_address(addr):
 def order_success(request, order_number):
     order = get_object_or_404(Order, order_number=order_number, user=request.user)
     offer_discount = order.discount_amount - order.coupon_discount
-
-    
-    
 
     return render(
     request,

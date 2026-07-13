@@ -16,7 +16,7 @@ from .models import Coupon
 @never_cache
 def coupon_list(request):
     coupons = Coupon.objects.all().order_by('-created_at')
-    today   = timezone.now().date()#checks validity(todays date)
+    today   = timezone.now().date()#checks validity
 
 
     paginator   = Paginator(coupons, settings.COUPONS_PER_PAGE)
@@ -84,7 +84,7 @@ def coupon_create(request):
                     if mc <= 0:
                         field_errors['max_discount_cap'] = 'Enter a valid amount greater than 0.'
                     elif dv and discount_type == 'percentage':
-                        # cap should make sense — warn if cap is unusually high
+                        
                         if mc > 10000:
                             field_errors['max_discount_cap'] = 'Cap cannot exceed ₹10,000.'
                 except (ValueError, TypeError):

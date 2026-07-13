@@ -25,7 +25,7 @@ def referral_dashboard(request):
     total_rewarded   = referrals_made.filter(referrer_rewarded=True).count()
     pending_rewards  = referrals_made.filter(referrer_rewarded=False).count()
 
-    paginator = Paginator(referrals_made, getattr(settings, "REFERRAlS_PER_PAGE", 5))
+    paginator = Paginator(referrals_made, getattr(settings, "REFERRALS_PER_PAGE"))
     page_obj = paginator.get_page(request.GET.get("page"))
     context = {
         'code_obj':       code_obj,
