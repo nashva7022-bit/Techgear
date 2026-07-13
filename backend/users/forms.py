@@ -35,7 +35,7 @@ class SignupForm(forms.ModelForm):
         phone = (self.cleaned_data.get ('phone') or '').strip()
         if phone and not phone.isdigit():
             raise ValidationError("Phone number must contain only digits.")
-        if len(phone) < 10:
+        if len(phone) != 10:
             raise ValidationError("Please enter a valid phone number.")
         return phone
 
