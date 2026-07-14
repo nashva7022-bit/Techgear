@@ -36,11 +36,11 @@
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
   <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Product Offers</p>
-    <p class="text-3xl font-black text-gray-900">{{ product_offers.count }}</p>
+    <p class="text-3xl font-black text-gray-900">{{ product_offers.paginator.count }}</p>
   </div>
   <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Category Offers</p>
-    <p class="text-3xl font-black text-gray-900">{{ category_offers.count }}</p>
+    <p class="text-3xl font-black text-gray-900">{{ category_offers.paginator.count }}</p>
   </div>
   <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Live Now</p>
