@@ -6,13 +6,19 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.cache import never_cache
 from django.core.paginator import Paginator
-
+from django.contrib import messages
 from .models import Wallet, WalletTransaction
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from decimal import Decimal
 
+def _razorpay_client():
+    import razorpay
+    from django.conf import settings
+    return razorpay.Client(
+        auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
+    )
 def get_or_create_wallet(user):
     
     wallet, _ = Wallet.objects.get_or_create(user=user)
@@ -48,28 +54,26 @@ def wallet_topup_initiate(request):
     if request.method != 'POST':
         return redirect('wallet:wallet')
 
-    import razorpay
+    
     from django.conf import settings
 
     amount_str = request.POST.get('amount', '').strip()
     try:
         amount = Decimal(amount_str)
         if amount < 1:
-            from django.contrib import messages
+            
             messages.error(request, "Minimum top-up amount is ₹1.")
             return redirect('wallet:wallet')
         if amount > 100000:
-            from django.contrib import messages
+           
             messages.error(request, "Maximum top-up amount is ₹1,00,000.")
             return redirect('wallet:wallet')
     except Exception:
-        from django.contrib import messages
+        
         messages.error(request, "Please enter a valid amount.")
         return redirect('wallet:wallet')
 
-    client = razorpay.Client(
-        auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
-    )
+    client = _razorpay_client()
     razorpay_order = client.order.create({
         'amount':          int(amount * 100),  # paise
         'currency':        'INR',
@@ -98,7 +102,7 @@ def wallet_topup_initiate(request):
 def wallet_topup_callback(request):
     
     import razorpay
-    from django.conf import settings
+    
 
     data = request.POST if request.method == 'POST' else request.GET
     razorpay_payment_id = data.get('razorpay_payment_id', '')
@@ -107,13 +111,11 @@ def wallet_topup_callback(request):
 
     pending = request.session.get('pending_wallet_topup')
     if not pending or pending.get('razorpay_order_id') != razorpay_order_id:
-        from django.contrib import messages
+        
         messages.error(request, "Invalid or expired payment session.")
         return redirect('wallet:wallet')
 
-    client = razorpay.Client(
-        auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
-    )
+    client = _razorpay_client()
 
     try:
         client.utility.verify_payment_signature({
@@ -122,7 +124,7 @@ def wallet_topup_callback(request):
             'razorpay_signature':  razorpay_signature,
         })
     except razorpay.errors.SignatureVerificationError:
-        from django.contrib import messages
+        
         messages.error(request, "Payment verification failed. Please contact support.")
         request.session.pop('pending_wallet_topup', None)
         return redirect('wallet:wallet')
@@ -136,7 +138,7 @@ def wallet_topup_callback(request):
     )
 
     request.session.pop('pending_wallet_topup', None)
-    from django.contrib import messages
+    
     messages.success(request, f"₹{amount} added to your wallet successfully!")
     return redirect('wallet:wallet')
 
