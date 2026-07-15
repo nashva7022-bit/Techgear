@@ -1,6 +1,6 @@
+
 {% extends 'admin_panel/admin_base.html' %}
 {% block content %}
-
 <!-- Header -->
 <div class="flex items-start justify-between mb-8">
   <div>
@@ -12,7 +12,6 @@
     ← Back
   </a>
 </div>
-
 {% if messages %}
 <div class="mb-6 flex flex-col gap-2">
   {% for message in messages %}
@@ -26,12 +25,9 @@
 {% endif %}
 <form method="POST" action="{% if edit_mode %}{% url 'coupons:coupon_edit' coupon.pk %}{% else %}{% url 'coupons:coupon_create' %}{% endif %}">
   {% csrf_token %}
-
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
     <!-- LEFT: Main fields -->
     <div class="lg:col-span-2 flex flex-col gap-6">
-
       <!-- Basic Info -->
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100">
@@ -39,7 +35,6 @@
           <p class="text-[11px] text-gray-400 mt-0.5">Code and description for this coupon</p>
         </div>
         <div class="px-6 py-5 flex flex-col gap-5">
-
           <!-- Code -->
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
@@ -49,29 +44,22 @@
             <input type="text"
                    name="code"
                    id="couponCodeInput"
-                   {% if submitted.code %}
-    value="{{ submitted.code }}"
-{% elif coupon %}
-    value="{{ coupon.code }}"
-{% else %}
-    value=""
-{% endif %}
+                   value="{{ form.code.value|default_if_none:'' }}"
                    placeholder="e.g. SAVE20"
                    maxlength="30"
                    style="text-transform:uppercase"
-                   class="flex-1 px-4 py-3 rounded-xl border {% if field_errors.code %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm font-mono font-bold text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">
+                   class="flex-1 px-4 py-3 rounded-xl border {% if form.code.errors %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm font-mono font-bold text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">
             <button type="button"
                     onclick="generateCode()"
                     class="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-widest hover:bg-gray-100 hover:text-gray-700 transition flex-shrink-0">
               Generate
             </button>
           </div>
-          {% if field_errors.code %}
-          <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ field_errors.code }}</p>
+          {% if form.code.errors %}
+          <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ form.code.errors.0 }}</p>
           {% endif %}
           <p class="mt-1.5 text-[11px] text-gray-400">Letters, numbers, hyphens only. Max 30 characters. Will be saved in uppercase.</p>
          </div>
-
           <!-- Description -->
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
@@ -79,21 +67,13 @@
             </label>
             <input type="text"
                    name="description"
-                   {% if submitted.description %}
-  value="{{ submitted.description }}"
-{% elif coupon %}
-  value="{{ coupon.description }}"
-{% else %}
-  value=""
-{% endif %}
+                   value="{{ form.description.value|default_if_none:'' }}"
                    placeholder="e.g. 20% off for new users"
                    maxlength="255"
                    class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">
           </div>
-
         </div>
       </div>
-
       <!-- Discount Settings -->
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100">
@@ -101,7 +81,6 @@
           <p class="text-[11px] text-gray-400 mt-0.5">How much and what type of discount</p>
         </div>
         <div class="px-6 py-5 flex flex-col gap-5">
-
           <!-- Discount Type -->
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
@@ -109,13 +88,9 @@
             </label>
             <div class="flex gap-3">
               <label class="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition
-                            {% if submitted.discount_type == 'percentage' %}border-black bg-gray-50{% else %}border-gray-200 hover:border-gray-300{% endif %}">
+                            {% if form.discount_type.value == 'percentage' %}border-black bg-gray-50{% else %}border-gray-200 hover:border-gray-300{% endif %}">
                 <input type="radio" name="discount_type" value="percentage"
-                      {% if submitted.discount_type == 'percentage' %}
-checked
-{% elif coupon and coupon.discount_type == 'percentage' %}
-checked
-{% endif %}
+                      {% if form.discount_type.value == 'percentage' %}checked{% endif %}
                        class="accent-black" onchange="toggleCapField()">
                 <div>
                   <p class="text-sm font-bold text-gray-900">Percentage</p>
@@ -123,13 +98,9 @@ checked
                 </div>
               </label>
               <label class="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition
-                            {% if submitted.discount_type == 'fixed' %}border-black bg-gray-50{% else %}border-gray-200 hover:border-gray-300{% endif %}">
+                            {% if form.discount_type.value == 'fixed' %}border-black bg-gray-50{% else %}border-gray-200 hover:border-gray-300{% endif %}">
                 <input type="radio" name="discount_type" value="fixed"
-                       {% if submitted.discount_type == 'fixed' %}
-checked
-{% elif coupon and coupon.discount_type == 'fixed' %}
-checked
-{% endif %}
+                       {% if form.discount_type.value == 'fixed' %}checked{% endif %}
                        class="accent-black" onchange="toggleCapField()">
                 <div>
                   <p class="text-sm font-bold text-gray-900">Fixed Amount</p>
@@ -137,11 +108,10 @@ checked
                 </div>
               </label>
             </div>
-            {% if field_errors.discount_type %}
-            <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ field_errors.discount_type }}</p>
+            {% if form.discount_type.errors %}
+            <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ form.discount_type.errors.0 }}</p>
             {% endif %}
           </div>
-
           <!-- Discount Value -->
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
@@ -151,25 +121,18 @@ checked
               <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400" id="discountPrefix">%</span>
               <input type="number"
                      name="discount_value"
-                     {% if submitted.discount_value %}
-value="{{ submitted.discount_value }}"
-{% elif coupon %}
-value="{{ coupon.discount_value }}"
-{% else %}
-value=""
-{% endif %}
+                     value="{{ form.discount_value.value|default_if_none:'' }}"
                      placeholder="0"
                      min="0.01"
                      step="0.01"
-                     class="w-full pl-9 pr-4 py-3 rounded-xl border {% if field_errors.discount_value %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm font-bold text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">
+                     class="w-full pl-9 pr-4 py-3 rounded-xl border {% if form.discount_value.errors %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm font-bold text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">
             </div>
-            {% if field_errors.discount_value %}
-            <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ field_errors.discount_value }}</p>
+            {% if form.discount_value.errors %}
+            <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ form.discount_value.errors.0 }}</p>
             {% endif %}
           </div>
-
           <!-- Max Discount Cap (percentage only) -->
-          <div id="capField" {% if submitted.discount_type == 'fixed' %}style="display:none"{% endif %}>
+          <div id="capField" {% if form.discount_type.value == 'fixed' %}style="display:none"{% endif %}>
             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
               Maximum Discount Cap <span class="text-gray-300 font-normal normal-case">(optional)</span>
             </label>
@@ -177,27 +140,19 @@ value=""
               <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">₹</span>
               <input type="number"
                      name="max_discount_cap"
-                     {% if submitted.max_discount_cap %}
-value="{{ submitted.max_discount_cap }}"
-{% elif coupon %}
-value="{{ coupon.max_discount_cap }}"
-{% else %}
-value=""
-{% endif %}
+                     value="{{ form.max_discount_cap.value|default_if_none:'' }}"
                      placeholder="e.g. 500"
                      min="0.01"
                      step="0.01"
-                     class="w-full pl-9 pr-4 py-3 rounded-xl border {% if field_errors.max_discount_cap %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">
+                     class="w-full pl-9 pr-4 py-3 rounded-xl border {% if form.max_discount_cap.errors %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">
             </div>
-            {% if field_errors.max_discount_cap %}
-            <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ field_errors.max_discount_cap }}</p>
+            {% if form.max_discount_cap.errors %}
+            <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ form.max_discount_cap.errors.0 }}</p>
             {% endif %}
             <p class="mt-1.5 text-[11px] text-gray-400">Maximum rupee value the percentage discount can give. Leave blank for no cap.</p>
           </div>
-
         </div>
       </div>
-
       <!-- Validity Period -->
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100">
@@ -205,51 +160,33 @@ value=""
           <p class="text-[11px] text-gray-400 mt-0.5">When this coupon can be used</p>
         </div>
         <div class="px-6 py-5 grid grid-cols-2 gap-5">
-
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
   Start Date <span class="text-red-400">*</span>
 </label>
 <input type="date"
        name="start_date"
-       {% if submitted.start_date %}
-value="{{ submitted.start_date }}"
-{% elif coupon %}
-value="{{ coupon.start_date|date:'Y-m-d' }}"
-{% else %}
-value=""
-{% endif %}
-       class="w-full px-4 py-3 rounded-xl border {% if field_errors.start_date %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">{% if field_errors.start_date %}
-            <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ field_errors.start_date }}</p>
+       value="{{ form.start_date.value|date:'Y-m-d' }}"
+       class="w-full px-4 py-3 rounded-xl border {% if form.start_date.errors %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">{% if form.start_date.errors %}
+            <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ form.start_date.errors.0 }}</p>
             {% endif %}
           </div>
-
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
   End Date <span class="text-red-400">*</span>
 </label>
 <input type="date"
        name="end_date"
-       {% if submitted.end_date %}
-value="{{ submitted.end_date }}"
-{% elif coupon %}
-value="{{ coupon.end_date|date:'Y-m-d' }}"
-{% else %}
-value=""
-{% endif %}
-       class="w-full px-4 py-3 rounded-xl border {% if field_errors.end_date %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">{% if field_errors.end_date %}
-            <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ field_errors.end_date }}</p>
+       value="{{ form.end_date.value|date:'Y-m-d' }}"
+       class="w-full px-4 py-3 rounded-xl border {% if form.end_date.errors %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">{% if form.end_date.errors %}
+            <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ form.end_date.errors.0 }}</p>
             {% endif %}
           </div>
-
         </div>
       </div>
-
     </div>
-
     <!-- RIGHT: Constraints + Submit -->
     <div class="flex flex-col gap-6">
-
       <!-- Usage Constraints -->
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100">
@@ -257,7 +194,6 @@ value=""
           <p class="text-[11px] text-gray-400 mt-0.5">Limits and minimum requirements</p>
         </div>
         <div class="px-6 py-5 flex flex-col gap-5">
-
           <!-- Min Order Amount -->
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
@@ -267,24 +203,17 @@ value=""
               <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">₹</span>
               <input type="number"
                      name="min_order_amount"
-                    {% if submitted.min_order_amount %}
-value="{{ submitted.min_order_amount }}"
-{% elif coupon %}
-value="{{ coupon.min_order_amount }}"
-{% else %}
-value=""
-{% endif %}
+                     value="{{ form.min_order_amount.value|default_if_none:'' }}"
                      placeholder="0"
                      min="0"
                      step="0.01"
-                     class="w-full pl-9 pr-4 py-3 rounded-xl border {% if field_errors.min_order_amount %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">
+                     class="w-full pl-9 pr-4 py-3 rounded-xl border {% if form.min_order_amount.errors %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">
             </div>
-            {% if field_errors.min_order_amount %}
-            <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ field_errors.min_order_amount }}</p>
+            {% if form.min_order_amount.errors %}
+            <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ form.min_order_amount.errors.0 }}</p>
             {% endif %}
             <p class="mt-1.5 text-[11px] text-gray-400">Leave blank or 0 for no minimum.</p>
           </div>
-
           <!-- Usage Limit -->
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
@@ -292,32 +221,23 @@ value=""
             </label>
             <input type="number"
                    name="usage_limit"
-                   {% if submitted.usage_limit %}
-value="{{ submitted.usage_limit }}"
-{% elif coupon %}
-value="{{ coupon.usage_limit }}"
-{% else %}
-value=""
-{% endif %}
+                   value="{{ form.usage_limit.value|default_if_none:'' }}"
                    placeholder="Unlimited"
                    min="1"
                    step="1"
-                   class="w-full px-4 py-3 rounded-xl border {% if field_errors.usage_limit %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">
-            {% if field_errors.usage_limit %}
-            <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ field_errors.usage_limit }}</p>
+                   class="w-full px-4 py-3 rounded-xl border {% if form.usage_limit.errors %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">
+            {% if form.usage_limit.errors %}
+            <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ form.usage_limit.errors.0 }}</p>
             {% endif %}
             <p class="mt-1.5 text-[11px] text-gray-400">Total times across all users. Leave blank for unlimited.</p>
           </div>
-
         </div>
       </div>
-
       <!-- Info box -->
       <div class="bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4">
         <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">One use per user</p>
         <p class="text-xs text-blue-500 leading-relaxed">Each customer can use a coupon only once regardless of usage limit. This is enforced automatically.</p>
       </div>
-
       <!-- Submit -->
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-6 py-5 flex flex-col gap-3">
@@ -331,11 +251,9 @@ value=""
           </a>
         </div>
       </div>
-
     </div>
   </div>
 </form>
-
 <script>
 function toggleCapField() {
   const type    = document.querySelector('input[name="discount_type"]:checked').value;
@@ -346,7 +264,6 @@ function toggleCapField() {
 }
 document.addEventListener('DOMContentLoaded', toggleCapField);
 </script>
-
 <script>
 function generateCode() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -357,5 +274,4 @@ function generateCode() {
   document.getElementById('couponCodeInput').value = code;
 }
 </script>
-
 {% endblock %}
