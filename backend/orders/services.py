@@ -16,6 +16,12 @@ logger = logging.getLogger(__name__)
 
 # PRIVATE HELPERS
 
+def _razorpay_client():
+    import razorpay
+    from django.conf import settings
+    return razorpay.Client(
+        auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
+    )
 
 def _d(value) -> Decimal:
     
@@ -681,9 +687,7 @@ def change_order_status(order: Order, new_status: str, changed_by, note: str = "
 
 def place_razorpay_order(user, cart, address, use_wallet=False, coupon_code=None):
    
-    import razorpay
-    from django.conf import settings
-
+    
     cart_items = list(
         cart.items.select_related(
             "variant__product__category",
@@ -720,9 +724,7 @@ def place_razorpay_order(user, cart, address, use_wallet=False, coupon_code=None
         )
         return order, None
 
-    client = razorpay.Client(
-        auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
-    )
+    client = _razorpay_client()
     razorpay_order = client.order.create(
         {
             "amount": int(razorpay_amount * 100),  # paise
@@ -753,13 +755,11 @@ def verify_razorpay_payment(
 ) -> Order:
    
     import razorpay
-    from django.conf import settings
+    
 
-    client = razorpay.Client(
-        auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
-    )
+    client = _razorpay_client()
 
-    #  Step 1: Verify signature
+    #  Verify signature
     try:
         client.utility.verify_payment_signature(
             {
