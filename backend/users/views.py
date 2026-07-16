@@ -89,8 +89,8 @@ def signup(request):
     if request.method == "POST" and form.is_valid():
 
         #  RATE LIMIT 
-        ip = request.META.get('REMOTE_ADDR')
-        rate_key = f'signup_rate:{ip}'
+        ip = request.META.get('REMOTE_ADDR')#vis ip add
+        rate_key = f'signup_rate:{ip}'#unique label 
         attempts = cache.get(rate_key, 0)
 
         if attempts >= 10:
@@ -129,6 +129,7 @@ def signup(request):
                 return redirect('signup')
 
             try:
+                #finding old otps
                 OTP.objects.filter(user=inactive_user,purpose='signup').delete()
                 generate_and_send_otp(inactive_user, email,purpose='signup')
                 #gene a new sess id
@@ -138,7 +139,7 @@ def signup(request):
 
                 messages.info(request, "Verification code sent.")
                 return redirect('verify_otp')
-
+                #mail server rej , malicious email , network
             except (SMTPException, BadHeaderError, OSError) as e:
                 logger.error("OTP failed sid=%s err=%s", _safe_id(email), str(e))
                 messages.error(request, "Mail error. Try again.")

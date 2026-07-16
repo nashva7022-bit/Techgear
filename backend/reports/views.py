@@ -60,7 +60,7 @@ def sales_report(request):
     net_revenue = orders_in_range.aggregate(r=Sum('total_amount'))['r'] or Decimal('0.00')
 
     # Pagination 
-    print("Total orders:", orders_in_range.count())
+    
     paginator = Paginator(orders_in_range, getattr(settings, 'REPORTS_PER_PAGE', 5))
     page_obj = paginator.get_page(request.GET.get('page'))
 

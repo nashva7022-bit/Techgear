@@ -1,10 +1,7 @@
 
-
 from __future__ import annotations
-
-import logging
+import logging#instead of print
 from decimal import Decimal
-
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -17,13 +14,11 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-
 from offers.utils import get_effective_price
 from store.models import Cart, Review
 from users.forms import AddressForm
 from users.models import Address
 from weasyprint import HTML
-
 from .models import Order, OrderItem, OrderStatusLog
 from .services import (
     cancel_order,
@@ -38,9 +33,6 @@ logger = logging.getLogger(__name__)
 
 
 
-
-
-
 def _build_checkout_context(request, cart, cart_items, addresses, wallet_balance):
     
     from coupons.models import Coupon
@@ -50,7 +42,9 @@ def _build_checkout_context(request, cart, cart_items, addresses, wallet_balance
     total_offer_discount = Decimal("0.00")
     customization_total = Decimal("0.00")
     enriched_items = []
+
     for item in cart_items:
+        #disc price
         eff_price, _ = get_effective_price(item.variant)
         original_price = item.variant.price
         item_offer_discount = (original_price - eff_price) * item.quantity
@@ -82,6 +76,7 @@ def _build_checkout_context(request, cart, cart_items, addresses, wallet_balance
         )
 
     shipping_charge = Decimal("0.00")
+    #cart total
     pre_coupon_total = subtotal + shipping_charge
     original_product_total = subtotal - customization_total + total_offer_discount
 
@@ -98,6 +93,7 @@ def _build_checkout_context(request, cart, cart_items, addresses, wallet_balance
             coupon_discount = min(raw_discount, pre_coupon_total)
         except Exception:
             request.session.pop("applied_coupon", None)
+            #resets
             coupon_code = ""
             coupon_discount = Decimal("0.00")
 
@@ -111,6 +107,7 @@ def _build_checkout_context(request, cart, cart_items, addresses, wallet_balance
 
     now_coupons = Coupon.objects.filter(is_active=True)
     available_coupons = []
+
     for c in now_coupons:
         _, error = validate_coupon(c.code, request.user, pre_coupon_total)
         applicable = error is None
@@ -119,6 +116,7 @@ def _build_checkout_context(request, cart, cart_items, addresses, wallet_balance
             amount_needed = max(
                 Decimal("0.00"), c.min_order_amount - pre_coupon_total
             )
+            
         available_coupons.append(
             {
                 "code": c.code,
@@ -186,7 +184,7 @@ def checkout(request):
 
     
     if request.method == "POST":
-        action = request.POST.get("action", "")
+        action = request.POST.get("action", "")#treat it as an empty string
         is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
         # ADD ADDRESS
@@ -266,9 +264,9 @@ def checkout(request):
                         address=address,
                         use_wallet=use_wallet,
                         coupon_code=coupon_code,
-                )
+                    )
 
-
+                    #entire order covered by wallwtnext
                     if razorpay_data is None and order_or_none is not None:#wallet coveres full
                         request.session.pop("applied_coupon", None)
                         return redirect(
@@ -305,7 +303,7 @@ def checkout(request):
                                 "amount": int(
                                     Decimal(str(razorpay_data["razorpay_amount"]))
                                     * 100
-                                ),#prefills
+                                ),
                                 "order_number": razorpay_order_id,
                                 "user_name": request.user.get_full_name()
                                 or request.user.email,
