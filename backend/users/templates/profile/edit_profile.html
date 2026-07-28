@@ -38,7 +38,12 @@
                     <input type="hidden" id="remove-image-flag" name="remove_image" value="false">
 
                     <button type="button" onclick="document.getElementById('image-upload').click()" class="bg-accent-hover text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-ink transition block mb-2">Change Photo</button>
-                    <button type="button" onclick="removePhoto()" class="text-xs font-bold text-red-500 hover:text-red-700 transition">Remove photo</button>
+                    {% if user.profile_image %}
+                    <!-- DEBUG: profile_image exists: {{ user.profile_image }} -->
+<button type="button" onclick="removePhoto()" class="text-xs font-bold text-red-500 hover:text-red-700 transition">Remove photo</button>
+{% else %}
+    <!-- DEBUG: profile_image is empty -->
+{% endif %}
                 </div>
             </div>
 
@@ -62,7 +67,7 @@
             <div>
                 <label class="block text-xs font-bold text-ink/50 uppercase tracking-widest mb-2">Email Address</label>
                 <div class="w-full px-5 py-3.5 rounded-xl border border-ink/10 bg-site-bg text-ink/50 cursor-not-allowed">
-                    {{ user.email }} <a href="{% url 'change_email' %}" class="ml-4 font-bold text-accent-hover underline">Change Email</a>
+                    {{ user.email }} 
                 </div>
             </div>
 

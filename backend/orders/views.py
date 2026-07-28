@@ -266,7 +266,7 @@ def checkout(request):
                         coupon_code=coupon_code,
                     )
 
-                    #entire order covered by wallwtnext
+                
                     if razorpay_data is None and order_or_none is not None:#wallet coveres full
                         request.session.pop("applied_coupon", None)
                         return redirect(

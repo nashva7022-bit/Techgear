@@ -284,8 +284,6 @@ def add_to_cart(request):
     cart         = get_or_create_cart(request.user)
     custom_text  = request.POST.get('custom_text', '').strip()
     custom_image = request.FILES.get('custom_image')
-
-    
     has_customization = bool(custom_text or custom_image)
 
     
@@ -318,7 +316,7 @@ def add_to_cart(request):
 
         existing_item.quantity = new_qty
         existing_item.save()
-
+       
         wishlist = get_or_create_wishlist(request.user)
         wishlist.items.filter(variant__product=variant.product).delete()
 
@@ -353,6 +351,7 @@ def add_to_cart(request):
             if custom_image:
                 cart_item.custom_image = custom_image
         cart_item.save()
+         
 
         wishlist = get_or_create_wishlist(request.user)
         wishlist.items.filter(variant__product=variant.product).delete()
@@ -409,6 +408,24 @@ def update_cart(request, item_id):
 
         cart_total = sum(i.subtotal for i in all_items)
 
+        # Re-validate coupon if one is applied
+        applied_coupon_data = request.session.get("applied_coupon")
+        if applied_coupon_data:
+            from coupons.models import Coupon
+            from coupons.utils import validate_coupon
+            
+            try:
+                coupon = Coupon.objects.get(code=applied_coupon_data["code"])
+                _, error = validate_coupon(coupon.code, request.user, cart_total)
+                if error:
+                    # Coupon no longer valid, remove it
+                    request.session.pop("applied_coupon", None)
+                    request.session.modified = True
+            except Coupon.DoesNotExist:
+                request.session.pop("applied_coupon", None)
+                request.session.modified = True
+
+
         original_total = sum(i.original_subtotal for i in all_items)
 
         customization_total = sum(
@@ -443,10 +460,33 @@ def remove_from_cart(request, item_id):
     cart_item = get_object_or_404(
         CartItem, pk=item_id, cart__user=request.user
     )
+    
     cart_item.delete()
+    
+    # Re-validate coupon after item removal
+    applied_coupon_data = request.session.get("applied_coupon")
+    if applied_coupon_data:
+        from coupons.models import Coupon
+        from coupons.utils import validate_coupon
+        from decimal import Decimal
+        
+        cart = request.user.cart
+        if cart.items.exists():
+            cart_total = Decimal(str(cart.total_price))
+            
+            try:
+                coupon = Coupon.objects.get(code=applied_coupon_data["code"])
+                _, error = validate_coupon(coupon.code, request.user, cart_total)
+                if error:
+                    request.session.pop("applied_coupon", None)
+                    request.session.modified = True
+                    messages.info(request, "Coupon removed — cart no longer qualifies.")
+            except Coupon.DoesNotExist:
+                request.session.pop("applied_coupon", None)
+                request.session.modified = True
+    
     messages.success(request, "Item removed from cart.")
     return redirect('cart')
-
 
 @login_required
 @require_POST

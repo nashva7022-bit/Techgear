@@ -11,7 +11,8 @@ def _get_referral_settings():
     
     from admin_panel.models import SiteSettings
     return SiteSettings.get()
-
+#referrer-existing user
+#referred-new user
 
 def get_or_create_referral_code(user):
     
@@ -94,6 +95,8 @@ def apply_referral_on_signup(referred_user, referral_code_obj):
                 reason=f"Welcome bonus — signed up via referral from {referrer.email}",
                 order=None,
             )
+        
+    
 
     return usage
 

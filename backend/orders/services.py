@@ -573,11 +573,11 @@ def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
                 )
                 refund_amount += wallet_share
 
-            if order.payment_method in ("razorpay", "wallet_razorpay") and order_paid > 0:
-                razorpay_share = (order_paid * proportion).quantize(
+            if order_paid > 0:
+                paid_share = (order_paid * proportion).quantize(
                     Decimal("0.01"), rounding=ROUND_DOWN
                 )
-                refund_amount += razorpay_share
+                refund_amount += paid_share
 
             if order.coupon_discount and order.coupon_discount > 0:
                 coupon_share = (_d(order.coupon_discount) * proportion).quantize(

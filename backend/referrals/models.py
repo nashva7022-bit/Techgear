@@ -14,7 +14,7 @@ REFERRED_REWARD = Decimal('100.00')
 
 
 def generate_referral_code():
-    """Generate a unique 8-character alphanumeric referral code."""
+   
     chars = string.ascii_uppercase + string.digits
     return ''.join(random.choices(chars, k=8))
 

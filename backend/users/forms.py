@@ -72,25 +72,21 @@ class SignupForm(forms.ModelForm):
 #EDIT PROFILE FORM
 class EditProfileForm(forms.ModelForm):
     
-    first_name = forms.CharField(required=True, error_messages={'required': 'First name is required.'})
-    last_name = forms.CharField(required=False)
+    full_name = forms.CharField(required=True, error_messages={'required': 'Name is required.'})
+    
     phone = forms.CharField(required=False)
 
     class Meta:
         model = User
-        fields =['first_name', 'last_name', 'phone', 'profile_image']
+        fields =['full_name', 'phone', 'profile_image']
 
-    def clean_first_name(self):
-        first_name = self.cleaned_data.get('first_name', '').strip()
-        if first_name and not re.match(NAME_REGEX, first_name):
-            raise ValidationError("First name contains invalid characters.")
-        return first_name
+    def clean_full_name(self):
+        full_name = self.cleaned_data.get('full_name', '').strip()
+        if full_name and not re.match(NAME_REGEX, full_name):
+            raise ValidationError("Name contains invalid characters.")
+        return full_name
 
-    def clean_last_name(self):
-        last_name = self.cleaned_data.get('last_name', '').strip()
-        if last_name and not re.match(NAME_REGEX, last_name):
-            raise ValidationError("Last name contains invalid characters.")
-        return last_name
+  
 
     def clean_phone(self):
         phone = (self.cleaned_data.get('phone') or '').strip()
@@ -113,12 +109,25 @@ class EditProfileForm(forms.ModelForm):
                     raise ValidationError("File must be a valid image format.")
         return image
     
-
+    def save(self, commit=True):
+        full_name = self.cleaned_data.get('full_name', '')
+        parts = full_name.split()
+        self.instance.first_name = parts[0] if parts else "User"
+        self.instance.last_name = ' '.join(parts[1:]) if len(parts) > 1 else ""
+        return super().save(commit=commit)
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+    # Pre-populate full_name from stored first_name + last_name
+        if self.instance.pk:
+            full = f"{self.instance.first_name}"
+            if self.instance.last_name:
+                full += f" {self.instance.last_name}"
+            self.fields['full_name'].initial = full.strip()
+    
         for field in self.fields.values():
             field.widget.attrs.update({'class': 'w-full px-5 py-3.5 rounded-xl border border-ink/15 bg-white text-ink focus:ring-2 focus:ring-accent-hover/30 outline-none transition'})
+
 
 #  CHANGE PASSWORD FORM 
 class ChangePasswordForm(forms.Form):
@@ -180,11 +189,12 @@ class ChangeEmailForm(forms.Form):
         return email
 
 
-# ADDRESS FORM 
+#address\
+
 class AddressForm(forms.ModelForm):
     class Meta:
         model = Address
-        fields =[
+        fields = [
             'full_name', 'phone', 'address_line_1', 
             'city', 'state', 'postal_code', 'country', 'address_label', 'is_default'
         ]
@@ -193,6 +203,7 @@ class AddressForm(forms.ModelForm):
         ('Work', 'Work'),
         ('Other', 'Other'),
     ])
+
     def clean_full_name(self):
         name = self.cleaned_data.get('full_name', '').strip()
         if not name:
@@ -203,25 +214,58 @@ class AddressForm(forms.ModelForm):
 
     def clean_phone(self):
         phone = self.cleaned_data.get('phone', '').strip()
-        if phone and not phone.isdigit():
+        if not phone:
+            raise ValidationError("Phone is required.")
+        if not phone.isdigit():
             raise ValidationError("Phone number must contain only digits.")
-        if len(phone) !=10:
-            raise ValidationError('phone number must be 10 digits')
+        if len(phone) != 10:
+            raise ValidationError('Phone number must be 10 digits')
+        if phone[0] == '0':
+            raise ValidationError("Phone number cannot start with zero.")
+        if len(set(phone)) == 1:
+            raise ValidationError("Please enter a valid phone number.")
         return phone
 
-        
+    def clean_address_line_1(self):
+        address = self.cleaned_data.get('address_line_1', '').strip()
+        if not address:
+            raise ValidationError("Address line is required.")
+        if any(char.isdigit() for char in address):
+            raise ValidationError("Address cannot contain digits.")
+        return address
+
+    def clean_city(self):
+        city = self.cleaned_data.get('city', '').strip()
+        if not city:
+            raise ValidationError("City is required.")
+        if any(char.isdigit() for char in city):
+            raise ValidationError("City name cannot contain digits.")
+        return city
+
+    def clean_state(self):
+        state = self.cleaned_data.get('state', '').strip()
+        if not state:
+            raise ValidationError("State is required.")
+        if any(char.isdigit() for char in state):
+            raise ValidationError("State name cannot contain digits.")
+        return state
+
     def clean_postal_code(self):
         postal_code = self.cleaned_data.get('postal_code', '').strip()
-        
-        # 1. Check for non-digits
-        if postal_code and not postal_code.isdigit():
+        if not postal_code:
+            raise ValidationError("Postal code is required.")
+        if not postal_code.isdigit():
             raise ValidationError("Postal code must contain only digits.")
-        
-        # 2. Check length (India uses 6 digits)
         if len(postal_code) != 6:
-            raise ValidationError("Postal code must be exactly 6 digits.")
-            
-        return postal_code   
-    
+            raise ValidationError('Postal code must be exactly 6 digits')
+        if postal_code == '000000':
+            raise ValidationError("Postal code cannot be all zeros.")
+        return postal_code
 
-        
+    def clean_country(self):
+        country = self.cleaned_data.get('country', '').strip()
+        if not country:
+            raise ValidationError("Country is required.")
+        if any(char.isdigit() for char in country):
+            raise ValidationError("Country name cannot contain digits.")
+        return country

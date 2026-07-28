@@ -515,6 +515,7 @@ def dashboard(request):
        
     })
 
+
 @login_required
 @never_cache
 def edit_profile(request):
@@ -523,12 +524,20 @@ def edit_profile(request):
         form = EditProfileForm(request.POST, request.FILES, instance=request.user)
         
         if form.is_valid():
-            if request.POST.get("remove_image") == "true" and request.user.profile_image:
-                request.user.profile_image.delete(save=False)
-                request.user.profile_image = None
-            form.save()
+            instance = form.save(commit=False)  # Don't save yet
+            
+            # Handle photo removal
+            if request.POST.get("remove_image") == "true":
+                if instance.profile_image:
+                    instance.profile_image.delete(save=False)
+                instance.profile_image = None
+            
+            instance.save()  # Save with profile_image properly set
+            request.user.refresh_from_db()
+            print(f"DEBUG: After save, profile_image = {request.user.profile_image}")
             messages.success(request, "Profile updated successfully.")
             return redirect("profile")
+            
         else:
             for error in form.errors.values():
                 messages.error(request, error)
@@ -537,9 +546,6 @@ def edit_profile(request):
         form = EditProfileForm(instance=request.user)
         
     return render(request, "profile/edit_profile.html", {"form": form})
-
-
-
 # SEPARATED EMAIL & PASSWORD PAGES
 
 @login_required
