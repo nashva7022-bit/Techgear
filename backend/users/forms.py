@@ -20,7 +20,7 @@ class SignupForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['email', 'phone']
+        fields = ['email', 'full_name', 'phone']
 
     def clean_email(self):
         email = self.cleaned_data.get('email', '').lower().strip()
@@ -33,10 +33,15 @@ class SignupForm(forms.ModelForm):
 
     def clean_phone(self):
         phone = (self.cleaned_data.get ('phone') or '').strip()
-        if phone and not phone.isdigit():
+        if not phone.isdigit():
             raise ValidationError("Phone number must contain only digits.")
         if len(phone) != 10:
             raise ValidationError("Please enter a valid phone number.")
+        if phone[0]=='0':
+            raise ValidationError("Phone number cannot start with zero.")
+        if len(set(phone)) == 1:
+            raise ValidationError("Please enter a valid phone number.")
+    
         return phone
 
     def clean_full_name(self):
