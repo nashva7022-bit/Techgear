@@ -20,7 +20,7 @@ class CouponForm(forms.ModelForm):
     def __init__(self, *args, is_edit=False, **kwargs):
         self.is_edit = is_edit
         super().__init__(*args, **kwargs)
-        # blank min-order means "no minimum" → treat as 0, so don't force it
+        
         self.fields['min_order_amount'].required = False
 
     def clean_code(self):
@@ -34,6 +34,12 @@ class CouponForm(forms.ModelForm):
 
     def clean_min_order_amount(self):
         moa = self.cleaned_data.get('min_order_amount')
+        dtype = self.cleaned_data.get('discount_type')
+    
+    # For fixed discounts, min_order_amount is required
+        if dtype == 'fixed' and not moa:
+            raise forms.ValidationError('Minimum order amount is required for fixed discounts.')
+    
         if moa is None:
             return 0
         if moa < 0:
@@ -41,7 +47,7 @@ class CouponForm(forms.ModelForm):
         if moa > 100000:
             raise forms.ValidationError('Minimum order amount seems too high.')
         return moa
-
+    
     def clean_usage_limit(self):
         ul = self.cleaned_data.get('usage_limit')
         if ul is None:
@@ -56,16 +62,14 @@ class CouponForm(forms.ModelForm):
 
     def clean_start_date(self):
         start_date = self.cleaned_data.get('start_date')
-        # only block past start dates when creating — an existing coupon may
-        # already have started in the past
+        
         if not self.is_edit and start_date and start_date < timezone.now().date():
             raise forms.ValidationError('Start date cannot be in the past.')
         return start_date
 
     def clean_end_date(self):
         end_date = self.cleaned_data.get('end_date')
-        # only block past end dates when editing (create is already covered by
-        # the future-start rule)
+        
         if self.is_edit and end_date and end_date < timezone.now().date():
             raise forms.ValidationError('End date cannot be in the past.')
         return end_date
@@ -75,10 +79,11 @@ class CouponForm(forms.ModelForm):
         dtype = cleaned.get('discount_type')
         dvalue = cleaned.get('discount_value')
         cap = cleaned.get('max_discount_cap')
+        moa = cleaned.get('min_order_amount')  
         start = cleaned.get('start_date')
         end = cleaned.get('end_date')
 
-        # discount value depends on the type, so it's validated here
+    
         if dvalue is not None:
             if dvalue <= 0:
                 self.add_error('discount_value', 'Discount value must be greater than 0.')
@@ -87,7 +92,12 @@ class CouponForm(forms.ModelForm):
             elif dtype == 'fixed' and dvalue > 10000:
                 self.add_error('discount_value', 'Fixed discount cannot exceed ₹10,000.')
 
-        # cap only makes sense for percentage discounts
+    
+        if dtype == 'fixed' and dvalue and moa is not None:
+            if moa <= dvalue:
+                self.add_error('min_order_amount', 
+                    f'Minimum order amount must exceed the discount value (₹{dvalue}) for fixed discounts.')
+    # cap only makes sense for percentage discounts
         if cap is not None:
             if dtype == 'fixed':
                 self.add_error('max_discount_cap', 'Max cap only applies to percentage discounts.')
@@ -96,7 +106,7 @@ class CouponForm(forms.ModelForm):
             elif cap > 10000:
                 self.add_error('max_discount_cap', 'Cap cannot exceed ₹10,000.')
 
-        # end must be strictly after start
+    
         if start and end:
             if end < start:
                 self.add_error('end_date', 'End date must be after start date.')

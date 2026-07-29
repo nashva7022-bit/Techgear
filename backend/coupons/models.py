@@ -1,6 +1,4 @@
 
-
-# Create your models here.
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -28,7 +26,7 @@ class Coupon(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-
+    
     def __str__(self):
         return self.code
 

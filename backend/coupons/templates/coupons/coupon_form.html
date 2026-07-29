@@ -166,7 +166,7 @@
 </label>
 <input type="date"
        name="start_date"
-       value="{{ form.start_date.value|date:'Y-m-d' }}"
+       value="{% if form.start_date.value %}{{ form.start_date.value }}{% endif %}"
        class="w-full px-4 py-3 rounded-xl border {% if form.start_date.errors %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">{% if form.start_date.errors %}
             <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ form.start_date.errors.0 }}</p>
             {% endif %}
@@ -177,7 +177,7 @@
 </label>
 <input type="date"
        name="end_date"
-       value="{{ form.end_date.value|date:'Y-m-d' }}"
+       value="{% if form.end_date.value %}{{ form.end_date.value }}{% endif %}"
        class="w-full px-4 py-3 rounded-xl border {% if form.end_date.errors %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition">{% if form.end_date.errors %}
             <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ form.end_date.errors.0 }}</p>
             {% endif %}
