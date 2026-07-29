@@ -95,7 +95,7 @@ def signup(request):
 
         if attempts >= 10:
             messages.error(request, "Too many attempts. Try again later.")
-            return redirect('signup')
+            return render(request, 'auth/signup.html', {'form': form,'ref_code': ref_code,}, status=429)
 
         cache.set(rate_key, attempts + 1, timeout=3600)
 
@@ -112,7 +112,7 @@ def signup(request):
 
         if User.objects.filter(email=email, is_active=True).exists():
             messages.info(request, "Account already exists. Please login.")
-            return redirect('login')
+            return render(request, 'auth/signup.html', {'form': form,'ref_code': request.GET.get('ref', '')}, status=409)
 
     
         inactive_user = User.objects.filter(email=email, is_active=False).first()
@@ -143,7 +143,7 @@ def signup(request):
             except (SMTPException, BadHeaderError, OSError) as e:
                 logger.error("OTP failed sid=%s err=%s", _safe_id(email), str(e))
                 messages.error(request, "Mail error. Try again.")
-                return redirect('signup')
+                return render(request, 'auth/signup.html', {'form': form,'ref_code': request.GET.get('ref', '')}, status=500)
 
         #   NEW USER FLOW
         user = None
@@ -206,7 +206,7 @@ def verify_otp(request):
 
     if not user:
         messages.error(request, "Session expired. Please login to continue.")
-        return redirect('login')
+        return render(request, 'auth/login.html', status=401)
 
     #  STATUS CHECK
     if user.is_verified and user.is_active:
@@ -250,7 +250,7 @@ def verify_otp(request):
             return render(request, 'auth/verify_otp.html', {
                 'remaining_time': remaining_time,
                 'user_email': user.email
-            })
+            }, status=422)
 
         
         if check_password(otp, otp_obj.otp):
@@ -281,7 +281,8 @@ def verify_otp(request):
         return render(request, 'auth/verify_otp.html', {
             'remaining_time': remaining_time,
             'user_email': user.email,
-        })
+            
+        },status=401)
 
     
     return render(request, 'auth/verify_otp.html', {
@@ -305,7 +306,7 @@ def login_view(request):
            
             if getattr(user_check, 'is_blocked', False):
                 messages.error(request, "This account has been suspended.")
-                return render(request, 'auth/login.html', {'email': email})
+                return render(request, 'auth/login.html', {'email': email},status=403)
 
             
             if not user_check.is_verified:
@@ -326,7 +327,7 @@ def login_view(request):
         user = authenticate(request, username=email, password=password)
         if not user:
             messages.error(request, "Invalid email or password.")
-            return render(request, 'auth/login.html', {'email': email})
+            return render(request, 'auth/login.html', {'email': email}, status=401)
 
         
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
@@ -366,7 +367,7 @@ def forgot_password(request):
         else:
            
             messages.error(request, "No account found with this email address.")
-            return redirect('forgot_password')
+            return render(request, 'auth/forgot_password.html', status=404)
 
     return render(request, 'auth/forgot_password.html')
 
@@ -395,7 +396,7 @@ def forgot_otp(request):
         otp_obj.delete()
         clear_auth_sessions(request)
         messages.error(request, "OTP expired. Request a new one.")
-        return redirect('forgot_password')
+        return render(request, 'auth/forgot_otp.html', {'remaining_time': 0}, status=401)
 
     if request.method == "POST":
         otp = request.POST.get('otp', '').strip()
@@ -404,7 +405,7 @@ def forgot_otp(request):
             otp_obj.delete()
             clear_auth_sessions(request)
             messages.error(request, "Too many attempts.")
-            return redirect('forgot_password')
+            return render(request, 'auth/forgot_otp.html', {'remaining_time': remaining_time}, status=429)
 
         if check_password(otp, otp_obj.otp):
             otp_obj.delete()
@@ -415,6 +416,7 @@ def forgot_otp(request):
         otp_obj.attempts += 1
         otp_obj.save()
         messages.error(request, "Invalid OTP.")
+        return render(request, 'auth/forgot_otp.html', {'remaining_time': remaining_time}, status=401)
 
     return render(request, 'auth/forgot_otp.html', {'remaining_time': remaining_time})
 
@@ -436,13 +438,13 @@ def reset_password(request):
 
         if password != confirm:
             messages.error(request, "Passwords do not match.")
-            return redirect(request.path)
+            return render(request, 'auth/reset_password.html', status=422)
 
         try:
             validate_password(password)
         except ValidationError as e:
             messages.error(request, ', '.join(e.messages))
-            return redirect(request.path)
+            return render(request, 'auth/reset_password.html', status=422)
 
         user.set_password(password)
         user.save()
@@ -532,7 +534,7 @@ def edit_profile(request):
                     instance.profile_image.delete(save=False)
                 instance.profile_image = None
             
-            instance.save()  # Save with profile_image properly set
+            instance.save()  
             request.user.refresh_from_db()
             print(f"DEBUG: After save, profile_image = {request.user.profile_image}")
             messages.success(request, "Profile updated successfully.")
@@ -601,7 +603,7 @@ def change_email_request(request):
 def verify_email(request):
     new_email = request.session.get("new_email_pending")
     if not new_email:
-        return redirect("profile")
+        return render(request, "profile/profile.html", status=401)
 
     otp_obj = OTP.objects.filter(user=request.user, purpose='email_change').order_by('-created_at').first()
     remaining_time = 0
@@ -631,20 +633,20 @@ def verify_email(request):
             return render(request, "profile/verify_email.html", {
                 "email": new_email,
                 "remaining_time": 60
-            })
-
+            }, status=401)
+        
         # Attempt limit check
         if otp_obj.attempts >= 5:
             otp_obj.delete()
             messages.error(request, "Too many incorrect attempts. Please request a new code.")
-            return redirect("change_email")
+            return render(request, "profile/verify_email.html", {"email": new_email, "remaining_time": remaining_time}, status=429)
 
         if len(otp) != 6:
             messages.error(request, "Please enter the full 6-digit code.")
             return render(request, "profile/verify_email.html", {
                 "email": new_email,
                 "remaining_time": remaining_time
-            })
+            }, status=422)
 
         if check_password(otp, otp_obj.otp):
             with transaction.atomic():
@@ -663,7 +665,7 @@ def verify_email(request):
             return render(request, "profile/verify_email.html", {
                 "email": new_email,
                 "remaining_time": remaining_time
-            })
+            }, status=401)
 
     return render(request, "profile/verify_email.html", {
         "email": new_email,

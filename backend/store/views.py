@@ -271,13 +271,13 @@ def add_to_cart(request):
 
     if not variant:
         if is_ajax:
-            return JsonResponse({'ok': False, 'error': 'This product is no longer available.'})
+            return JsonResponse({'ok': False, 'error': 'This product is no longer available.'}, status=404)
         messages.error(request, "This product is no longer available.")
         return redirect('product_list')
 
     if variant.stock <= 0:
         if is_ajax:
-            return JsonResponse({'ok': False, 'error': 'Sorry, this item is out of stock.'})
+            return JsonResponse({'ok': False, 'error': 'Sorry, this item is out of stock.'}, status=409)
         messages.error(request, "Sorry, this item is out of stock.")
         return redirect('product_detail', slug=variant.product.slug)
 
@@ -304,13 +304,13 @@ def add_to_cart(request):
         new_qty = existing_item.quantity + quantity
         if new_qty > variant.stock:
             if is_ajax:
-                return JsonResponse({'ok': False, 'error': f'Only {variant.stock} units available in stock.'})
+                return JsonResponse({'ok': False, 'error': f'Only {variant.stock} units available in stock.'}, status=409)
             messages.error(request, f"Only {variant.stock} units available in stock.")
             return redirect('product_detail', slug=variant.product.slug)
 
         if new_qty > 5:
             if is_ajax:
-                return JsonResponse({'ok': False, 'error': 'Maximum 5 of the same item allowed in cart.'})
+                return JsonResponse({'ok': False, 'error': 'Maximum 5 of the same item allowed in cart.'}, status=409)
             messages.error(request, "Maximum 5 of the same item allowed in cart.")
             return redirect('product_detail', slug=variant.product.slug)
 
@@ -333,7 +333,7 @@ def add_to_cart(request):
         quantity = min(quantity, 5)
         if quantity > variant.stock:
             if is_ajax:
-                return JsonResponse({'ok': False, 'error': f'Only {variant.stock} units available in stock.'})
+                return JsonResponse({'ok': False, 'error': f'Only {variant.stock} units available in stock.'}, status=409)
             messages.error(request, f"Only {variant.stock} units available in stock.")
             return redirect('product_detail', slug=variant.product.slug)
         
@@ -380,12 +380,12 @@ def update_cart(request, item_id):
         new_qty = cart_item.quantity + 1
         if new_qty > cart_item.variant.stock:
             if is_ajax:
-                return JsonResponse({'ok': False, 'error': f'Only {cart_item.variant.stock} available in stock.'})
+                return JsonResponse({'ok': False, 'error': f'Only {cart_item.variant.stock} available in stock.'}, status=409)
             messages.error(request, f"Only {cart_item.variant.stock} available in stock.")
             return redirect('cart')
         if new_qty > 5:
             if is_ajax:
-                return JsonResponse({'ok': False, 'error': 'Maximum 5 of the same item allowed.'})
+                return JsonResponse({'ok': False, 'error': 'Maximum 5 of the same item allowed.'}, status=409)
             messages.error(request, "Maximum 5 of the same item allowed.")
             return redirect('cart')
         cart_item.quantity = new_qty
@@ -394,7 +394,7 @@ def update_cart(request, item_id):
     elif action == 'decrease':
         if cart_item.quantity <= 1:
             if is_ajax:
-                return JsonResponse({'ok': False, 'error': 'Minimum quantity is 1. Remove item to delete.'})
+                return JsonResponse({'ok': False, 'error': 'Minimum quantity is 1. Remove item to delete.'}, status=400)
             return redirect('cart')
         cart_item.quantity -= 1
         cart_item.save()
@@ -569,7 +569,7 @@ def toggle_wishlist(request, product_id):
     
     if not variant:
         if is_ajax:
-            return JsonResponse({'ok': False, 'error': 'No active variant found.'})
+            return JsonResponse({'ok': False, 'error': 'No active variant found.'}, status=404)
         messages.error(request, 'No active variant found.')
         return redirect('product_list')
 
