@@ -134,7 +134,7 @@
           <!-- Max Discount Cap (percentage only) -->
           <div id="capField" {% if form.discount_type.value == 'fixed' %}style="display:none"{% endif %}>
             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
-              Maximum Discount Cap <span class="text-gray-300 font-normal normal-case">(optional)</span>
+              Maximum Discount Cap <span class="text-red-400">*</span>
             </label>
             <div class="relative">
               <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">₹</span>
@@ -149,7 +149,7 @@
             {% if form.max_discount_cap.errors %}
             <p class="mt-1.5 text-xs text-red-500 font-semibold">{{ form.max_discount_cap.errors.0 }}</p>
             {% endif %}
-            <p class="mt-1.5 text-[11px] text-gray-400">Maximum rupee value the percentage discount can give. Leave blank for no cap.</p>
+            <p class="mt-1.5 text-[11px] text-gray-400">Maximum rupee value the percentage discount can give. e.g. "20% off up to ₹500".</p>
           </div>
         </div>
       </div>

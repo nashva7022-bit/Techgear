@@ -23,6 +23,11 @@ class CouponForm(forms.ModelForm):
         
         self.fields['min_order_amount'].required = False
 
+        if self.instance.pk:
+            for f in ('start_date', 'end_date'):
+                if getattr(self.instance, f):
+                    self.initial[f] = getattr(self.instance, f).strftime('%Y-%m-%d')
+
     def clean_code(self):
         code = self.cleaned_data['code'].strip().upper()
         qs = Coupon.objects.filter(code__iexact=code)
@@ -98,6 +103,8 @@ class CouponForm(forms.ModelForm):
                 self.add_error('min_order_amount', 
                     f'Minimum order amount must exceed the discount value (₹{dvalue}) for fixed discounts.')
     # cap only makes sense for percentage discounts
+        if dtype == 'percentage' and cap is None:
+                self.add_error('max_discount_cap', 'Maximum discount cap is required for percentage discounts.')
         if cap is not None:
             if dtype == 'fixed':
                 self.add_error('max_discount_cap', 'Max cap only applies to percentage discounts.')

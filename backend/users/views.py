@@ -95,7 +95,7 @@ def signup(request):
 
         if attempts >= 10:
             messages.error(request, "Too many attempts. Try again later.")
-            return render(request, 'auth/signup.html', {'form': form,'ref_code': ref_code,}, status=429)
+            return render(request, 'auth/signup.html', {'form': form,'ref_code': request.GET.get('ref', '')}, status=429)
 
         cache.set(rate_key, attempts + 1, timeout=3600)
 

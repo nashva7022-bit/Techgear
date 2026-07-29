@@ -5,29 +5,24 @@ from .models import ProductOffer, CategoryOffer
 
 
 def get_effective_price(variant):
-   
+
     today         = timezone.now().date()
     best_discount = Decimal('0')
 
-    # Check product offer
-    try:
-        offer = variant.product.offer
+    # Check product offers
+    for offer in variant.product.offers.all():
         if (offer.is_active and
                 offer.start_date <= today <= offer.end_date and
                 offer.discount_percent > best_discount):
             best_discount = offer.discount_percent
-    except ProductOffer.DoesNotExist:
-        pass
 
-    # Check category offer
-    try:
-        offer = variant.product.category.offer
-        if (offer.is_active and
-                offer.start_date <= today <= offer.end_date and
-                offer.discount_percent > best_discount):
-            best_discount = offer.discount_percent
-    except CategoryOffer.DoesNotExist:
-        pass
+    # Check category offers
+    if variant.product.category:
+        for offer in variant.product.category.offers.all():
+            if (offer.is_active and
+                    offer.start_date <= today <= offer.end_date and
+                    offer.discount_percent > best_discount):
+                best_discount = offer.discount_percent
 
     if best_discount > 0:
         multiplier      = (Decimal('100') - best_discount) / Decimal('100')
