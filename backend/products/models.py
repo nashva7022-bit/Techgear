@@ -5,7 +5,7 @@ import random, string
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 
-
+import re
 # BRAND CHOICES 
 BRAND_CHOICES = [
     ('apple',    'Apple'),
@@ -82,6 +82,23 @@ class Category(models.Model):
     class Meta:
         ordering            = ['-created_at']
         verbose_name_plural = 'Categories'
+
+    def clean(self):
+    # Validate name
+        name = self.name.strip()
+        if not name:
+            raise ValidationError({'name': 'Category name is required.'})
+        if len(name) < 3:
+            raise ValidationError({'name': 'Category name must be at least 3 characters.'})
+        if len(name) > 100:
+            raise ValidationError({'name': 'Category name must not exceed 100 characters.'})
+    
+        if not re.match(r'^[a-zA-Z0-9\s\-&()]+$', name):
+            raise ValidationError({'name': 'Category name contains invalid characters.'})
+    
+        existing = Category.objects.filter(name__iexact=name).exclude(pk=self.pk)
+        if existing.exists():
+            raise ValidationError({'name': 'A category with this name already exists.'})
 
     def save(self, *args, **kwargs):
         if not self.slug:
