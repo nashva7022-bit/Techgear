@@ -390,13 +390,8 @@ def cancel_order(order: Order, cancelled_by, reason: str = "") -> Order:
 
             # Free up coupon so user can use it again
             if order.coupon_code:
-                from django.db.models import F
-                from coupons.models import CouponUsage, Coupon
-                from django.db.models import F
+                from coupons.models import CouponUsage
                 CouponUsage.objects.filter(order=order).delete()
-                Coupon.objects.filter(code=order.coupon_code).update(
-                    times_used=F('times_used') - 1
-                )
 
         OrderStatusLog.objects.create(
             order=order,
@@ -478,12 +473,8 @@ def cancel_order_item(order_item: OrderItem, cancelled_by, reason: str = "") -> 
 
             # Free up coupon
             if order.coupon_code:
-                from django.db.models import F
-                from coupons.models import CouponUsage, Coupon
+                from coupons.models import CouponUsage
                 CouponUsage.objects.filter(order=order).delete()
-                Coupon.objects.filter(code=order.coupon_code).update(
-                    times_used=F('times_used') - 1
-                )
 
         OrderStatusLog.objects.create(
             order=order,

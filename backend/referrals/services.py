@@ -5,7 +5,8 @@ from django.db import transaction
 from django.utils import timezone
 
 from .models import ReferralCode, ReferralUsage, generate_referral_code
-
+from django.db.models import Sum
+from orders.models import Order
 
 def _get_referral_settings():
     
@@ -152,3 +153,5 @@ def reward_referrer_on_first_order(order):
         usage.referrer_rewarded = True
         usage.rewarded_at = timezone.now()
         usage.save(update_fields=['referrer_rewarded', 'rewarded_at'])
+
+        
