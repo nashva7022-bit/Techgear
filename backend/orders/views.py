@@ -447,16 +447,16 @@ def order_detail(request, order_number):
 
 
     customization_total = sum(
-        item.customization_charge
+        item.customization_charge * item.quantity
         for item in items
-    )   
+        if item.item_status == "active"
+    )
 
     original_product_total = (
         order.subtotal
         + offer_discount
-        +order.coupon_discount
         - customization_total
-    )      
+    )     
 
     reviewed_product_ids = set(
         Review.objects.filter(user=request.user).values_list("product_id", flat=True)
@@ -587,14 +587,14 @@ def download_invoice(request, order_number):
     offer_discount = order.discount_amount - order.coupon_discount
 
     customization_total = sum(
-        item.customization_charge
+        item.customization_charge * item.quantity
         for item in items
+        if item.item_status == "active"
     )
 
     original_product_total = (
         order.subtotal
         + offer_discount
-        + order.coupon_discount
         - customization_total
     )
 
