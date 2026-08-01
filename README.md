@@ -1,53 +1,151 @@
 # TechGear
 
-TechGear is an e-commerce platform I built for customizable phone cases and laptop accessories. It's a Django project, and the goal was to make it feel like a real production store rather than a tutorial project — so it has actual Razorpay payments, a wallet system, referrals, coupons/offers, and a proper admin panel behind it, not just a basic cart-and-checkout demo.
+TechGear is a full-featured e-commerce platform for customizable phone cases and laptop accessories, built with Django. The goal was to create something that feels like a real production-ready online store rather than a simple tutorial project. It includes secure Razorpay payments, a wallet system, referrals, coupons and offers, detailed order management, and a fully functional admin panel.
 
-## Features
+---
 
-Customer side:
-- Browse products with variants (color, case type, device model), filter and search
-- Customize products with your own text or image, for an extra fee
-- Cart, wishlist, and reviews (only if you've actually bought and received the product)
-- Checkout with Razorpay, wallet, or a split of the two — plus COD
-- Coupons and automatic offers at product/category level (whichever discount is bigger wins)
-- Track orders, cancel or return items, download invoices
-- Refer friends and both of you get wallet credit
+# Features
 
-Admin side:
-- Dashboard with revenue, orders, best sellers, and a sales chart
-- Manage products, categories, inventory, and stock
-- Handle order status changes and return requests
-- Configure site settings and the referral program without touching code
-- Export sales reports as PDF or Excel
+## Customer Features
 
-## Tech Stack
+* Browse products with multiple variants, including color, case type, and device model
+* Search and filter products
+* Customize products with your own text or image for an additional charge
+* Shopping cart and wishlist
+* Product reviews restricted to customers who have purchased and received the product
+* Checkout using Razorpay, Wallet, Cash on Delivery (COD), or a combination of Wallet and Razorpay
+* Coupons and automatic product/category offers, where the highest available discount is applied automatically
+* Track orders, cancel or return eligible items, and download invoices
+* Referral program where both the referrer and the new customer receive wallet rewards
 
-Backend is Python/Django, database is PostgreSQL. Payments run through Razorpay, images are hosted on Cloudinary, and login supports both email/OTP and Google SSO via django-allauth. Frontend is Tailwind CSS with Bootstrap icons — kept it simple, no heavy JS framework since it didn't need one.
+## Admin Features
 
+* Dashboard displaying revenue, order statistics, best-selling products, and sales charts
+* Product, category, inventory, and stock management
+* Order processing and return request management
+* Configurable referral rewards and other site settings without modifying code
+* Export sales reports in PDF and Excel formats
 
+---
 
-## How the project is organized
+# Tech Stack
 
-I split things into separate Django apps by responsibility instead of dumping everything into one. Quick rundown of each:
+| Category       | Technology                                 |
+| -------------- | ------------------------------------------ |
+| Backend        | Python, Django                             |
+| Database       | PostgreSQL                                 |
+| Payments       | Razorpay                                   |
+| Authentication | Email OTP, Google Sign-In (django-allauth) |
+| Image Storage  | Cloudinary                                 |
+| Frontend       | Tailwind CSS, Bootstrap Icons              |
 
-**users** — custom user model (login by email), addresses, and the OTP flow for signup/password reset.
+---
 
-**products — the catalogue itself. `Product` holds the general info, `ProductVariant` is where price/stock/color/case-type actually live, and SKUs are auto-generated so I never have to worry about collisions.
+# Project Structure
 
-**orders** — this is the biggest and most important app. `services.py` has basically all the money logic: placing orders, verifying Razorpay payments, cancellations, and returns. Refunds are proportional to what was actually paid (wallet vs Razorpay vs COD), which took some thought to get right — COD never gets refunded since no cash was collected yet.
+The project is organized into multiple Django apps, each with a specific responsibility to keep the codebase clean and maintainable.
 
-**store** — cart, wishlist, and reviews. Reviews are locked to people who've actually received the product, so there's no fake review problem.
+### users
 
-**wallet** — a simple balance plus a full transaction log. Every credit or debit creates a record, so it works like an actual bank statement rather than just a number that changes.
+Manages the custom user model, email-based authentication, addresses, and OTP verification for registration and password reset.
 
-**coupons** and **offers** — coupons are manually entered codes with usage limits; offers are automatic discounts on a product or a whole category. If both apply, the bigger discount wins.
+### products
 
-**referrals** — every user gets a shareable code. New signups get an instant wallet bonus; the person who referred them only gets paid once the new user actually places an order. I did it this way on purpose — paying the referrer immediately on signup would make it too easy to farm fake accounts for free wallet money.
+Handles the product catalog.
 
-**admin_panel** and **admin_orders** — this is where the store gets managed day to day: dashboard, inventory, order status changes, return approvals, and site-wide settings (like the referral reward amounts) that don't require a code change.
+* `Product` stores the general product information.
+* `ProductVariant` stores variant-specific details such as price, stock, color, case type, and device compatibility.
+* SKUs are generated automatically to ensure uniqueness.
 
-**reports** — sales reports with date filtering, and export to PDF or Excel for anyone who wants the numbers outside the app.
+### orders
 
-## License
+The core business logic of the application.
 
-Built for learning
+The `services.py` module handles:
+
+* Order placement
+* Razorpay payment verification
+* Order cancellation
+* Return processing
+* Refund calculations
+
+Refunds are calculated proportionally based on the customer's original payment method (Wallet, Razorpay, or a combination of both). Since Cash on Delivery payments are collected only upon delivery, COD orders are not refunded electronically.
+
+### store
+
+Handles customer interactions, including:
+
+* Shopping cart
+* Wishlist
+* Product reviews
+
+Reviews are available only to customers who have successfully purchased and received the product, preventing fake or spam reviews.
+
+### wallet
+
+Implements a digital wallet system.
+
+Instead of simply updating the wallet balance, every credit and debit creates a transaction record, providing a complete transaction history similar to a bank statement.
+
+### coupons
+
+Supports manually entered coupon codes with configurable usage limits and validity periods.
+
+### offers
+
+Provides automatic discounts at both the product and category levels.
+
+If multiple discounts are applicable, the system automatically applies the highest discount available.
+
+### referrals
+
+Each user receives a unique referral code.
+
+* New users receive a wallet bonus immediately after signing up with a valid referral code.
+* The referrer receives their reward only after the referred user successfully places their first order.
+
+This approach helps prevent abuse through fake account creation.
+
+### admin_panel & admin_orders
+
+Provides tools for managing the store, including:
+
+* Dashboard
+* Product and inventory management
+* Order status updates
+* Return approvals
+* Referral settings
+* Other configurable site settings
+
+### reports
+
+Generates sales reports with date-based filtering and supports exporting reports in PDF and Excel formats.
+
+---
+
+# Key Highlights
+
+* Custom user model with email authentication
+* OTP-based registration and password reset
+* Google Sign-In integration
+* Product customization with text and image uploads
+* Variant-based inventory management
+* Razorpay payment integration
+* Digital wallet with complete transaction history
+* Split payments using Wallet + Razorpay
+* Coupon and offer management
+* Referral reward system
+* Order cancellation and return workflow
+* Automatic refund calculation
+* Invoice generation
+* Sales analytics dashboard
+* PDF and Excel report export
+* Responsive UI built with Tailwind CSS
+
+---
+
+# License
+
+This project was built for learning and educational purposes.
+
+This version is more polished, consistent, and GitHub-friendly while still accurately describing your project. It also uses clearer sectioning and wording that will make a stronger impression on recruiters and reviewers.
