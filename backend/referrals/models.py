@@ -12,12 +12,10 @@ from django.utils import timezone
 REFERRER_REWARD = Decimal('50.00')
 REFERRED_REWARD = Decimal('100.00')
 
-
 def generate_referral_code():
    
     chars = string.ascii_uppercase + string.digits
     return ''.join(random.choices(chars, k=8))
-
 
 class ReferralCode(models.Model):
    

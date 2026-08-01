@@ -18,10 +18,8 @@ class User(AbstractUser):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
-    
     def __str__(self):
         return self.email
-
 
 class Address(models.Model):
     LABEL_CHOICES = (

@@ -1,7 +1,4 @@
 from django.db import models
-
-
-
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -17,8 +14,6 @@ class ActivityLog(models.Model):
         ('order_view',          'Order Viewed'),
     ]
     
-
-   
     admin = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -27,39 +22,29 @@ class ActivityLog(models.Model):
         related_name='activity_logs',
     )
     
-    
-
-    
     action = models.CharField(
         max_length=50,
         choices=ACTION_CHOICES,
     )
    
-
     description = models.TextField()
    
-
     order_number = models.CharField(
         max_length=20,
         blank=True,
         default='',
     )
    
-
     variant_id = models.IntegerField(
         null=True,
         blank=True,
     )
    
-
-   
     created_at = models.DateTimeField(default=timezone.now)
     
-
     class Meta:
         ordering = ['-created_at']
        
-
         verbose_name        = 'Activity Log'
         verbose_name_plural = 'Activity Logs'
 

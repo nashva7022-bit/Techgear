@@ -4,8 +4,6 @@ from products.models import ProductVariant, Product
 from django.core.validators import MinValueValidator, MaxValueValidator
 from cloudinary.models import CloudinaryField
 
-
-
 class Cart(models.Model):
     user       = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -77,7 +75,6 @@ class CartItem(models.Model):
         decimal_places=2,
         default=0,
     )
-
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

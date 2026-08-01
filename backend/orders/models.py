@@ -1,17 +1,9 @@
 
 import uuid
-
-
 from django.db import models
-
 from cloudinary.models import CloudinaryField
-
 from django.conf import settings
-
-
 from django.utils import timezone
-
-
 
 # ORDER STATUS CHOICES 
 
@@ -23,7 +15,6 @@ ORDER_STATUS_CHOICES = [
     ('cancelled',         'Cancelled'),
 ]
 
-
 VALID_TRANSITIONS = {
     'pending':           ['shipped', 'cancelled'],
     'shipped':           ['out_for_delivery'],
@@ -31,7 +22,6 @@ VALID_TRANSITIONS = {
     'delivered':         [],
     'cancelled':         [],
 }
-
 
 # ITEM STATUS CHOICES 
 
@@ -43,7 +33,6 @@ ITEM_STATUS_CHOICES = [
     ('return_rejected',  'Return Rejected'), 
 ]
 
-
 # PAYMENT METHOD CHOICES
 PAYMENT_METHOD_CHOICES = [
     ('cod',             'Cash on Delivery'),
@@ -52,7 +41,6 @@ PAYMENT_METHOD_CHOICES = [
     ('wallet_cod',      'Wallet + Cash on Delivery'),
     ('wallet_razorpay', 'Wallet + Razorpay'),
 ]
-
 
 def generate_order_number():
     return 'ORD-' + uuid.uuid4().hex[:8].upper()
@@ -67,58 +55,35 @@ class Order(models.Model):
         null=True,
         related_name='orders',
     )
-   
     order_number = models.CharField(
         max_length=20,
         unique=True,
         default=generate_order_number,
         editable=False,
     )
-    
-
     status = models.CharField(
         max_length=20,
         choices=ORDER_STATUS_CHOICES,
         default='pending',
     )
-
-
     payment_method = models.CharField(
         max_length=20,
         choices=PAYMENT_METHOD_CHOICES,
         default='cod',
     )
     
-
     shipping_full_name = models.CharField(max_length=100)
-   
-
     shipping_phone = models.CharField(max_length=15)
- 
-
     shipping_address_line_1 = models.CharField(max_length=255)
-  
-
     shipping_address_line_2 = models.CharField(max_length=255, blank=True, default='')
-   
-
     shipping_city = models.CharField(max_length=100)
     shipping_state = models.CharField(max_length=100)
     shipping_postal_code = models.CharField(max_length=20)
     shipping_country = models.CharField(max_length=100, default='India')
-    
-    
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
-    
-
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    
-
     shipping_charge = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-
-
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-
     wallet_amount = models.DecimalField(
         max_digits=10, decimal_places=2, default=0,
         help_text='Amount paid from wallet'
@@ -133,27 +98,20 @@ class Order(models.Model):
     razorpay_order_id   = models.CharField(max_length=100, blank=True, default='')
     razorpay_payment_id = models.CharField(max_length=100, blank=True, default='')
    
-
     # TIMESTAMPS 
-
     created_at = models.DateTimeField(default=timezone.now)
-
     updated_at = models.DateTimeField(auto_now=True)
     
-
     class Meta:
         ordering = ['-created_at']
        
-
     def __str__(self):
         return f"{self.order_number} — {self.user.email if self.user else 'Deleted User'}"
-    
 
     @property
     def can_cancel(self):
         return self.status == 'pending'
     
-
     @property
     def can_return(self):
         return self.status == 'delivered'
@@ -262,7 +220,6 @@ class OrderStatusLog(models.Model):
         related_name='status_logs',
     )
     
-
     changed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -271,20 +228,14 @@ class OrderStatusLog(models.Model):
         related_name='order_status_changes',
     )
    
-
     old_status = models.CharField(max_length=20, blank=True, default='')
- 
-
-    new_status = models.CharField(max_length=20)
-    
+     new_status = models.CharField(max_length=20)   
     note = models.TextField(blank=True, default='')
-   
     created_at = models.DateTimeField(default=timezone.now)
    
     class Meta:
         ordering = ['created_at']
    
-
     def __str__(self):
         return (
             f"{self.order.order_number}: "
