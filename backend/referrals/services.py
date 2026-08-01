@@ -155,3 +155,5 @@ def reward_referrer_on_first_order(order):
         usage.save(update_fields=['referrer_rewarded', 'rewarded_at'])
 
         
+
+        
