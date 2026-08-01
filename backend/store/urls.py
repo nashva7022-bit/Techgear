@@ -2,10 +2,10 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Product List — browse all products
+    # Product List 
     path('products/', views.product_list, name='product_list'),
 
-    # Product Detail — single product page
+    # Product Detail — single
     path('products/<slug:slug>/', views.product_detail, name='product_detail'),
 
     # Cart

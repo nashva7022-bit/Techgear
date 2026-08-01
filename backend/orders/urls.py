@@ -47,7 +47,7 @@ urlpatterns = [
     ),
    
 
-    # ── CANCEL SINGLE ITEM 
+    # CANCEL SINGLE ITEM 
     path(
         'my-orders/<str:order_number>/cancel-item/<int:item_id>/',
         views.cancel_item_view,

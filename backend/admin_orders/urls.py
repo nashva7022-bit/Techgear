@@ -15,15 +15,15 @@ urlpatterns = [
     # Activity log
     path('activity/', views.activity_log, name='activity_log'),
 
-    # ── RETURN REQUESTS ──────────────────────────────────────────
+    # RETURN REQUESTS
     path('returns/', views.return_requests, name='return_requests'),
 
-    # ── ORDER DETAIL & STATUS ─────────────────────────────────────
+    # ORDER DETAIL & STATUS 
    
     path('<str:order_number>/', views.order_detail, name='order_detail'),
     path('<str:order_number>/change-status/', views.change_status, name='change_status'),
 
-    # ── APPROVE / REJECT RETURN ───────────────────────────────────
+    # APPROVE / REJECT RETURN
     path('<str:order_number>/items/<int:item_id>/approve-return/', views.approve_return_view, name='approve_return'),
     path('<str:order_number>/items/<int:item_id>/reject-return/',  views.reject_return_view,  name='reject_return'),
 
