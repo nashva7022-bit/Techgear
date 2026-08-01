@@ -459,7 +459,7 @@ def password_reset_sent(request):
     return render(request, 'auth/reset_sent.html')
 
 
-# SEPARATED DASHBOARD & PROFILE
+
 
 @login_required
 @never_cache
@@ -510,10 +510,11 @@ def dashboard(request):
 
     
     primary_address = request.user.addresses.all().order_by('-created_at').first()
-   
+    
     return render(request, "profile/dashboard.html", {
         "user": request.user,
         "primary_address": primary_address,
+        
        
     })
 
@@ -760,7 +761,7 @@ def add_address(request):
             messages.success(request, "New address added!")
             return redirect("manage_addresses")
         
-      
+        print("FORM ERRORS:", form.errors)
         addresses = request.user.addresses.all()
         return render(request, "profile/manage_addresses.html", {
             "addresses": addresses,
