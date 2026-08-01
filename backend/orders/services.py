@@ -570,11 +570,7 @@ def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
                 )
                 refund_amount += paid_share
 
-            if order.coupon_discount and order.coupon_discount > 0:
-                coupon_share = (_d(order.coupon_discount) * proportion).quantize(
-                    Decimal("0.01"), rounding=ROUND_DOWN
-                )
-                refund_amount = max(Decimal("0.00"), refund_amount - coupon_share)
+            
 
             if refund_amount > 0:
                 wallet, _ = Wallet.objects.get_or_create(user=order.user)
