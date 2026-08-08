@@ -229,7 +229,7 @@ class OrderStatusLog(models.Model):
     )
    
     old_status = models.CharField(max_length=20, blank=True, default='')
-     new_status = models.CharField(max_length=20)   
+    new_status = models.CharField(max_length=20)   
     note = models.TextField(blank=True, default='')
     created_at = models.DateTimeField(default=timezone.now)
    

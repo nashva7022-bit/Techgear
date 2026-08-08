@@ -761,7 +761,7 @@ def add_address(request):
             messages.success(request, "New address added!")
             return redirect("manage_addresses")
         
-        print("FORM ERRORS:", form.errors)
+        
         addresses = request.user.addresses.all()
         return render(request, "profile/manage_addresses.html", {
             "addresses": addresses,

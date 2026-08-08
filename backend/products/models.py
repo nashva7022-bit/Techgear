@@ -18,6 +18,12 @@ BRAND_CHOICES = [
     ('vivo',     'Vivo'),
     ('nothing',  'Nothing'),
     ('motorola', 'Motorola'),
+    ('dell',     'Dell'),
+    ('hp',       'HP'),
+    ('lenovo',   'Lenovo'),
+    ('asus',     'ASUS'),
+    ('acer',     'Acer'),
+    ('msi',      'MSI'),
     ('other',    'Other'),
 ]
 
@@ -76,6 +82,7 @@ class Category(models.Model):
     is_customizable = models.BooleanField(default=False)
     is_active       = models.BooleanField(default=True)
     has_case_type   = models.BooleanField(default=False)
+    requires_device_model = models.BooleanField(default=True)
     created_at      = models.DateTimeField(auto_now_add=True)
     updated_at      = models.DateTimeField(auto_now=True)
 

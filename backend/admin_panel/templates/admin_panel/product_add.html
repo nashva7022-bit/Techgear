@@ -386,7 +386,7 @@ const COLOR_CHOICES = [
 // ── STATE ──
 let variantCount = 0;
 const variantFiles = {};
-let catFlags = { is_customizable: false, is_laptop: false };
+let catFlags = { is_customizable: false, is_laptop: false, requires_device_model: true };
 
 // Device model cache keyed by brand
 let deviceModelCache = {};
@@ -448,6 +448,7 @@ async function onCategoryChange() {
     catFlags.is_customizable = data.is_customizable;
     catFlags.is_laptop       = data.device_type === 'laptop';
     currentDeviceType        = data.device_type; // 'phone', 'laptop', or 'other'
+    catFlags.requires_device_model = data.requires_device_model !== false;
 
     buildSpecFields(data.spec_templates);
   } catch(e) {
@@ -535,6 +536,8 @@ function getColorOptions(selected) {
 
 function refreshVariantFields(idx) {
   // Case type — only for customizable categories (phone cases, laptop skins)
+  const dmField = document.getElementById(`dm_select_${idx}`)?.closest('div[style*="grid-column:1/-1"]');
+  if (dmField) dmField.style.display = catFlags.requires_device_model ? '' : 'none';
   const ct = document.getElementById(`ct_field_${idx}`);
   if (ct) ct.style.display = catFlags.is_customizable ? '' : 'none';
 
@@ -690,6 +693,7 @@ async function addVariant() {
   `;
 
   document.getElementById('variantsContainer').appendChild(card);
+  refreshVariantFields(idx);  
 }
 
 // ── REMOVE VARIANT ──
@@ -873,7 +877,7 @@ document.getElementById('productForm').addEventListener('submit', function (e) {
 
     const markError = el => { if (el) { el.style.borderColor = '#ef4444'; el.style.background = '#fef2f2'; } };
 
-    if (!dm?.value) {
+    if (catFlags.requires_device_model && !dm?.value) {
       errs.push(`Variant ${n}: Device model is required.`);
       valid = false;
       markError(dm);

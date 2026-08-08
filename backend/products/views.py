@@ -134,6 +134,7 @@ def category_meta(request, pk):
         'is_customizable': category.is_customizable,
         'spec_templates':  templates,
         'device_type':     category.device_type,
+        'requires_device_model':  category.requires_device_model,
     })
 
 
@@ -277,6 +278,7 @@ def _resolve_device_model(device_model_id):
 
 def _save_variants(product, post_data, files):
     errors = []
+    requires_dm = product.category.requires_device_model if product.category else True
 
     device_model_ids = post_data.getlist('variant_device_model')
     if not device_model_ids:
@@ -292,7 +294,7 @@ def _save_variants(product, post_data, files):
 
     for i, dm_id in enumerate(device_model_ids):
         device_model = _resolve_device_model(dm_id)
-        if not device_model:
+        if requires_dm and not device_model:
             errors.append(f'Variant {i + 1}: A valid device model is required.')
             continue
 
@@ -446,6 +448,7 @@ def _handle_existing_variants(request, post_data, files, existing_variants):
 
 def _save_new_variants(product, post_data, files):
     errors = []
+    requires_dm = product.category.requires_device_model if product.category else True
 
     device_model_ids = post_data.getlist('new_variant_device_model')
     if not device_model_ids:
@@ -460,7 +463,7 @@ def _save_new_variants(product, post_data, files):
 
     for i, dm_id in enumerate(device_model_ids):
         device_model = _resolve_device_model(dm_id)
-        if not device_model:
+        if requires_dm and not device_model:
             errors.append(f'New variant {i + 1}: A valid device model is required.')
             continue
 

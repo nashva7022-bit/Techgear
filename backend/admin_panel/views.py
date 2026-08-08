@@ -393,8 +393,6 @@ def toggle_user_status(request, user_id):
 
     return redirect('admin_user_management')
 
-
-
 # ADMIN LOGOUT
 
 @require_POST
@@ -402,7 +400,6 @@ def admin_logout(request):
     logout(request)
     messages.success(request, "Logged out successfully.")
     return redirect('admin_login')
-
 
 @staff_member_required(login_url='admin_login')
 @never_cache
