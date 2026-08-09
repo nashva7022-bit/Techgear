@@ -1,6 +1,7 @@
 from django import forms
 from django.utils import timezone
-from .models import ProductOffer, CategoryOffer
+
+from .models import CategoryOffer, ProductOffer
 
 
 class BaseOfferForm(forms.ModelForm):
@@ -11,33 +12,33 @@ class BaseOfferForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if is_edit and self.identity_field:
             self.fields.pop(self.identity_field, None)
+
     def clean_start_date(self):
-        start_date = self.cleaned_data.get('start_date')
+        start_date = self.cleaned_data.get("start_date")
         if not self.is_edit and start_date and start_date < timezone.now().date():
-            raise forms.ValidationError('Start date cannot be in the past.')
+            raise forms.ValidationError("Start date cannot be in the past.")
         return start_date
 
 
 class ProductOfferForm(BaseOfferForm):
-    identity_field = 'product'
+    identity_field = "product"
 
     class Meta:
         model = ProductOffer
-        fields = ['product', 'discount_percent', 'start_date', 'end_date']
+        fields = ["product", "discount_percent", "start_date", "end_date"]
         widgets = {
-            'start_date': forms.DateInput(attrs={'type': 'date'}),
-            'end_date': forms.DateInput(attrs={'type': 'date'}),
+            "start_date": forms.DateInput(attrs={"type": "date"}),
+            "end_date": forms.DateInput(attrs={"type": "date"}),
         }
 
 
 class CategoryOfferForm(BaseOfferForm):
-    identity_field = 'category'
+    identity_field = "category"
 
     class Meta:
         model = CategoryOffer
-        fields = ['category', 'discount_percent', 'start_date', 'end_date']
+        fields = ["category", "discount_percent", "start_date", "end_date"]
         widgets = {
-            'start_date': forms.DateInput(attrs={'type': 'date'}),
-            'end_date': forms.DateInput(attrs={'type': 'date'}),
+            "start_date": forms.DateInput(attrs={"type": "date"}),
+            "end_date": forms.DateInput(attrs={"type": "date"}),
         }
-

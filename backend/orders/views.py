@@ -1,7 +1,8 @@
-
 from __future__ import annotations
-import logging#instead of print
+
+import logging  # instead of print
 from decimal import Decimal
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -14,37 +15,32 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from weasyprint import HTML
+
 from offers.utils import get_effective_price
 from store.models import Cart, Review
 from users.forms import AddressForm
 from users.models import Address
-from weasyprint import HTML
+
 from .models import Order, OrderItem, OrderStatusLog
-from .services import (
-    cancel_order,
-    cancel_order_item,
-    place_cod_order,
-    place_razorpay_order,
-    return_order_item,
-    verify_razorpay_payment,
-)
+from .services import (cancel_order, cancel_order_item, place_cod_order,
+                       place_razorpay_order, return_order_item,
+                       verify_razorpay_payment)
 
 logger = logging.getLogger(__name__)
 
 
-
 def _build_checkout_context(request, cart, cart_items, addresses, wallet_balance):
-    
+
     from coupons.models import Coupon
 
-    
     subtotal = Decimal("0.00")
     total_offer_discount = Decimal("0.00")
     customization_total = Decimal("0.00")
     enriched_items = []
 
     for item in cart_items:
-        #disc price
+        # disc price
         eff_price, _ = get_effective_price(item.variant)
         original_price = item.variant.price
         item_offer_discount = (original_price - eff_price) * item.quantity
@@ -58,9 +54,7 @@ def _build_checkout_context(request, cart, cart_items, addresses, wallet_balance
 
         discount_pct = 0
         if original_price > 0:
-            discount_pct = round(
-                ((original_price - eff_price) / original_price) * 100
-            )
+            discount_pct = round(((original_price - eff_price) / original_price) * 100)
 
         enriched_items.append(
             {
@@ -68,7 +62,6 @@ def _build_checkout_context(request, cart, cart_items, addresses, wallet_balance
                 "effective_price": eff_price,
                 "discounted_total": item_discounted_total,
                 "discount_pct": discount_pct,
-                
                 "variant": item.variant,
                 "quantity": item.quantity,
                 "customization_charge": item.customization_charge,
@@ -76,33 +69,31 @@ def _build_checkout_context(request, cart, cart_items, addresses, wallet_balance
         )
 
     shipping_charge = Decimal("0.00")
-    #cart total
+    # cart total
     pre_coupon_total = subtotal + shipping_charge
     original_product_total = subtotal - customization_total + total_offer_discount
 
-     
     applied_coupon = request.session.get("applied_coupon")
     coupon_code = ""
     coupon_discount = Decimal("0.00")
 
     if applied_coupon:
         coupon_code = applied_coupon.get("code", "")
-       
+
         try:
             raw_discount = Decimal(str(applied_coupon.get("discount", "0")))
             coupon_discount = min(raw_discount, pre_coupon_total)
         except Exception:
             request.session.pop("applied_coupon", None)
-            #resets
+            # resets
             coupon_code = ""
             coupon_discount = Decimal("0.00")
 
     total_amount = max(Decimal("0.00"), pre_coupon_total - coupon_discount)
 
-    #  Wallet 
+    #  Wallet
     wallet_applicable = min(wallet_balance, total_amount)
 
-    
     from coupons.utils import validate_coupon
 
     now_coupons = Coupon.objects.filter(is_active=True)
@@ -113,10 +104,8 @@ def _build_checkout_context(request, cart, cart_items, addresses, wallet_balance
         applicable = error is None
         amount_needed = Decimal("0.00")
         if not applicable and c.min_order_amount:
-            amount_needed = max(
-                Decimal("0.00"), c.min_order_amount - pre_coupon_total
-            )
-            
+            amount_needed = max(Decimal("0.00"), c.min_order_amount - pre_coupon_total)
+
         available_coupons.append(
             {
                 "code": c.code,
@@ -162,7 +151,6 @@ def _get_wallet_balance(user):
     return wallet.balance
 
 
-
 @login_required
 @never_cache
 def checkout(request):
@@ -172,7 +160,6 @@ def checkout(request):
         messages.error(request, "Your cart is empty.")
         return redirect("cart")
 
-   
     cart_items = list(
         cart.items.select_related(
             "variant__product__category",
@@ -182,9 +169,8 @@ def checkout(request):
     addresses = request.user.addresses.all().order_by("-is_default", "-created_at")
     wallet_balance = _get_wallet_balance(request.user)
 
-    
     if request.method == "POST":
-        action = request.POST.get("action", "")#treat it as an empty string
+        action = request.POST.get("action", "")  # treat it as an empty string
         is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
         # ADD ADDRESS
@@ -194,7 +180,7 @@ def checkout(request):
                 addr = form.save(commit=False)
                 addr.user = request.user
                 addr.save()
-                
+
                 if request.user.addresses.count() == 1:
                     addr.is_default = True
                     addr.save(update_fields=["is_default"])
@@ -205,7 +191,7 @@ def checkout(request):
                         "address": _serialize_address(addr),
                     }
                 )
-            
+
             return JsonResponse({"ok": False, "errors": form.errors}, status=400)
 
         # EDIT ADDRESS
@@ -225,7 +211,6 @@ def checkout(request):
                 )
             return JsonResponse({"ok": False, "errors": form.errors}, status=400)
 
-       
         if action == "delete_address":
             addr_id = request.POST.get("address_id", "")
             addr = Address.objects.filter(pk=addr_id, user=request.user).first()
@@ -236,12 +221,12 @@ def checkout(request):
             addr.delete()
             return JsonResponse({"ok": True, "message": "Address deleted."})
 
-        # PLACE ORDER 
+        # PLACE ORDER
         if action == "place_order":
             address_id = request.POST.get("selected_address", "")
             if not address_id:
                 messages.error(request, "Please select a delivery address.")
-                
+
                 return render(
                     request,
                     "orders/checkout.html",
@@ -266,17 +251,18 @@ def checkout(request):
                         coupon_code=coupon_code,
                     )
 
-                
-                    if razorpay_data is None and order_or_none is not None:#wallet coveres full
+                    if (
+                        razorpay_data is None and order_or_none is not None
+                    ):  # wallet coveres full
                         request.session.pop("applied_coupon", None)
                         return redirect(
                             "orders:order_success",
                             order_number=order_or_none.order_number,
                         )
 
-                    if razorpay_data is not None:#wall havent cover full
+                    if razorpay_data is not None:  # wall havent cover full
                         rp_order = razorpay_data["razorpay_order"]
-                        
+
                         razorpay_order_id = (
                             rp_order["id"]
                             if isinstance(rp_order, dict)
@@ -286,12 +272,8 @@ def checkout(request):
                             "address_id": address.pk,
                             "use_wallet": use_wallet,
                             "coupon_code": coupon_code,
-                            "wallet_deduction": str(
-                                razorpay_data["wallet_deduction"]
-                            ),
-                            "razorpay_amount": str(
-                                razorpay_data["razorpay_amount"]
-                            ),
+                            "wallet_deduction": str(razorpay_data["wallet_deduction"]),
+                            "razorpay_amount": str(razorpay_data["razorpay_amount"]),
                             "razorpay_order_id": razorpay_order_id,
                         }
                         return render(
@@ -301,8 +283,7 @@ def checkout(request):
                                 "razorpay_order": rp_order,
                                 "razorpay_key": settings.RAZORPAY_KEY_ID,
                                 "amount": int(
-                                    Decimal(str(razorpay_data["razorpay_amount"]))
-                                    * 100
+                                    Decimal(str(razorpay_data["razorpay_amount"])) * 100
                                 ),
                                 "order_number": razorpay_order_id,
                                 "user_name": request.user.get_full_name()
@@ -312,7 +293,6 @@ def checkout(request):
                             },
                         )
 
-                    
                     messages.error(
                         request, "Could not initialise payment. Please try again."
                     )
@@ -351,7 +331,6 @@ def checkout(request):
                         ),
                     )
 
-    
         logger.warning(
             "checkout: unknown action=%r from user=%s", action, request.user.pk
         )
@@ -366,14 +345,12 @@ def checkout(request):
     return render(
         request,
         "orders/checkout.html",
-        _build_checkout_context(
-            request, cart, cart_items, addresses, wallet_balance
-        ),
+        _build_checkout_context(request, cart, cart_items, addresses, wallet_balance),
     )
 
 
 def _serialize_address(addr):
-  
+
     return {
         "id": addr.pk,
         "label": addr.address_label,
@@ -399,13 +376,13 @@ def order_success(request, order_number):
     offer_discount = order.discount_amount - order.coupon_discount
 
     return render(
-    request,
-    "orders/order_success.html",
-    {
-        "order": order,
-        "offer_discount": offer_discount,
-    }
-)
+        request,
+        "orders/order_success.html",
+        {
+            "order": order,
+            "offer_discount": offer_discount,
+        },
+    )
 
 
 # ORDER LIST
@@ -419,8 +396,7 @@ def order_list(request):
 
     if search:
         orders = orders.filter(
-            Q(order_number__icontains=search)
-            | Q(items__product_name__icontains=search)
+            Q(order_number__icontains=search) | Q(items__product_name__icontains=search)
         ).distinct()
 
     paginator = Paginator(orders, getattr(settings, "ORDERS_PER_PAGE", 10))
@@ -431,7 +407,6 @@ def order_list(request):
         "orders/order_list.html",
         {"page_obj": page_obj, "search": search},
     )
-
 
 
 # ORDER DETAIL
@@ -445,37 +420,31 @@ def order_detail(request, order_number):
     status_logs = order.status_logs.all()
     offer_discount = order.discount_amount - order.coupon_discount
 
-
     customization_total = sum(
         item.customization_charge * item.quantity
         for item in items
         if item.item_status == "active"
     )
 
-    original_product_total = (
-        order.subtotal
-        + offer_discount
-        - customization_total
-    )     
+    original_product_total = order.subtotal + offer_discount - customization_total
 
     reviewed_product_ids = set(
         Review.objects.filter(user=request.user).values_list("product_id", flat=True)
     )
 
     return render(
-    request,
-    "orders/order_detail.html",
-    {
-        "order": order,
-        "items": items,
-        "status_logs": status_logs,
-        "reviewed_product_ids": reviewed_product_ids,
-
-        "offer_discount": offer_discount,
-        "customization_total": customization_total,
-        "original_product_total": original_product_total,
-    },
-)
+        request,
+        "orders/order_detail.html",
+        {
+            "order": order,
+            "items": items,
+            "status_logs": status_logs,
+            "reviewed_product_ids": reviewed_product_ids,
+            "offer_discount": offer_discount,
+            "customization_total": customization_total,
+            "original_product_total": original_product_total,
+        },
+    )
 
 
 # CANCEL ENTIRE ORDER
@@ -532,7 +501,6 @@ def cancel_item_view(request, order_number, item_id):
     return redirect("orders:order_detail", order_number=order_number)
 
 
-
 # RETURN SINGLE ITEM
 
 
@@ -567,7 +535,6 @@ def return_item_view(request, order_number, item_id):
     return redirect("orders:order_detail", order_number=order_number)
 
 
-
 # PDF INVOICE
 
 
@@ -592,11 +559,7 @@ def download_invoice(request, order_number):
         if item.item_status == "active"
     )
 
-    original_product_total = (
-        order.subtotal
-        + offer_discount
-        - customization_total
-    )
+    original_product_total = order.subtotal + offer_discount - customization_total
 
     html_string = render_to_string(
         "orders/invoice.html",
@@ -604,7 +567,6 @@ def download_invoice(request, order_number):
             "order": order,
             "items": items,
             "status_logs": order.status_logs.all(),
-
             "offer_discount": offer_discount,
             "customization_total": customization_total,
             "original_product_total": original_product_total,
@@ -622,7 +584,6 @@ def download_invoice(request, order_number):
     return response
 
 
-
 # COUPON — APPLY
 
 
@@ -635,7 +596,6 @@ def apply_coupon(request):
     if not code:
         return JsonResponse({"ok": False, "error": "Please enter a coupon code."})
 
-    
     if request.session.get("applied_coupon"):
         return JsonResponse(
             {
@@ -663,14 +623,14 @@ def apply_coupon(request):
         return JsonResponse({"ok": False, "error": error})
 
     discount = calculate_coupon_discount(coupon, order_total)
-    
+
     discount = min(discount, order_total)
 
     request.session["applied_coupon"] = {
         "code": coupon.code,
         "discount": str(discount),
     }
-   
+
     request.session.modified = True
 
     return JsonResponse(
@@ -681,7 +641,6 @@ def apply_coupon(request):
             "message": f"Coupon applied! You save ₹{discount}",
         }
     )
-
 
 
 # COUPON — REMOVE
@@ -695,24 +654,22 @@ def remove_coupon(request):
     return JsonResponse({"ok": True})
 
 
-
 # RAZORPAY CALLBACK
 
 
 @csrf_exempt
 @login_required
 def razorpay_callback(request):
-  
+
     if request.method not in ("POST", "GET"):
         return redirect("orders:checkout")
 
-    
     data = request.POST if request.method == "POST" else request.GET
     razorpay_payment_id = data.get("razorpay_payment_id", "")
     razorpay_order_id = data.get("razorpay_order_id", "")
     razorpay_signature = data.get("razorpay_signature", "")
 
-    logger.info(#save payment log
+    logger.info(  # save payment log
         "razorpay_callback: user=%s payment_id=%s order_id=%s",
         request.user.pk,
         razorpay_payment_id,
@@ -721,7 +678,6 @@ def razorpay_callback(request):
 
     pending = request.session.get("pending_razorpay")
 
-    
     if not pending or pending.get("razorpay_order_id") != razorpay_order_id:
         logger.warning(
             "razorpay_callback: session mismatch for user=%s order_id=%s",
@@ -737,12 +693,10 @@ def razorpay_callback(request):
 
     cart = Cart.objects.filter(user=request.user).first()
     if not cart or not cart.items.exists():
-        
+
         pass
 
-    address = get_object_or_404(
-        Address, pk=pending["address_id"], user=request.user
-    )
+    address = get_object_or_404(Address, pk=pending["address_id"], user=request.user)
 
     try:
         order = verify_razorpay_payment(
@@ -754,7 +708,7 @@ def razorpay_callback(request):
             razorpay_order_id=razorpay_order_id,
             razorpay_signature=razorpay_signature,
         )
-        
+
         request.session.pop("pending_razorpay", None)
         request.session.pop("applied_coupon", None)
         request.session.modified = True
@@ -762,12 +716,12 @@ def razorpay_callback(request):
 
     except ValueError as exc:
         error_msg = str(exc)
-        
+
         request.session.pop("pending_razorpay", None)
         request.session.modified = True
 
         if "refund" in error_msg.lower():
-            
+
             request.session["failed_payment_amount"] = pending.get(
                 "razorpay_amount", "0"
             )
@@ -784,19 +738,18 @@ def razorpay_callback(request):
 @login_required
 @never_cache
 def payment_failed(request):
-    
+
     amount = request.session.pop("failed_payment_amount", None)
     return render(request, "orders/payment_failed.html", {"amount": amount})
 
 
-
-# RAZORPAY PAYMENT FAILED 
+# RAZORPAY PAYMENT FAILED
 
 
 @login_required
 @require_POST
 def razorpay_payment_failed(request):
-    
+
     pending = request.session.get("pending_razorpay", {})
     request.session["failed_payment_amount"] = pending.get("razorpay_amount", "0")
     request.session.pop("pending_razorpay", None)

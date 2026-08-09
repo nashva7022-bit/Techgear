@@ -7,13 +7,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('products', '0012_category_device_type_alter_productvariant_case_type'),
+        ("products", "0012_category_device_type_alter_productvariant_case_type"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='productvariant',
-            name='discount_percentage',
-            field=models.PositiveIntegerField(default=0, help_text='Discount percentage 0-90%', validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(90)]),
+            model_name="productvariant",
+            name="discount_percentage",
+            field=models.PositiveIntegerField(
+                default=0,
+                help_text="Discount percentage 0-90%",
+                validators=[
+                    django.core.validators.MinValueValidator(0),
+                    django.core.validators.MaxValueValidator(90),
+                ],
+            ),
         ),
     ]

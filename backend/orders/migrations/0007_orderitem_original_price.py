@@ -6,13 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('orders', '0006_order_paid_amount_order_wallet_amount'),
+        ("orders", "0006_order_paid_amount_order_wallet_amount"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='orderitem',
-            name='original_price',
-            field=models.DecimalField(decimal_places=2, default=0, help_text='MRP per unit at time of purchase, before any offer discount', max_digits=10),
+            model_name="orderitem",
+            name="original_price",
+            field=models.DecimalField(
+                decimal_places=2,
+                default=0,
+                help_text="MRP per unit at time of purchase, before any offer discount",
+                max_digits=10,
+            ),
         ),
     ]

@@ -3,7 +3,8 @@ from __future__ import annotations
 import logging
 from decimal import ROUND_DOWN, Decimal
 
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError
+from django.db import transaction
 from django.db import transaction as db_transaction
 
 from offers.utils import get_effective_price
@@ -13,18 +14,20 @@ from .models import VALID_TRANSITIONS, Order, OrderItem, OrderStatusLog
 logger = logging.getLogger(__name__)
 
 
-
 # PRIVATE HELPERS
+
 
 def _razorpay_client():
     import razorpay
     from django.conf import settings
+
     return razorpay.Client(
         auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
     )
 
+
 def _d(value) -> Decimal:
-    
+
     return Decimal(str(value))
 
 
@@ -42,7 +45,7 @@ def _snapshot_address(address) -> dict:
 
 
 def _snapshot_item(cart_item) -> dict:
-    
+
     variant = cart_item.variant
     product = variant.product
     effective_price, _ = get_effective_price(variant)
@@ -57,8 +60,8 @@ def _snapshot_item(cart_item) -> dict:
         "case_type": variant.get_case_type_display() if variant.case_type else "",
         "color": variant.get_color_display(),
         "color_code": variant.color_code,
-        "original_price": variant.price,       # MRP snapshot
-        "unit_price": effective_price,          # discounted price snapshot
+        "original_price": variant.price,  # MRP snapshot
+        "unit_price": effective_price,  # discounted price snapshot
         "quantity": cart_item.quantity,
         "subtotal": item_subtotal,
         "custom_text": cart_item.custom_text or "",
@@ -68,11 +71,10 @@ def _snapshot_item(cart_item) -> dict:
 
 
 def _calculate_totals(cart_items, coupon=None) -> dict:
-   
+
     discounted_subtotal = Decimal("0.00")
     total_offer_discount = Decimal("0.00")
-    
-    
+
     for item in cart_items:
         eff_price, _ = get_effective_price(item.variant)
         regular_total = _d(item.variant.price) * item.quantity
@@ -90,7 +92,7 @@ def _calculate_totals(cart_items, coupon=None) -> dict:
         from coupons.utils import calculate_coupon_discount
 
         coupon_discount = calculate_coupon_discount(coupon, pre_coupon_total)
-        
+
         coupon_discount = min(coupon_discount, pre_coupon_total)
 
     total_amount = max(Decimal("0.00"), pre_coupon_total - coupon_discount)
@@ -106,7 +108,7 @@ def _calculate_totals(cart_items, coupon=None) -> dict:
 
 
 def _resolve_coupon(coupon_code: str | None, user, cart_items):
-   
+
     if not coupon_code:
         return None
 
@@ -117,7 +119,6 @@ def _resolve_coupon(coupon_code: str | None, user, cart_items):
     if not coupon:
         return None
 
-    
     temp_totals = _calculate_totals(cart_items, coupon=None)
     _, error = validate_coupon(coupon_code, user, temp_totals["total_amount"])
     if error:
@@ -128,7 +129,7 @@ def _resolve_coupon(coupon_code: str | None, user, cart_items):
 
 
 def _check_cart_items(cart_items):
-   
+
     if not cart_items:
         raise ValueError("Your cart is empty.")
     for item in cart_items:
@@ -146,14 +147,12 @@ def _check_cart_items(cart_items):
 
 
 def _deduct_wallet(user, wallet_deduction: Decimal, order: Order):
-    
+
     from wallet.models import Wallet
 
     wallet = Wallet.objects.select_for_update().get(user=user)
     if wallet.balance < wallet_deduction:
-        raise ValueError(
-            "Your wallet balance changed. Please refresh and try again."
-        )
+        raise ValueError("Your wallet balance changed. Please refresh and try again.")
     wallet.debit(
         amount=wallet_deduction,
         reason=f"Payment for order {order.order_number}",
@@ -168,19 +167,17 @@ def _record_coupon_usage(coupon, user, order):
 
 
 def _create_order_with_retry(defaults: dict) -> Order:
-    
+
     for _ in range(5):
         try:
             return Order.objects.create(**defaults)
         except IntegrityError:
             continue
-    raise ValueError(
-        "Could not generate a unique order number. Please try again."
-    )
+    raise ValueError("Could not generate a unique order number. Please try again.")
 
 
 def _recalculate_order_total(order: Order) -> None:
-    
+
     active_items = list(order.items.filter(item_status="active"))
     new_subtotal = sum(_d(item.subtotal) for item in active_items)
 
@@ -189,7 +186,6 @@ def _recalculate_order_total(order: Order) -> None:
         for item in active_items
     )
 
-    
     new_coupon_discount = Decimal("0.00")
     if order.coupon_discount and order.subtotal > 0:
         proportion = new_subtotal / _d(order.subtotal)
@@ -218,7 +214,7 @@ def _recalculate_order_total(order: Order) -> None:
 
 
 def _calculate_item_wallet_refund(order_item: OrderItem, order: Order) -> Decimal:
-    
+
     if not order.wallet_amount or order.wallet_amount <= 0:
         return Decimal("0.00")
     if not order.subtotal or order.subtotal <= 0:
@@ -228,7 +224,7 @@ def _calculate_item_wallet_refund(order_item: OrderItem, order: Order) -> Decima
     refund = (_d(order.wallet_amount) * proportion).quantize(
         Decimal("0.01"), rounding=ROUND_DOWN
     )
-    
+
     return min(refund, _d(order.wallet_amount))
 
 
@@ -236,7 +232,7 @@ def _calculate_item_wallet_refund(order_item: OrderItem, order: Order) -> Decima
 
 
 def place_cod_order(user, cart, address, use_wallet=False, coupon_code=None) -> Order:
-    
+
     cart_items = list(
         cart.items.select_related(
             "variant__product__category",
@@ -263,8 +259,6 @@ def place_cod_order(user, cart, address, use_wallet=False, coupon_code=None) -> 
             wallet_deduction = min(_d(wallet_obj.balance), total_amount)
             paid_via_cod = total_amount - wallet_deduction
 
-
-           
     if wallet_deduction >= total_amount:
         payment_method = "wallet"
     elif wallet_deduction > 0:
@@ -291,11 +285,9 @@ def place_cod_order(user, cart, address, use_wallet=False, coupon_code=None) -> 
             }
         )
 
-        
         for cart_item in cart_items:
             OrderItem.objects.create(order=order, **_snapshot_item(cart_item))
 
-        
         for cart_item in cart_items:
             if cart_item.variant.stock < cart_item.quantity:
                 raise ValueError(
@@ -305,7 +297,6 @@ def place_cod_order(user, cart, address, use_wallet=False, coupon_code=None) -> 
             cart_item.variant.stock -= cart_item.quantity
             cart_item.variant.save(update_fields=["stock"])
 
-       
         if wallet_deduction > 0:
             _deduct_wallet(user, wallet_deduction, order)
 
@@ -316,6 +307,7 @@ def place_cod_order(user, cart, address, use_wallet=False, coupon_code=None) -> 
             # Referral reward — credit referrer if this is referred user's first order
         try:
             from referrals.services import reward_referrer_on_first_order
+
             reward_referrer_on_first_order(order)
         except Exception:
             logger.exception("Referral reward failed for order %s", order.order_number)
@@ -327,9 +319,7 @@ def place_cod_order(user, cart, address, use_wallet=False, coupon_code=None) -> 
                 f"Coupon {coupon.code} applied — ₹{totals['coupon_discount']} off."
             )
         if wallet_deduction > 0:
-            notes.append(
-                f"₹{wallet_deduction} from wallet; ₹{paid_via_cod} via COD."
-            )
+            notes.append(f"₹{wallet_deduction} from wallet; ₹{paid_via_cod} via COD.")
 
         OrderStatusLog.objects.create(
             order=order,
@@ -375,11 +365,15 @@ def cancel_order(order: Order, cancelled_by, reason: str = "") -> Order:
             if order.wallet_amount and order.wallet_amount > 0:
                 refund_to_wallet += _d(order.wallet_amount)
 
-            if order.payment_method in ("razorpay", "wallet_razorpay") and order.paid_amount > 0:
+            if (
+                order.payment_method in ("razorpay", "wallet_razorpay")
+                and order.paid_amount > 0
+            ):
                 refund_to_wallet += _d(order.paid_amount)
 
             if refund_to_wallet > 0:
                 from wallet.models import Wallet
+
                 wallet, _ = Wallet.objects.get_or_create(user=order.user)
                 wallet.credit(
                     amount=refund_to_wallet,
@@ -391,6 +385,7 @@ def cancel_order(order: Order, cancelled_by, reason: str = "") -> Order:
             # Free up coupon so user can use it again
             if order.coupon_code:
                 from coupons.models import CouponUsage
+
                 CouponUsage.objects.filter(order=order).delete()
 
         OrderStatusLog.objects.create(
@@ -404,7 +399,9 @@ def cancel_order(order: Order, cancelled_by, reason: str = "") -> Order:
     return order
 
 
-def cancel_order_item(order_item: OrderItem, cancelled_by, reason: str = "") -> OrderItem:
+def cancel_order_item(
+    order_item: OrderItem, cancelled_by, reason: str = ""
+) -> OrderItem:
     if not order_item.is_cancellable:
         raise ValueError(
             "This item cannot be cancelled. It may already be cancelled, "
@@ -438,7 +435,10 @@ def cancel_order_item(order_item: OrderItem, cancelled_by, reason: str = "") -> 
                 )
                 total_item_refund += wallet_share
 
-            if order.payment_method in ("razorpay", "wallet_razorpay") and order.paid_amount > 0:
+            if (
+                order.payment_method in ("razorpay", "wallet_razorpay")
+                and order.paid_amount > 0
+            ):
                 razorpay_share = (_d(order.paid_amount) * proportion).quantize(
                     Decimal("0.01"), rounding=ROUND_DOWN
                 )
@@ -446,6 +446,7 @@ def cancel_order_item(order_item: OrderItem, cancelled_by, reason: str = "") -> 
 
             if total_item_refund > 0:
                 from wallet.models import Wallet
+
                 wallet, _ = Wallet.objects.get_or_create(user=order.user)
                 wallet.credit(
                     amount=total_item_refund,
@@ -457,8 +458,7 @@ def cancel_order_item(order_item: OrderItem, cancelled_by, reason: str = "") -> 
                     order=order,
                 )
                 order.wallet_amount = max(
-                    Decimal("0.00"),
-                    _d(order.wallet_amount) - total_item_refund
+                    Decimal("0.00"), _d(order.wallet_amount) - total_item_refund
                 )
                 order.save(update_fields=["wallet_amount", "updated_at"])
                 wallet_refund_note = f" ₹{total_item_refund} refunded to wallet."
@@ -474,6 +474,7 @@ def cancel_order_item(order_item: OrderItem, cancelled_by, reason: str = "") -> 
             # Free up coupon
             if order.coupon_code:
                 from coupons.models import CouponUsage
+
                 CouponUsage.objects.filter(order=order).delete()
 
         OrderStatusLog.objects.create(
@@ -495,7 +496,7 @@ def cancel_order_item(order_item: OrderItem, cancelled_by, reason: str = "") -> 
 
 
 def return_order_item(order_item: OrderItem, returned_by, reason: str) -> OrderItem:
-    
+
     if not reason or not reason.strip():
         raise ValueError("A reason is required to submit a return request.")
     if not order_item.is_returnable:
@@ -523,8 +524,7 @@ def return_order_item(order_item: OrderItem, returned_by, reason: str) -> OrderI
     return order_item
 
 
-
-# APPROVE RETURN 
+# APPROVE RETURN
 
 
 def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
@@ -535,10 +535,12 @@ def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
         order = order_item.order
 
         # Capture BEFORE any changes
-        item_subtotal  = _d(order_item.subtotal)
+        item_subtotal = _d(order_item.subtotal)
         order_subtotal = _d(order.subtotal)
-        order_wallet   = _d(order.wallet_amount) if order.wallet_amount else Decimal("0.00")
-        order_paid     = _d(order.paid_amount) if order.paid_amount else Decimal("0.00")
+        order_wallet = (
+            _d(order.wallet_amount) if order.wallet_amount else Decimal("0.00")
+        )
+        order_paid = _d(order.paid_amount) if order.paid_amount else Decimal("0.00")
 
         item_wallet_refund = _calculate_item_wallet_refund(order_item, order)
 
@@ -556,6 +558,7 @@ def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
 
         if order.user and order_subtotal > 0:
             from wallet.models import Wallet
+
             proportion = item_subtotal / order_subtotal
 
             if order_wallet > 0:
@@ -569,8 +572,6 @@ def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
                     Decimal("0.01"), rounding=ROUND_DOWN
                 )
                 refund_amount += paid_share
-
-            
 
             if refund_amount > 0:
                 wallet, _ = Wallet.objects.get_or_create(user=order.user)
@@ -605,7 +606,8 @@ def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
 
     return order_item
 
-# REJECT RETURN 
+
+# REJECT RETURN
 
 
 def reject_return(order_item: OrderItem, rejected_by, reason: str = "") -> OrderItem:
@@ -631,22 +633,20 @@ def reject_return(order_item: OrderItem, rejected_by, reason: str = "") -> Order
     return order_item
 
 
-
 # ADMIN: CHANGE ORDER STATUS
 
 
-def change_order_status(order: Order, new_status: str, changed_by, note: str = "") -> Order:
+def change_order_status(
+    order: Order, new_status: str, changed_by, note: str = ""
+) -> Order:
     allowed = VALID_TRANSITIONS.get(order.status, [])
     if new_status not in allowed:
         current_label = order.get_status_display()
         new_label = dict(Order._meta.get_field("status").choices).get(
             new_status, new_status
         )
-        raise ValueError(
-            f'Cannot transition from "{current_label}" to "{new_label}".'
-        )
+        raise ValueError(f'Cannot transition from "{current_label}" to "{new_label}".')
 
-   
     if new_status == "cancelled":
         return cancel_order(
             order=order,
@@ -669,12 +669,12 @@ def change_order_status(order: Order, new_status: str, changed_by, note: str = "
 
     return order
 
+
 # RAZORPAY: CREATE ORDER (pre-payment)
 
 
 def place_razorpay_order(user, cart, address, use_wallet=False, coupon_code=None):
-   
-    
+
     cart_items = list(
         cart.items.select_related(
             "variant__product__category",
@@ -740,9 +740,8 @@ def verify_razorpay_payment(
     razorpay_order_id: str,
     razorpay_signature: str,
 ) -> Order:
-   
+
     import razorpay
-    
 
     client = _razorpay_client()
 
@@ -765,10 +764,8 @@ def verify_razorpay_payment(
             "Please try again."
         )
 
-    #  Step 2: Idempotency 
-    existing = Order.objects.filter(
-        razorpay_payment_id=razorpay_payment_id
-    ).first()
+    #  Step 2: Idempotency
+    existing = Order.objects.filter(razorpay_payment_id=razorpay_payment_id).first()
     if existing:
         logger.info(
             "verify_razorpay_payment: duplicate callback for payment_id=%s → "
@@ -778,18 +775,22 @@ def verify_razorpay_payment(
         )
         return existing
 
-    # Step 3: Create order 
+    # Step 3: Create order
     razorpay_amount = _d(session_data.get("razorpay_amount", "0"))
     wallet_deduction = _d(session_data.get("wallet_deduction", "0"))
     coupon_code = session_data.get("coupon_code")
 
     try:
-        cart_items = list(
-            cart.items.select_related(
-                "variant__product__category",
-                "variant__device_model",
-            ).prefetch_related("variant__images")
-        ) if cart else []
+        cart_items = (
+            list(
+                cart.items.select_related(
+                    "variant__product__category",
+                    "variant__device_model",
+                ).prefetch_related("variant__images")
+            )
+            if cart
+            else []
+        )
 
         _check_cart_items(cart_items)
 
@@ -801,7 +802,9 @@ def verify_razorpay_payment(
             order = _create_order_with_retry(
                 {
                     "user": user,
-                    "payment_method": "wallet_razorpay" if wallet_deduction > 0 else "razorpay",
+                    "payment_method": (
+                        "wallet_razorpay" if wallet_deduction > 0 else "razorpay"
+                    ),
                     "status": "pending",
                     "wallet_amount": wallet_deduction,
                     "paid_amount": razorpay_amount,
@@ -838,9 +841,12 @@ def verify_razorpay_payment(
             # Referral reward — inside transaction so it rolls back if order fails
             try:
                 from referrals.services import reward_referrer_on_first_order
+
                 reward_referrer_on_first_order(order)
             except Exception:
-                logger.exception("Referral reward failed for order %s", order.order_number)
+                logger.exception(
+                    "Referral reward failed for order %s", order.order_number
+                )
 
             notes = ["Order confirmed. Payment received via Razorpay."]
             if wallet_deduction > 0:
@@ -865,7 +871,7 @@ def verify_razorpay_payment(
         return order
 
     except Exception as exc:
-        # Step 4: Auto-refund on failure 
+        # Step 4: Auto-refund on failure
         logger.error(
             "verify_razorpay_payment: order creation failed after capture. "
             "payment_id=%s user=%s error=%s",

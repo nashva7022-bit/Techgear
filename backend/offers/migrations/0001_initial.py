@@ -10,32 +10,68 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('products', '0014_remove_discount_percentage'),
+        ("products", "0014_remove_discount_percentage"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='CategoryOffer',
+            name="CategoryOffer",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('discount_percent', models.DecimalField(decimal_places=2, max_digits=5)),
-                ('is_active', models.BooleanField(default=True)),
-                ('start_date', models.DateField()),
-                ('end_date', models.DateField()),
-                ('created_at', models.DateTimeField(default=django.utils.timezone.now)),
-                ('category', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='offer', to='products.category')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "discount_percent",
+                    models.DecimalField(decimal_places=2, max_digits=5),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                ("start_date", models.DateField()),
+                ("end_date", models.DateField()),
+                ("created_at", models.DateTimeField(default=django.utils.timezone.now)),
+                (
+                    "category",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="offer",
+                        to="products.category",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='ProductOffer',
+            name="ProductOffer",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('discount_percent', models.DecimalField(decimal_places=2, max_digits=5)),
-                ('is_active', models.BooleanField(default=True)),
-                ('start_date', models.DateField()),
-                ('end_date', models.DateField()),
-                ('created_at', models.DateTimeField(default=django.utils.timezone.now)),
-                ('product', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='offer', to='products.product')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "discount_percent",
+                    models.DecimalField(decimal_places=2, max_digits=5),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                ("start_date", models.DateField()),
+                ("end_date", models.DateField()),
+                ("created_at", models.DateTimeField(default=django.utils.timezone.now)),
+                (
+                    "product",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="offer",
+                        to="products.product",
+                    ),
+                ),
             ],
         ),
     ]

@@ -1,10 +1,12 @@
+from decimal import ROUND_DOWN, Decimal
+
 from django.utils import timezone
-from decimal import Decimal, ROUND_DOWN
+
 from .models import Coupon, CouponUsage
 
 
 def validate_coupon(code, user, order_subtotal):
-    
+
     code = code.strip().upper()
 
     coupon = Coupon.objects.filter(code__iexact=code).first()
@@ -29,21 +31,23 @@ def validate_coupon(code, user, order_subtotal):
         return None, "You have already used this coupon."
 
     if order_subtotal < coupon.min_order_amount:
-        return None, f"Minimum order amount of ₹{coupon.min_order_amount} required for this coupon."
+        return (
+            None,
+            f"Minimum order amount of ₹{coupon.min_order_amount} required for this coupon.",
+        )
 
     return coupon, None
 
 
 def calculate_coupon_discount(coupon, order_subtotal):
-    
-    if coupon.discount_type == 'percentage':
-        discount = (order_subtotal * coupon.discount_value) / Decimal('100')
+
+    if coupon.discount_type == "percentage":
+        discount = (order_subtotal * coupon.discount_value) / Decimal("100")
         if coupon.max_discount_cap is not None:
             discount = min(discount, coupon.max_discount_cap)
-    else:  
+    else:
         discount = coupon.discount_value
 
-   
     discount = min(discount, order_subtotal)
 
-    return discount.quantize(Decimal('0.01'), rounding=ROUND_DOWN)
+    return discount.quantize(Decimal("0.01"), rounding=ROUND_DOWN)

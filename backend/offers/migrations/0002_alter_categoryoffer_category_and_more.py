@@ -7,19 +7,27 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('offers', '0001_initial'),
-        ('products', '0014_remove_discount_percentage'),
+        ("offers", "0001_initial"),
+        ("products", "0014_remove_discount_percentage"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='categoryoffer',
-            name='category',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='offers', to='products.category'),
+            model_name="categoryoffer",
+            name="category",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="offers",
+                to="products.category",
+            ),
         ),
         migrations.AlterField(
-            model_name='productoffer',
-            name='product',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='offers', to='products.product'),
+            model_name="productoffer",
+            name="product",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="offers",
+                to="products.product",
+            ),
         ),
     ]

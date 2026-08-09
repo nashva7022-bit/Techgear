@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class ReferralsConfig(AppConfig):
-    name = 'referrals'
+    name = "referrals"

@@ -7,15 +7,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('products', '0013_alter_productvariant_discount_percentage'),
-        ('store', '0004_alter_wishlistitem_unique_together_and_more'),
+        ("products", "0013_alter_productvariant_discount_percentage"),
+        ("store", "0004_alter_wishlistitem_unique_together_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='wishlistitem',
-            name='variant',
-            field=models.ForeignKey(default=21, on_delete=django.db.models.deletion.CASCADE, related_name='wishlist_items', to='products.productvariant'),
+            model_name="wishlistitem",
+            name="variant",
+            field=models.ForeignKey(
+                default=21,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="wishlist_items",
+                to="products.productvariant",
+            ),
             preserve_default=False,
         ),
     ]

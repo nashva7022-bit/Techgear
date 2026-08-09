@@ -8,76 +8,132 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('products', '0002_product_sku'),
+        ("products", "0002_product_sku"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='productspecification',
-            options={'ordering': ['order']},
+            name="productspecification",
+            options={"ordering": ["order"]},
         ),
         migrations.RenameField(
-            model_name='productspecification',
-            old_name='spec_key',
-            new_name='name',
+            model_name="productspecification",
+            old_name="spec_key",
+            new_name="name",
         ),
         migrations.RenameField(
-            model_name='productspecification',
-            old_name='spec_value',
-            new_name='value',
+            model_name="productspecification",
+            old_name="spec_value",
+            new_name="value",
         ),
         migrations.RemoveField(
-            model_name='category',
-            name='image',
+            model_name="category",
+            name="image",
         ),
         migrations.RemoveField(
-            model_name='product',
-            name='base_price',
+            model_name="product",
+            name="base_price",
         ),
         migrations.RemoveField(
-            model_name='product',
-            name='sku',
+            model_name="product",
+            name="sku",
         ),
         migrations.AddField(
-            model_name='product',
-            name='brand',
-            field=models.CharField(choices=[('apple', 'Apple'), ('samsung', 'Samsung'), ('oneplus', 'OnePlus'), ('google', 'Google'), ('xiaomi', 'Xiaomi'), ('realme', 'Realme'), ('oppo', 'OPPO'), ('vivo', 'Vivo'), ('nothing', 'Nothing'), ('motorola', 'Motorola'), ('other', 'Other')], default='other', max_length=50),
+            model_name="product",
+            name="brand",
+            field=models.CharField(
+                choices=[
+                    ("apple", "Apple"),
+                    ("samsung", "Samsung"),
+                    ("oneplus", "OnePlus"),
+                    ("google", "Google"),
+                    ("xiaomi", "Xiaomi"),
+                    ("realme", "Realme"),
+                    ("oppo", "OPPO"),
+                    ("vivo", "Vivo"),
+                    ("nothing", "Nothing"),
+                    ("motorola", "Motorola"),
+                    ("other", "Other"),
+                ],
+                default="other",
+                max_length=50,
+            ),
         ),
         migrations.AddField(
-            model_name='productspecification',
-            name='order',
+            model_name="productspecification",
+            name="order",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='productvariant',
-            name='color_code',
-            field=models.CharField(default='#000000', max_length=7),
+            model_name="productvariant",
+            name="color_code",
+            field=models.CharField(default="#000000", max_length=7),
         ),
         migrations.AddField(
-            model_name='productvariant',
-            name='sku',
+            model_name="productvariant",
+            name="sku",
             field=models.CharField(blank=True, max_length=50, unique=True),
         ),
         migrations.AlterField(
-            model_name='productvariant',
-            name='color',
-            field=models.CharField(choices=[('black', 'Black'), ('white', 'White'), ('red', 'Red'), ('blue', 'Blue'), ('green', 'Green'), ('yellow', 'Yellow'), ('orange', 'Orange'), ('purple', 'Purple'), ('pink', 'Pink'), ('grey', 'Grey'), ('navy', 'Navy'), ('gold', 'Gold'), ('silver', 'Silver'), ('transparent', 'Transparent'), ('other', 'Other')], default='black', max_length=50),
+            model_name="productvariant",
+            name="color",
+            field=models.CharField(
+                choices=[
+                    ("black", "Black"),
+                    ("white", "White"),
+                    ("red", "Red"),
+                    ("blue", "Blue"),
+                    ("green", "Green"),
+                    ("yellow", "Yellow"),
+                    ("orange", "Orange"),
+                    ("purple", "Purple"),
+                    ("pink", "Pink"),
+                    ("grey", "Grey"),
+                    ("navy", "Navy"),
+                    ("gold", "Gold"),
+                    ("silver", "Silver"),
+                    ("transparent", "Transparent"),
+                    ("other", "Other"),
+                ],
+                default="black",
+                max_length=50,
+            ),
         ),
         migrations.CreateModel(
-            name='VariantImage',
+            name="VariantImage",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('image', cloudinary.models.CloudinaryField(max_length=255, verbose_name='image')),
-                ('is_primary', models.BooleanField(default=False)),
-                ('order', models.PositiveIntegerField(default=0)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('variant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='images', to='products.productvariant')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "image",
+                    cloudinary.models.CloudinaryField(
+                        max_length=255, verbose_name="image"
+                    ),
+                ),
+                ("is_primary", models.BooleanField(default=False)),
+                ("order", models.PositiveIntegerField(default=0)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "variant",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="images",
+                        to="products.productvariant",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['order'],
+                "ordering": ["order"],
             },
         ),
         migrations.DeleteModel(
-            name='ProductImage',
+            name="ProductImage",
         ),
     ]

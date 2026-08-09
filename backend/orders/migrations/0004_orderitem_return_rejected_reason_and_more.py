@@ -6,18 +6,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('orders', '0003_alter_orderitem_item_status'),
+        ("orders", "0003_alter_orderitem_item_status"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='orderitem',
-            name='return_rejected_reason',
-            field=models.TextField(blank=True, default=''),
+            model_name="orderitem",
+            name="return_rejected_reason",
+            field=models.TextField(blank=True, default=""),
         ),
         migrations.AlterField(
-            model_name='orderitem',
-            name='item_status',
-            field=models.CharField(choices=[('active', 'Active'), ('cancelled', 'Cancelled'), ('return_requested', 'Return Requested'), ('returned', 'Returned'), ('return_rejected', 'Return Rejected')], default='active', max_length=20),
+            model_name="orderitem",
+            name="item_status",
+            field=models.CharField(
+                choices=[
+                    ("active", "Active"),
+                    ("cancelled", "Cancelled"),
+                    ("return_requested", "Return Requested"),
+                    ("returned", "Returned"),
+                    ("return_rejected", "Return Rejected"),
+                ],
+                default="active",
+                max_length=20,
+            ),
         ),
     ]

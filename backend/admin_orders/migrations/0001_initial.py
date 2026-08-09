@@ -16,20 +16,51 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='ActivityLog',
+            name="ActivityLog",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.CharField(choices=[('order_status_change', 'Order Status Changed'), ('stock_update', 'Stock Updated'), ('order_cancel', 'Order Cancelled'), ('order_view', 'Order Viewed')], max_length=50)),
-                ('description', models.TextField()),
-                ('order_number', models.CharField(blank=True, default='', max_length=20)),
-                ('variant_id', models.IntegerField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(default=django.utils.timezone.now)),
-                ('admin', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activity_logs', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "action",
+                    models.CharField(
+                        choices=[
+                            ("order_status_change", "Order Status Changed"),
+                            ("stock_update", "Stock Updated"),
+                            ("order_cancel", "Order Cancelled"),
+                            ("order_view", "Order Viewed"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                ("description", models.TextField()),
+                (
+                    "order_number",
+                    models.CharField(blank=True, default="", max_length=20),
+                ),
+                ("variant_id", models.IntegerField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(default=django.utils.timezone.now)),
+                (
+                    "admin",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="activity_logs",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Activity Log',
-                'verbose_name_plural': 'Activity Logs',
-                'ordering': ['-created_at'],
+                "verbose_name": "Activity Log",
+                "verbose_name_plural": "Activity Logs",
+                "ordering": ["-created_at"],
             },
         ),
     ]

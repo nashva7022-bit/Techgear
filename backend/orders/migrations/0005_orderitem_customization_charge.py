@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('orders', '0004_orderitem_return_rejected_reason_and_more'),
+        ("orders", "0004_orderitem_return_rejected_reason_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='orderitem',
-            name='customization_charge',
+            model_name="orderitem",
+            name="customization_charge",
             field=models.DecimalField(decimal_places=2, default=0, max_digits=6),
         ),
     ]

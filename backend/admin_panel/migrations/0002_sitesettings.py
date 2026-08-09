@@ -6,19 +6,35 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('admin_panel', '0001_initial'),
+        ("admin_panel", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='SiteSettings',
+            name="SiteSettings",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('customization_fee', models.DecimalField(decimal_places=2, default=49, help_text='Fee charged when a customer adds custom text or image to a product.', max_digits=6)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "customization_fee",
+                    models.DecimalField(
+                        decimal_places=2,
+                        default=49,
+                        help_text="Fee charged when a customer adds custom text or image to a product.",
+                        max_digits=6,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Site Settings',
-                'verbose_name_plural': 'Site Settings',
+                "verbose_name": "Site Settings",
+                "verbose_name_plural": "Site Settings",
             },
         ),
     ]

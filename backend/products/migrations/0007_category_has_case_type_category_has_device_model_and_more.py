@@ -7,32 +7,47 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('products', '0006_remove_product_is_customizable_category_image_and_more'),
+        ("products", "0006_remove_product_is_customizable_category_image_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='category',
-            name='has_case_type',
+            model_name="category",
+            name="has_case_type",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='category',
-            name='has_device_model',
+            model_name="category",
+            name="has_device_model",
             field=models.BooleanField(default=True),
         ),
         migrations.CreateModel(
-            name='CategorySpecTemplate',
+            name="CategorySpecTemplate",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
-                ('placeholder', models.CharField(blank=True, max_length=100)),
-                ('order', models.PositiveIntegerField(default=0)),
-                ('is_required', models.BooleanField(default=False)),
-                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='spec_templates', to='products.category')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                ("placeholder", models.CharField(blank=True, max_length=100)),
+                ("order", models.PositiveIntegerField(default=0)),
+                ("is_required", models.BooleanField(default=False)),
+                (
+                    "category",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="spec_templates",
+                        to="products.category",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['order'],
+                "ordering": ["order"],
             },
         ),
     ]

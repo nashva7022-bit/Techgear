@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('products', '0008_remove_category_has_device_model_and_more'),
+        ("products", "0008_remove_category_has_device_model_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='product',
-            name='is_featured',
+            model_name="product",
+            name="is_featured",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='product',
-            name='is_trending',
+            model_name="product",
+            name="is_trending",
             field=models.BooleanField(default=False),
         ),
     ]

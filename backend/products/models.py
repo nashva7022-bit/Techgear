@@ -1,111 +1,125 @@
-from django.db import models
-from cloudinary.models import CloudinaryField
-from django.utils.text import slugify
-import random, string
-from django.core.validators import MinValueValidator
-from django.core.exceptions import ValidationError
-
+import random
 import re
-# BRAND CHOICES 
+import string
+
+from cloudinary.models import CloudinaryField
+from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
+from django.db import models
+from django.utils.text import slugify
+
+# BRAND CHOICES
 BRAND_CHOICES = [
-    ('apple',    'Apple'),
-    ('samsung',  'Samsung'),
-    ('oneplus',  'OnePlus'),
-    ('google',   'Google'),
-    ('xiaomi',   'Xiaomi'),
-    ('realme',   'Realme'),
-    ('oppo',     'OPPO'),
-    ('vivo',     'Vivo'),
-    ('nothing',  'Nothing'),
-    ('motorola', 'Motorola'),
-    ('dell',     'Dell'),
-    ('hp',       'HP'),
-    ('lenovo',   'Lenovo'),
-    ('asus',     'ASUS'),
-    ('acer',     'Acer'),
-    ('msi',      'MSI'),
-    ('other',    'Other'),
+    ("apple", "Apple"),
+    ("samsung", "Samsung"),
+    ("oneplus", "OnePlus"),
+    ("google", "Google"),
+    ("xiaomi", "Xiaomi"),
+    ("realme", "Realme"),
+    ("oppo", "OPPO"),
+    ("vivo", "Vivo"),
+    ("nothing", "Nothing"),
+    ("motorola", "Motorola"),
+    ("dell", "Dell"),
+    ("hp", "HP"),
+    ("lenovo", "Lenovo"),
+    ("asus", "ASUS"),
+    ("acer", "Acer"),
+    ("msi", "MSI"),
+    ("other", "Other"),
 ]
 
 # CASE TYPE CHOICES
 
 CASE_TYPE_CHOICES = [
-    ('slim',     'Slim Fit'),
-    ('rugged',   'Rugged Armor'),
-    ('wallet',   'Wallet Folio'),
-    ('clear',    'Crystal Clear'),
-    ('leather',  'Leather Finish'),
-    ('magsafe',  'MagSafe Compatible'),
-    ('bumper',   'Bumper Case'),
-    ('military', 'Military Grade'),
-    ('thin',     'Ultra Thin'),
-    ('matte',    'Matte Finish'),
-    ('other',    'Other'),
-    ('dell',     'Dell'),
-    ('hp',       'HP'),
+    ("slim", "Slim Fit"),
+    ("rugged", "Rugged Armor"),
+    ("wallet", "Wallet Folio"),
+    ("clear", "Crystal Clear"),
+    ("leather", "Leather Finish"),
+    ("magsafe", "MagSafe Compatible"),
+    ("bumper", "Bumper Case"),
+    ("military", "Military Grade"),
+    ("thin", "Ultra Thin"),
+    ("matte", "Matte Finish"),
+    ("other", "Other"),
+    ("dell", "Dell"),
+    ("hp", "HP"),
 ]
+
 
 # DEVICE MODEL
 class DeviceModel(models.Model):
     DEVICE_TYPE_CHOICES = [
-        ('phone',  'Phone'),
-        ('laptop', 'Laptop'),
+        ("phone", "Phone"),
+        ("laptop", "Laptop"),
     ]
-    brand       = models.CharField(max_length=50, choices=BRAND_CHOICES)
-    name        = models.CharField(max_length=100)
-    device_type = models.CharField(max_length=10, choices=DEVICE_TYPE_CHOICES, default='phone')
-    is_active   = models.BooleanField(default=True)
+    brand = models.CharField(max_length=50, choices=BRAND_CHOICES)
+    name = models.CharField(max_length=100)
+    device_type = models.CharField(
+        max_length=10, choices=DEVICE_TYPE_CHOICES, default="phone"
+    )
+    is_active = models.BooleanField(default=True)
 
     class Meta:
-        ordering        = ['brand', 'name']
-        unique_together = ['brand', 'name']
-        verbose_name        = 'Device Model'
-        verbose_name_plural = 'Device Models'
+        ordering = ["brand", "name"]
+        unique_together = ["brand", "name"]
+        verbose_name = "Device Model"
+        verbose_name_plural = "Device Models"
 
     def __str__(self):
         return f"{self.get_brand_display()} — {self.name}"
 
 
-# CATEGORY 
+# CATEGORY
+
 
 class Category(models.Model):
     DEVICE_TYPE_CHOICES = [
-        ('phone',  'Phone'),
-        ('laptop', 'Laptop'),
+        ("phone", "Phone"),
+        ("laptop", "Laptop"),
     ]
 
-    device_type     = models.CharField(max_length=10, choices=DEVICE_TYPE_CHOICES, default='phone')
-    name            = models.CharField(max_length=100)
-    slug            = models.SlugField(max_length=100, unique=True, blank=True)
-    description     = models.TextField(blank=True)
-    image           = CloudinaryField('image', blank=True, null=True)
+    device_type = models.CharField(
+        max_length=10, choices=DEVICE_TYPE_CHOICES, default="phone"
+    )
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
+    description = models.TextField(blank=True)
+    image = CloudinaryField("image", blank=True, null=True)
     is_customizable = models.BooleanField(default=False)
-    is_active       = models.BooleanField(default=True)
-    has_case_type   = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    has_case_type = models.BooleanField(default=False)
     requires_device_model = models.BooleanField(default=True)
-    created_at      = models.DateTimeField(auto_now_add=True)
-    updated_at      = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering            = ['-created_at']
-        verbose_name_plural = 'Categories'
+        ordering = ["-created_at"]
+        verbose_name_plural = "Categories"
 
     def clean(self):
-    # Validate name
+        # Validate name
         name = self.name.strip()
         if not name:
-            raise ValidationError({'name': 'Category name is required.'})
+            raise ValidationError({"name": "Category name is required."})
         if len(name) < 3:
-            raise ValidationError({'name': 'Category name must be at least 3 characters.'})
+            raise ValidationError(
+                {"name": "Category name must be at least 3 characters."}
+            )
         if len(name) > 100:
-            raise ValidationError({'name': 'Category name must not exceed 100 characters.'})
-    
-        if not re.match(r'^[a-zA-Z0-9\s\-&()]+$', name):
-            raise ValidationError({'name': 'Category name contains invalid characters.'})
-    
+            raise ValidationError(
+                {"name": "Category name must not exceed 100 characters."}
+            )
+
+        if not re.match(r"^[a-zA-Z0-9\s\-&()]+$", name):
+            raise ValidationError(
+                {"name": "Category name contains invalid characters."}
+            )
+
         existing = Category.objects.filter(name__iexact=name).exclude(pk=self.pk)
         if existing.exists():
-            raise ValidationError({'name': 'A category with this name already exists.'})
+            raise ValidationError({"name": "A category with this name already exists."})
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -121,45 +135,48 @@ class Category(models.Model):
 
 
 class CategorySpecTemplate(models.Model):
-    category    = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='spec_templates')
-    name        = models.CharField(max_length=100)
+    category = models.ForeignKey(
+        Category, on_delete=models.CASCADE, related_name="spec_templates"
+    )
+    name = models.CharField(max_length=100)
     placeholder = models.CharField(max_length=100, blank=True)
-    order       = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(default=0)
     is_required = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ['order']
+        ordering = ["order"]
 
     def __str__(self):
         return f"{self.category.name} → {self.name}"
 
 
-#  PRODUCT 
+#  PRODUCT
+
 
 class Product(models.Model):
-    category    = models.ForeignKey(
-        Category, on_delete=models.SET_NULL, null=True, related_name='products'
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL, null=True, related_name="products"
     )
-    name        = models.CharField(max_length=150)
-    slug        = models.SlugField(max_length=150, unique=True, blank=True)
-    brand       = models.CharField(max_length=50, choices=BRAND_CHOICES, default='other')
+    name = models.CharField(max_length=150)
+    slug = models.SlugField(max_length=150, unique=True, blank=True)
+    brand = models.CharField(max_length=50, choices=BRAND_CHOICES, default="other")
     description = models.TextField(blank=True)
 
-    is_active               = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
     deactivated_by_category = models.BooleanField(default=False)
-    created_at              = models.DateTimeField(auto_now_add=True)
-    updated_at              = models.DateTimeField(auto_now=True)
-    is_featured             = models.BooleanField(default=False)
-    is_trending             = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_featured = models.BooleanField(default=False)
+    is_trending = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
     def save(self, *args, **kwargs):
         if not self.slug:
             base_slug = slugify(self.name)
-            slug      = base_slug
-            counter   = 1
+            slug = base_slug
+            counter = 1
             while Product.objects.filter(slug=slug).exclude(pk=self.pk).exists():
                 slug = f"{base_slug}-{counter}"
                 counter += 1
@@ -186,7 +203,9 @@ class Product(models.Model):
 
     @property
     def min_price(self):
-        prices = list(self.variants.filter(is_active=True).values_list('price', flat=True))
+        prices = list(
+            self.variants.filter(is_active=True).values_list("price", flat=True)
+        )
         return min(prices) if prices else None
 
     @property
@@ -194,79 +213,89 @@ class Product(models.Model):
         return self.variants.filter(is_active=True).first()
 
 
-#PRODUCT SPECIFICATION 
+# PRODUCT SPECIFICATION
+
 
 class ProductSpecification(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='specifications')
-    name    = models.CharField(max_length=100)
-    value   = models.CharField(max_length=255)
-    order   = models.PositiveIntegerField(default=0)
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="specifications"
+    )
+    name = models.CharField(max_length=100)
+    value = models.CharField(max_length=255)
+    order = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ['order']
+        ordering = ["order"]
 
     def __str__(self):
         return f"{self.product.name} — {self.name}: {self.value}"
 
 
-#COLOUR CHOICES 
+# COLOUR CHOICES
 
 COLOR_CHOICES = [
-    ('black',       'Black'),
-    ('white',       'White'),
-    ('red',         'Red'),
-    ('blue',        'Blue'),
-    ('green',       'Green'),
-    ('yellow',      'Yellow'),
-    ('orange',      'Orange'),
-    ('purple',      'Purple'),
-    ('pink',        'Pink'),
-    ('grey',        'Grey'),
-    ('navy',        'Navy'),
-    ('gold',        'Gold'),
-    ('silver',      'Silver'),
-    ('transparent', 'Transparent'),
-    ('other',       'Other'),
+    ("black", "Black"),
+    ("white", "White"),
+    ("red", "Red"),
+    ("blue", "Blue"),
+    ("green", "Green"),
+    ("yellow", "Yellow"),
+    ("orange", "Orange"),
+    ("purple", "Purple"),
+    ("pink", "Pink"),
+    ("grey", "Grey"),
+    ("navy", "Navy"),
+    ("gold", "Gold"),
+    ("silver", "Silver"),
+    ("transparent", "Transparent"),
+    ("other", "Other"),
 ]
 
 
 # PRODUCT VARIANT
 
+
 class ProductVariant(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="variants"
+    )
 
     device_model = models.ForeignKey(
         DeviceModel,
         on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='variants',
+        null=True,
+        blank=True,
+        related_name="variants",
     )
-    case_type  = models.CharField(max_length=50, choices=CASE_TYPE_CHOICES, blank=True, default='')
-    color      = models.CharField(max_length=50, choices=COLOR_CHOICES, default='black')
-    color_code = models.CharField(max_length=7, default='#000000')
-    sku        = models.CharField(max_length=50, unique=True, blank=True, null=True)
+    case_type = models.CharField(
+        max_length=50, choices=CASE_TYPE_CHOICES, blank=True, default=""
+    )
+    color = models.CharField(max_length=50, choices=COLOR_CHOICES, default="black")
+    color_code = models.CharField(max_length=7, default="#000000")
+    sku = models.CharField(max_length=50, unique=True, blank=True, null=True)
 
     # MRP — the one true price. Discounts come from offers, not this field.
-    price      = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
 
-    stock      = models.PositiveIntegerField(default=0)
-    is_active  = models.BooleanField(default=True)
+    stock = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
     def clean(self):
         if self.price is not None and self.price <= 0:
-            raise ValidationError({'price': 'Price must be greater than 0.'})
+            raise ValidationError({"price": "Price must be greater than 0."})
 
     def save(self, *args, **kwargs):
         if not self.sku:
             from django.db import IntegrityError
+
             for _ in range(10):
-                base   = self.product.name.upper().replace(' ', '-')[:8]
-                color  = self.color.upper()[:3]
-                suffix = ''.join(random.choices(string.digits, k=4))
+                base = self.product.name.upper().replace(" ", "-")[:8]
+                color = self.color.upper()[:3]
+                suffix = "".join(random.choices(string.digits, k=4))
                 self.sku = f"{base}-{color}-{suffix}"
                 try:
                     super().save(*args, **kwargs)
@@ -277,7 +306,7 @@ class ProductVariant(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        device = self.device_model.name if self.device_model else 'No Device'
+        device = self.device_model.name if self.device_model else "No Device"
         return f"{self.product.name} — {device} — {self.color}"
 
     @property
@@ -285,17 +314,20 @@ class ProductVariant(models.Model):
         return self.images.first()
 
 
-#  VARIANT IMAGE 
+#  VARIANT IMAGE
+
 
 class VariantImage(models.Model):
-    variant    = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='images')
-    image      = CloudinaryField('image')
+    variant = models.ForeignKey(
+        ProductVariant, on_delete=models.CASCADE, related_name="images"
+    )
+    image = CloudinaryField("image")
     is_primary = models.BooleanField(default=False)
-    order      = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['order']
+        ordering = ["order"]
 
     def __str__(self):
         return f"Image for variant {self.variant.id}"

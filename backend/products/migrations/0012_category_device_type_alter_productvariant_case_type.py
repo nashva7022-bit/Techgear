@@ -6,18 +6,41 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('products', '0011_devicemodel_device_type'),
+        ("products", "0011_devicemodel_device_type"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='category',
-            name='device_type',
-            field=models.CharField(choices=[('phone', 'Phone'), ('laptop', 'Laptop')], default='phone', max_length=10),
+            model_name="category",
+            name="device_type",
+            field=models.CharField(
+                choices=[("phone", "Phone"), ("laptop", "Laptop")],
+                default="phone",
+                max_length=10,
+            ),
         ),
         migrations.AlterField(
-            model_name='productvariant',
-            name='case_type',
-            field=models.CharField(blank=True, choices=[('slim', 'Slim Fit'), ('rugged', 'Rugged Armor'), ('wallet', 'Wallet Folio'), ('clear', 'Crystal Clear'), ('leather', 'Leather Finish'), ('magsafe', 'MagSafe Compatible'), ('bumper', 'Bumper Case'), ('military', 'Military Grade'), ('thin', 'Ultra Thin'), ('matte', 'Matte Finish'), ('other', 'Other'), ('dell', 'Dell'), ('hp', 'HP')], default='', max_length=50),
+            model_name="productvariant",
+            name="case_type",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("slim", "Slim Fit"),
+                    ("rugged", "Rugged Armor"),
+                    ("wallet", "Wallet Folio"),
+                    ("clear", "Crystal Clear"),
+                    ("leather", "Leather Finish"),
+                    ("magsafe", "MagSafe Compatible"),
+                    ("bumper", "Bumper Case"),
+                    ("military", "Military Grade"),
+                    ("thin", "Ultra Thin"),
+                    ("matte", "Matte Finish"),
+                    ("other", "Other"),
+                    ("dell", "Dell"),
+                    ("hp", "HP"),
+                ],
+                default="",
+                max_length=50,
+            ),
         ),
     ]

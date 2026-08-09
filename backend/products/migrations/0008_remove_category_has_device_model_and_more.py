@@ -7,37 +7,86 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('products', '0007_category_has_case_type_category_has_device_model_and_more'),
+        ("products", "0007_category_has_case_type_category_has_device_model_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='category',
-            name='has_device_model',
+            model_name="category",
+            name="has_device_model",
         ),
         migrations.AlterField(
-            model_name='productvariant',
-            name='case_type',
-            field=models.CharField(blank=True, choices=[('slim', 'Slim Fit'), ('rugged', 'Rugged Armor'), ('wallet', 'Wallet Folio'), ('clear', 'Crystal Clear'), ('leather', 'Leather Finish'), ('magsafe', 'MagSafe Compatible'), ('bumper', 'Bumper Case'), ('military', 'Military Grade'), ('thin', 'Ultra Thin'), ('matte', 'Matte Finish'), ('other', 'Other')], default='', max_length=50),
+            model_name="productvariant",
+            name="case_type",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("slim", "Slim Fit"),
+                    ("rugged", "Rugged Armor"),
+                    ("wallet", "Wallet Folio"),
+                    ("clear", "Crystal Clear"),
+                    ("leather", "Leather Finish"),
+                    ("magsafe", "MagSafe Compatible"),
+                    ("bumper", "Bumper Case"),
+                    ("military", "Military Grade"),
+                    ("thin", "Ultra Thin"),
+                    ("matte", "Matte Finish"),
+                    ("other", "Other"),
+                ],
+                default="",
+                max_length=50,
+            ),
         ),
         migrations.CreateModel(
-            name='DeviceModel',
+            name="DeviceModel",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('brand', models.CharField(choices=[('apple', 'Apple'), ('samsung', 'Samsung'), ('oneplus', 'OnePlus'), ('google', 'Google'), ('xiaomi', 'Xiaomi'), ('realme', 'Realme'), ('oppo', 'OPPO'), ('vivo', 'Vivo'), ('nothing', 'Nothing'), ('motorola', 'Motorola'), ('other', 'Other')], max_length=50)),
-                ('name', models.CharField(max_length=100)),
-                ('is_active', models.BooleanField(default=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "brand",
+                    models.CharField(
+                        choices=[
+                            ("apple", "Apple"),
+                            ("samsung", "Samsung"),
+                            ("oneplus", "OnePlus"),
+                            ("google", "Google"),
+                            ("xiaomi", "Xiaomi"),
+                            ("realme", "Realme"),
+                            ("oppo", "OPPO"),
+                            ("vivo", "Vivo"),
+                            ("nothing", "Nothing"),
+                            ("motorola", "Motorola"),
+                            ("other", "Other"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                ("is_active", models.BooleanField(default=True)),
             ],
             options={
-                'verbose_name': 'Device Model',
-                'verbose_name_plural': 'Device Models',
-                'ordering': ['brand', 'name'],
-                'unique_together': {('brand', 'name')},
+                "verbose_name": "Device Model",
+                "verbose_name_plural": "Device Models",
+                "ordering": ["brand", "name"],
+                "unique_together": {("brand", "name")},
             },
         ),
         migrations.AlterField(
-            model_name='productvariant',
-            name='device_model',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='variants', to='products.devicemodel'),
+            model_name="productvariant",
+            name="device_model",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="variants",
+                to="products.devicemodel",
+            ),
         ),
     ]

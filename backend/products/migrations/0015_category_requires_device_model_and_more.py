@@ -6,23 +6,66 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('products', '0014_remove_discount_percentage'),
+        ("products", "0014_remove_discount_percentage"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='category',
-            name='requires_device_model',
+            model_name="category",
+            name="requires_device_model",
             field=models.BooleanField(default=True),
         ),
         migrations.AlterField(
-            model_name='devicemodel',
-            name='brand',
-            field=models.CharField(choices=[('apple', 'Apple'), ('samsung', 'Samsung'), ('oneplus', 'OnePlus'), ('google', 'Google'), ('xiaomi', 'Xiaomi'), ('realme', 'Realme'), ('oppo', 'OPPO'), ('vivo', 'Vivo'), ('nothing', 'Nothing'), ('motorola', 'Motorola'), ('dell', 'Dell'), ('hp', 'HP'), ('lenovo', 'Lenovo'), ('asus', 'ASUS'), ('acer', 'Acer'), ('msi', 'MSI'), ('other', 'Other')], max_length=50),
+            model_name="devicemodel",
+            name="brand",
+            field=models.CharField(
+                choices=[
+                    ("apple", "Apple"),
+                    ("samsung", "Samsung"),
+                    ("oneplus", "OnePlus"),
+                    ("google", "Google"),
+                    ("xiaomi", "Xiaomi"),
+                    ("realme", "Realme"),
+                    ("oppo", "OPPO"),
+                    ("vivo", "Vivo"),
+                    ("nothing", "Nothing"),
+                    ("motorola", "Motorola"),
+                    ("dell", "Dell"),
+                    ("hp", "HP"),
+                    ("lenovo", "Lenovo"),
+                    ("asus", "ASUS"),
+                    ("acer", "Acer"),
+                    ("msi", "MSI"),
+                    ("other", "Other"),
+                ],
+                max_length=50,
+            ),
         ),
         migrations.AlterField(
-            model_name='product',
-            name='brand',
-            field=models.CharField(choices=[('apple', 'Apple'), ('samsung', 'Samsung'), ('oneplus', 'OnePlus'), ('google', 'Google'), ('xiaomi', 'Xiaomi'), ('realme', 'Realme'), ('oppo', 'OPPO'), ('vivo', 'Vivo'), ('nothing', 'Nothing'), ('motorola', 'Motorola'), ('dell', 'Dell'), ('hp', 'HP'), ('lenovo', 'Lenovo'), ('asus', 'ASUS'), ('acer', 'Acer'), ('msi', 'MSI'), ('other', 'Other')], default='other', max_length=50),
+            model_name="product",
+            name="brand",
+            field=models.CharField(
+                choices=[
+                    ("apple", "Apple"),
+                    ("samsung", "Samsung"),
+                    ("oneplus", "OnePlus"),
+                    ("google", "Google"),
+                    ("xiaomi", "Xiaomi"),
+                    ("realme", "Realme"),
+                    ("oppo", "OPPO"),
+                    ("vivo", "Vivo"),
+                    ("nothing", "Nothing"),
+                    ("motorola", "Motorola"),
+                    ("dell", "Dell"),
+                    ("hp", "HP"),
+                    ("lenovo", "Lenovo"),
+                    ("asus", "ASUS"),
+                    ("acer", "Acer"),
+                    ("msi", "MSI"),
+                    ("other", "Other"),
+                ],
+                default="other",
+                max_length=50,
+            ),
         ),
     ]

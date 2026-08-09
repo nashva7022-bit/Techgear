@@ -1,13 +1,16 @@
 import re
+
 from django import forms
-from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
-from .models import User, Address
+from django.core.exceptions import ValidationError
+
+from .models import Address, User
 
 # Regex for real-world names (allows spaces, hyphens, and apostrophes, but NO numbers/symbols)
 NAME_REGEX = r"^[A-Za-z\s\-\']+$"
 
-#SIGNUP FORM 
+
+# SIGNUP FORM
 class SignupForm(forms.ModelForm):
     full_name = forms.CharField(max_length=100)
     password = forms.CharField(widget=forms.PasswordInput)
@@ -15,37 +18,37 @@ class SignupForm(forms.ModelForm):
     referral_code = forms.CharField(
         max_length=10,
         required=False,
-        widget=forms.TextInput(attrs={'placeholder': 'Referral code (optional)'}),
+        widget=forms.TextInput(attrs={"placeholder": "Referral code (optional)"}),
     )
 
     class Meta:
         model = User
-        fields = ['email', 'full_name', 'phone']
+        fields = ["email", "full_name", "phone"]
 
     def clean_email(self):
-        email = self.cleaned_data.get('email', '').lower().strip()
+        email = self.cleaned_data.get("email", "").lower().strip()
         if not email:
             raise ValidationError("Email is required.")
         # Secure case-insensitive check
-        if User.objects.filter(email__iexact=email,is_active=True).exists():
+        if User.objects.filter(email__iexact=email, is_active=True).exists():
             raise ValidationError("An account with this email already exists.")
         return email
 
     def clean_phone(self):
-        phone = (self.cleaned_data.get ('phone') or '').strip()
+        phone = (self.cleaned_data.get("phone") or "").strip()
         if not phone.isdigit():
             raise ValidationError("Phone number must contain only digits.")
         if len(phone) != 10:
             raise ValidationError("Please enter a valid phone number.")
-        if phone[0]=='0':
+        if phone[0] == "0":
             raise ValidationError("Phone number cannot start with zero.")
         if len(set(phone)) == 1:
             raise ValidationError("Please enter a valid phone number.")
-    
+
         return phone
 
     def clean_full_name(self):
-        name = self.cleaned_data.get('full_name', '').strip()
+        name = self.cleaned_data.get("full_name", "").strip()
         if not name:
             raise ValidationError("Full name is required.")
         if not re.match(NAME_REGEX, name):
@@ -54,134 +57,139 @@ class SignupForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        password = cleaned_data.get('password')
-        confirm = cleaned_data.get('confirm_password')
+        password = cleaned_data.get("password")
+        confirm = cleaned_data.get("confirm_password")
 
         if password and confirm:
             if password != confirm:
-                self.add_error('confirm_password', "Passwords do not match.")
+                self.add_error("confirm_password", "Passwords do not match.")
             else:
                 try:
-                    
+
                     validate_password(password)
                 except ValidationError as e:
-                   
-                    self.add_error('password', e)
+
+                    self.add_error("password", e)
         return cleaned_data
 
-#EDIT PROFILE FORM
+
+# EDIT PROFILE FORM
 class EditProfileForm(forms.ModelForm):
-    
-    full_name = forms.CharField(required=True, error_messages={'required': 'Name is required.'})
-    
+
+    full_name = forms.CharField(
+        required=True, error_messages={"required": "Name is required."}
+    )
+
     phone = forms.CharField(required=False)
 
     class Meta:
         model = User
-        fields =['full_name', 'phone', 'profile_image']
+        fields = ["full_name", "phone", "profile_image"]
 
     def clean_full_name(self):
-        full_name = self.cleaned_data.get('full_name', '').strip()
+        full_name = self.cleaned_data.get("full_name", "").strip()
         if full_name and not re.match(NAME_REGEX, full_name):
             raise ValidationError("Name contains invalid characters.")
         return full_name
 
-  
-
     def clean_phone(self):
-        phone = (self.cleaned_data.get('phone') or '').strip()
-        if len(phone) !=10:
-            raise ValidationError('phone number must be 10 digits')
+        phone = (self.cleaned_data.get("phone") or "").strip()
+        if len(phone) != 10:
+            raise ValidationError("phone number must be 10 digits")
         if phone and not phone.isdigit():
             raise ValidationError("Phone must contain only numbers.")
         return phone
-        
-    
 
     def clean_profile_image(self):
-        image = self.cleaned_data.get('profile_image')
+        image = self.cleaned_data.get("profile_image")
         if image:
             # Check if this is a NEWLY uploaded file
-            if hasattr(image, 'file'):
+            if hasattr(image, "file"):
                 if image.size > 2 * 1024 * 1024:
                     raise ValidationError("Image must be smaller than 2MB.")
-                if hasattr(image, 'content_type') and not image.content_type.startswith('image/'):
+                if hasattr(image, "content_type") and not image.content_type.startswith(
+                    "image/"
+                ):
                     raise ValidationError("File must be a valid image format.")
         return image
-    
+
     def save(self, commit=True):
-        full_name = self.cleaned_data.get('full_name', '')
+        full_name = self.cleaned_data.get("full_name", "")
         parts = full_name.split()
         self.instance.first_name = parts[0] if parts else "User"
-        self.instance.last_name = ' '.join(parts[1:]) if len(parts) > 1 else ""
+        self.instance.last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
         return super().save(commit=commit)
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-    # Pre-populate full_name from stored first_name + last_name
+        # Pre-populate full_name from stored first_name + last_name
         if self.instance.pk:
             full = f"{self.instance.first_name}"
             if self.instance.last_name:
                 full += f" {self.instance.last_name}"
-            self.fields['full_name'].initial = full.strip()
-    
+            self.fields["full_name"].initial = full.strip()
+
         for field in self.fields.values():
-            field.widget.attrs.update({'class': 'w-full px-5 py-3.5 rounded-xl border border-ink/15 bg-white text-ink focus:ring-2 focus:ring-accent-hover/30 outline-none transition'})
+            field.widget.attrs.update(
+                {
+                    "class": "w-full px-5 py-3.5 rounded-xl border border-ink/15 bg-white text-ink focus:ring-2 focus:ring-accent-hover/30 outline-none transition"
+                }
+            )
 
 
-#  CHANGE PASSWORD FORM 
+#  CHANGE PASSWORD FORM
 class ChangePasswordForm(forms.Form):
     old_password = forms.CharField(widget=forms.PasswordInput)
     new_password = forms.CharField(widget=forms.PasswordInput)
     confirm_password = forms.CharField(widget=forms.PasswordInput)
 
     def __init__(self, user, *args, **kwargs):
-        
+
         self.user = user
         super().__init__(*args, **kwargs)
-        
-        
+
         input_style = "w-full px-5 py-4 rounded-xl border border-ink/15 bg-white text-ink placeholder-ink/30 focus:outline-none focus:ring-2 focus:ring-accent-hover"
         for field in self.fields.values():
-            field.widget.attrs.update({'class': input_style})
+            field.widget.attrs.update({"class": input_style})
 
     def clean_old_password(self):
-        old_password = self.cleaned_data.get('old_password')
-       
+        old_password = self.cleaned_data.get("old_password")
+
         if not self.user.check_password(old_password):
             raise ValidationError("Incorrect old password.")
         return old_password
 
     def clean_new_password(self):
-        new_password = self.cleaned_data.get('new_password')
-        
+        new_password = self.cleaned_data.get("new_password")
+
         validate_password(new_password, self.user)
-        
+
         return new_password
 
     def clean(self):
         cleaned_data = super().clean()
-        new_password = cleaned_data.get('new_password')
-        confirm = cleaned_data.get('confirm_password')
+        new_password = cleaned_data.get("new_password")
+        confirm = cleaned_data.get("confirm_password")
 
         if new_password and confirm and new_password != confirm:
-            self.add_error('confirm_password', "Passwords do not match.")
+            self.add_error("confirm_password", "Passwords do not match.")
         return cleaned_data
 
 
-# CHANGE EMAIL FORM 
+# CHANGE EMAIL FORM
 class ChangeEmailForm(forms.Form):
     email = forms.EmailField(
         label="Email Address",
-        widget=forms.EmailInput(attrs={
-            'placeholder': 'name@company.com',
-            
-           'class': 'w-full px-5 py-4 rounded-xl border border-ink/15 bg-white text-ink focus:ring-2 focus:ring-accent-hover outline-none transition duration-200 text-lg'
-        })
+        widget=forms.EmailInput(
+            attrs={
+                "placeholder": "name@company.com",
+                "class": "w-full px-5 py-4 rounded-xl border border-ink/15 bg-white text-ink focus:ring-2 focus:ring-accent-hover outline-none transition duration-200 text-lg",
+            }
+        ),
     )
 
     def clean_email(self):
-        email = self.cleaned_data.get('email', '').lower().strip()
+        email = self.cleaned_data.get("email", "").lower().strip()
         if not email:
             raise ValidationError("Email is required.")
         if User.objects.filter(email__iexact=email).exists():
@@ -189,23 +197,34 @@ class ChangeEmailForm(forms.Form):
         return email
 
 
-#address\
+# address\
+
 
 class AddressForm(forms.ModelForm):
     class Meta:
         model = Address
         fields = [
-            'full_name', 'phone', 'address_line_1', 
-            'city', 'state', 'postal_code', 'country', 'address_label', 'is_default'
+            "full_name",
+            "phone",
+            "address_line_1",
+            "city",
+            "state",
+            "postal_code",
+            "country",
+            "address_label",
+            "is_default",
         ]
-    address_label = forms.ChoiceField(choices=[
-        ('Home', 'Home'),
-        ('Work', 'Work'),
-        ('Other', 'Other'),
-    ])
+
+    address_label = forms.ChoiceField(
+        choices=[
+            ("Home", "Home"),
+            ("Work", "Work"),
+            ("Other", "Other"),
+        ]
+    )
 
     def clean_full_name(self):
-        name = self.cleaned_data.get('full_name', '').strip()
+        name = self.cleaned_data.get("full_name", "").strip()
         if not name:
             raise ValidationError("Name is required.")
         if not re.match(NAME_REGEX, name):
@@ -213,21 +232,21 @@ class AddressForm(forms.ModelForm):
         return name
 
     def clean_phone(self):
-        phone = self.cleaned_data.get('phone', '').strip()
+        phone = self.cleaned_data.get("phone", "").strip()
         if not phone:
             raise ValidationError("Phone is required.")
         if not phone.isdigit():
             raise ValidationError("Phone number must contain only digits.")
         if len(phone) != 10:
-            raise ValidationError('Phone number must be 10 digits')
-        if phone[0] == '0':
+            raise ValidationError("Phone number must be 10 digits")
+        if phone[0] == "0":
             raise ValidationError("Phone number cannot start with zero.")
         if len(set(phone)) == 1:
             raise ValidationError("Please enter a valid phone number.")
         return phone
 
     def clean_address_line_1(self):
-        address = self.cleaned_data.get('address_line_1', '').strip()
+        address = self.cleaned_data.get("address_line_1", "").strip()
         if not address:
             raise ValidationError("Address line is required.")
         if any(char.isdigit() for char in address):
@@ -235,7 +254,7 @@ class AddressForm(forms.ModelForm):
         return address
 
     def clean_city(self):
-        city = self.cleaned_data.get('city', '').strip()
+        city = self.cleaned_data.get("city", "").strip()
         if not city:
             raise ValidationError("City is required.")
         if any(char.isdigit() for char in city):
@@ -243,7 +262,7 @@ class AddressForm(forms.ModelForm):
         return city
 
     def clean_state(self):
-        state = self.cleaned_data.get('state', '').strip()
+        state = self.cleaned_data.get("state", "").strip()
         if not state:
             raise ValidationError("State is required.")
         if any(char.isdigit() for char in state):
@@ -251,19 +270,19 @@ class AddressForm(forms.ModelForm):
         return state
 
     def clean_postal_code(self):
-        postal_code = self.cleaned_data.get('postal_code', '').strip()
+        postal_code = self.cleaned_data.get("postal_code", "").strip()
         if not postal_code:
             raise ValidationError("Postal code is required.")
         if not postal_code.isdigit():
             raise ValidationError("Postal code must contain only digits.")
         if len(postal_code) != 6:
-            raise ValidationError('Postal code must be exactly 6 digits')
-        if postal_code == '000000':
+            raise ValidationError("Postal code must be exactly 6 digits")
+        if postal_code == "000000":
             raise ValidationError("Postal code cannot be all zeros.")
         return postal_code
 
     def clean_country(self):
-        country = self.cleaned_data.get('country', '').strip()
+        country = self.cleaned_data.get("country", "").strip()
         if not country:
             raise ValidationError("Country is required.")
         if any(char.isdigit() for char in country):

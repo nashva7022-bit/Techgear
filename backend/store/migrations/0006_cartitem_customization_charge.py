@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('store', '0005_alter_wishlistitem_variant'),
+        ("store", "0005_alter_wishlistitem_variant"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='cartitem',
-            name='customization_charge',
+            model_name="cartitem",
+            name="customization_charge",
             field=models.DecimalField(decimal_places=2, default=0, max_digits=6),
         ),
     ]

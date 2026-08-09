@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('products', '0010_productvariant_discount_percentage'),
+        ("products", "0010_productvariant_discount_percentage"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='devicemodel',
-            name='device_type',
-            field=models.CharField(choices=[('phone', 'Phone'), ('laptop', 'Laptop')], default='phone', max_length=10),
+            model_name="devicemodel",
+            name="device_type",
+            field=models.CharField(
+                choices=[("phone", "Phone"), ("laptop", "Laptop")],
+                default="phone",
+                max_length=10,
+            ),
         ),
     ]

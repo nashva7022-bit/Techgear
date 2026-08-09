@@ -7,13 +7,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('products', '0009_product_is_featured_product_is_trending'),
+        ("products", "0009_product_is_featured_product_is_trending"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='productvariant',
-            name='discount_percentage',
-            field=models.PositiveIntegerField(default=0, validators=[django.core.validators.MaxValueValidator(90)]),
+            model_name="productvariant",
+            name="discount_percentage",
+            field=models.PositiveIntegerField(
+                default=0, validators=[django.core.validators.MaxValueValidator(90)]
+            ),
         ),
     ]

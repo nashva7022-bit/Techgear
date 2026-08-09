@@ -7,27 +7,29 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('products', '0005_alter_productvariant_sku'),
+        ("products", "0005_alter_productvariant_sku"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='product',
-            name='is_customizable',
+            model_name="product",
+            name="is_customizable",
         ),
         migrations.AddField(
-            model_name='category',
-            name='image',
-            field=cloudinary.models.CloudinaryField(blank=True, max_length=255, null=True, verbose_name='image'),
+            model_name="category",
+            name="image",
+            field=cloudinary.models.CloudinaryField(
+                blank=True, max_length=255, null=True, verbose_name="image"
+            ),
         ),
         migrations.AddField(
-            model_name='category',
-            name='is_customizable',
+            model_name="category",
+            name="is_customizable",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='product',
-            name='deactivated_by_category',
+            model_name="product",
+            name="deactivated_by_category",
             field=models.BooleanField(default=False),
         ),
     ]
