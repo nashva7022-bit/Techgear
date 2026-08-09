@@ -1,13 +1,8 @@
 from decimal import Decimal
-
 from django.contrib.auth import get_user_model
 from django.db import models
 
 User = get_user_model()
-
-
-def user_list(request):
-    users = User.objects.all()
 
 
 class Order(models.Model):
