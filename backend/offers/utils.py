@@ -1,8 +1,5 @@
 from decimal import ROUND_DOWN, Decimal
-
 from django.utils import timezone
-
-from .models import CategoryOffer, ProductOffer
 
 
 def get_effective_price(variant):

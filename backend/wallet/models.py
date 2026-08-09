@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.db import models
-from django.db import transaction as db_transaction
 from django.utils import timezone
 
 

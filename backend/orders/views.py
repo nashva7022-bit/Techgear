@@ -1,8 +1,6 @@
 from __future__ import annotations
-
 import logging  # instead of print
 from decimal import Decimal
-
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -11,18 +9,15 @@ from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
-from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from weasyprint import HTML
-
 from offers.utils import get_effective_price
 from store.models import Cart, Review
 from users.forms import AddressForm
 from users.models import Address
-
-from .models import Order, OrderItem, OrderStatusLog
+from .models import Order, OrderItem
 from .services import (cancel_order, cancel_order_item, place_cod_order,
                        place_razorpay_order, return_order_item,
                        verify_razorpay_payment)
@@ -171,8 +166,6 @@ def checkout(request):
 
     if request.method == "POST":
         action = request.POST.get("action", "")  # treat it as an empty string
-        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
-
         # ADD ADDRESS
         if action == "add_address":
             form = AddressForm(request.POST)
