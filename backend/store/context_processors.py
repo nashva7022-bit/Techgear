@@ -1,6 +1,5 @@
 from products.models import Category
-
-from .models import Cart, Wishlist
+from orders.models import OrderItem
 
 
 def cart_wishlist(request):
@@ -24,9 +23,6 @@ def cart_wishlist(request):
         "wishlist_count": wishlist_count,
         "categories": categories,
     }
-
-
-from orders.models import OrderItem
 
 
 def admin_stats(request):
