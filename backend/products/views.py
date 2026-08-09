@@ -7,9 +7,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
-
-from .forms import (CategoryForm, ProductForm, ProductSpecificationForm,
-                    ProductVariantForm)
+from .forms import (CategoryForm, ProductForm)
 from .models import (CASE_TYPE_CHOICES, Category, DeviceModel, Product,
                      ProductSpecification, ProductVariant, VariantImage)
 

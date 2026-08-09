@@ -2,7 +2,8 @@ from django import forms
 from django.contrib import admin
 
 from .models import (Category, CategorySpecTemplate, DeviceModel, Product,
-                     ProductSpecification, ProductVariant, VariantImage)
+                     ProductVariant, VariantImage)
+from store.models import Review
 
 
 class CategoryAdminForm(forms.ModelForm):
@@ -134,9 +135,6 @@ class ProductVariantAdmin(admin.ModelAdmin):
     list_filter = ["color", "case_type", "is_active"]
     search_fields = ["product__name", "sku"]
     inlines = [VariantImageInline]
-
-
-from store.models import Review
 
 
 @admin.register(Review)

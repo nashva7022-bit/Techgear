@@ -1,10 +1,8 @@
 import random
 import re
 import string
-
 from cloudinary.models import CloudinaryField
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.text import slugify
 
