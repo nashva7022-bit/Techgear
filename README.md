@@ -147,5 +147,3 @@ Generates sales reports with date-based filtering and supports exporting reports
 # License
 
 This project was built for learning and educational purposes.
-
-This version is more polished, consistent, and GitHub-friendly while still accurately describing your project. It also uses clearer sectioning and wording that will make a stronger impression on recruiters and reviewers.
