@@ -122,6 +122,31 @@ Provides tools for managing the store, including:
 Generates sales reports with date-based filtering and supports exporting reports in PDF and Excel formats.
 
 ---
+# Environment Configuration
+
+TechGear uses environment variables to manage sensitive configuration and third-party service credentials.
+
+Create a `.env` file in the project root and add the required variables:
+
+```env
+SECRET_KEY=your-secret-key
+DEBUG=False
+
+DB_NAME=your-database-name
+DB_USER=your-database-user
+DB_PASSWORD=your-database-password
+DB_HOST=localhost
+DB_PORT=5432
+
+RAZORPAY_KEY_ID=your-razorpay-key-id
+RAZORPAY_KEY_SECRET=your-razorpay-secret-key
+
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-cloudinary-api-key
+CLOUDINARY_API_SECRET=your-cloudinary-api-secret
+
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
 
 # Key Highlights
 
