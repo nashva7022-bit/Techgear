@@ -354,13 +354,12 @@ const PHONE_CASE_TYPES = [
 ];
 
 const LAPTOP_CASE_TYPES = [
-  ['slim',   'Full Cover'],
-  ['top',    'Top Cover Only'],
-  ['bottom', 'Bottom Cover Only'],
-  ['palm',   'Palm Rest Cover'],
-  ['full',   'Full Body Wrap'],
+  ['full_cover',     'Full Cover'],
+  ['top_cover',      'Top Cover Only'],
+  ['bottom_cover',   'Bottom Cover Only'],
+  ['palm_rest',      'Palm Rest Cover'],
+  ['full_body_wrap', 'Full Body Wrap'],
 ];
-
 function getCaseTypeOptions(selected) {
   const types = catFlags.is_laptop ? LAPTOP_CASE_TYPES : PHONE_CASE_TYPES;
   let html = '<option value="">— Select case type —</option>';

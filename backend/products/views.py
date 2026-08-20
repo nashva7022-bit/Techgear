@@ -308,11 +308,24 @@ def _save_variants(product, post_data, files):
     prices = post_data.getlist("variant_price")
     stocks = post_data.getlist("variant_stock")
 
+    seen_combos = set()
+
     for i, dm_id in enumerate(device_model_ids):
         device_model = _resolve_device_model(dm_id)
         if requires_dm and not device_model:
             errors.append(f"Variant {i + 1}: A valid device model is required.")
             continue
+
+        case_type = case_types[i].strip() if i < len(case_types) else ""
+        color = colors[i] if i < len(colors) else "other"
+
+        combo = (device_model.pk if device_model else None, case_type, color)
+        if combo in seen_combos:
+            errors.append(
+                f"Variant {i + 1}: Duplicate variant (same device model, case type, and color already used in this form)."
+            )
+            continue
+        seen_combos.add(combo)
 
         images = files.getlist(f"variant_images_{i}")
         if len(images) < 3:
@@ -343,8 +356,8 @@ def _save_variants(product, post_data, files):
         variant = ProductVariant(
             product=product,
             device_model=device_model,
-            case_type=case_types[i].strip() if i < len(case_types) else "",
-            color=colors[i] if i < len(colors) else "other",
+            case_type=case_type,
+            color=color,
             color_code=color_codes[i].strip() if i < len(color_codes) else "#000000",
             sku=sku or None,
             price=price,
@@ -366,6 +379,10 @@ def _save_variants(product, post_data, files):
 def _handle_existing_variants(request, post_data, files, existing_variants):
     has_errors = False
 
+    seen_combos = {}
+    for v in existing_variants:
+        seen_combos[v.pk] = (v.device_model_id, v.case_type, v.color)
+
     for variant in existing_variants:
         prefix = f"existing_variant_{variant.pk}"
 
@@ -378,6 +395,21 @@ def _handle_existing_variants(request, post_data, files, existing_variants):
 
         dm_id = post_data.get(f"{prefix}_device_model")
         device_model = _resolve_device_model(dm_id) if dm_id else variant.device_model
+
+        new_combo = (device_model.pk if device_model else None, case_type, color)
+
+        other_combos = {
+            pk: combo for pk, combo in seen_combos.items() if pk != variant.pk
+        }
+        if new_combo in other_combos.values():
+            messages.error(
+                request,
+                f'Variant "{variant}": A variant with this device model, case type, and color already exists for this product.',
+            )
+            has_errors = True
+            continue
+
+        seen_combos[variant.pk] = new_combo
 
         if price_val:
             try:
@@ -463,7 +495,6 @@ def _handle_existing_variants(request, post_data, files, existing_variants):
 
     return not has_errors
 
-
 def _save_new_variants(product, post_data, files):
     errors = []
     requires_dm = product.category.requires_device_model if product.category else True
@@ -479,11 +510,26 @@ def _save_new_variants(product, post_data, files):
     prices = post_data.getlist("new_variant_price")
     stocks = post_data.getlist("new_variant_stock")
 
+    seen_combos = set(
+        product.variants.values_list("device_model_id", "case_type", "color")
+    )
+
     for i, dm_id in enumerate(device_model_ids):
         device_model = _resolve_device_model(dm_id)
         if requires_dm and not device_model:
             errors.append(f"New variant {i + 1}: A valid device model is required.")
             continue
+
+        case_type = case_types[i].strip() if i < len(case_types) else ""
+        color = colors[i] if i < len(colors) else "other"
+
+        combo = (device_model.pk if device_model else None, case_type, color)
+        if combo in seen_combos:
+            errors.append(
+                f"New variant {i + 1}: A variant with this device model, case type, and color already exists for this product."
+            )
+            continue
+        seen_combos.add(combo)
 
         images = files.getlist(f"new_variant_images_{i}")
         if len(images) < 3:
@@ -514,8 +560,8 @@ def _save_new_variants(product, post_data, files):
         variant = ProductVariant(
             product=product,
             device_model=device_model,
-            case_type=case_types[i].strip() if i < len(case_types) else "",
-            color=colors[i] if i < len(colors) else "other",
+            case_type=case_type,
+            color=color,
             color_code=color_codes[i].strip() if i < len(color_codes) else "#000000",
             sku=sku or None,
             price=price,

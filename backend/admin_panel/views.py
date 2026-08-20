@@ -27,6 +27,8 @@ def get_or_create_wallet(user):
 #  ADMIN LOGIN
 
 
+from django.contrib.auth import get_user_model
+
 @never_cache
 def admin_login(request):
     if request.user.is_authenticated and request.user.is_superuser:
@@ -39,8 +41,13 @@ def admin_login(request):
             email = form.cleaned_data["email"].lower().strip()
             password = form.cleaned_data["password"]
 
-            user = authenticate(request, username=email, password=password)
-            # did the pswd match
+            User = get_user_model()
+            user_obj = User.objects.filter(email__iexact=email).first()
+
+            user = None
+            if user_obj is not None:
+                user = authenticate(request, username=user_obj.username, password=password)
+
             if user is not None and user.is_superuser and user.is_staff:
                 login(request, user)
                 messages.success(request, f"Welcome back, {user.first_name}!")
@@ -52,7 +59,6 @@ def admin_login(request):
         form = AdminLoginForm()
 
     return render(request, "admin_panel/login.html", {"form": form})
-
 
 #  DASHBOARD VIEW
 
