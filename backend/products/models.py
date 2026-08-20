@@ -29,7 +29,7 @@ BRAND_CHOICES = [
 
 # CASE TYPE CHOICES
 
-CASE_TYPE_CHOICES = [
+PHONE_CASE_TYPE_CHOICES = [
     ("slim", "Slim Fit"),
     ("rugged", "Rugged Armor"),
     ("wallet", "Wallet Folio"),
@@ -41,9 +41,17 @@ CASE_TYPE_CHOICES = [
     ("thin", "Ultra Thin"),
     ("matte", "Matte Finish"),
     ("other", "Other"),
-    ("dell", "Dell"),
-    ("hp", "HP"),
 ]
+
+LAPTOP_CASE_TYPE_CHOICES = [
+    ("full_cover", "Full Cover"),
+    ("top_cover", "Top Cover Only"),
+    ("bottom_cover", "Bottom Cover Only"),
+    ("palm_rest", "Palm Rest Cover"),
+    ("full_body_wrap", "Full Body Wrap"),
+]
+
+CASE_TYPE_CHOICES = PHONE_CASE_TYPE_CHOICES + LAPTOP_CASE_TYPE_CHOICES
 
 
 # DEVICE MODEL
