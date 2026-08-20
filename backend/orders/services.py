@@ -213,20 +213,6 @@ def _recalculate_order_total(order: Order) -> None:
     )
 
 
-def _calculate_item_wallet_refund(order_item: OrderItem, order: Order) -> Decimal:
-
-    if not order.wallet_amount or order.wallet_amount <= 0:
-        return Decimal("0.00")
-    if not order.subtotal or order.subtotal <= 0:
-        return Decimal("0.00")
-
-    proportion = _d(order_item.subtotal) / _d(order.subtotal)
-    refund = (_d(order.wallet_amount) * proportion).quantize(
-        Decimal("0.01"), rounding=ROUND_DOWN
-    )
-
-    return min(refund, _d(order.wallet_amount))
-
 
 # PLACE COD ORDER
 
@@ -427,13 +413,13 @@ def cancel_order_item(
         wallet_refund_note = ""
         if order.user and order_subtotal > 0:
             proportion = item_subtotal / order_subtotal
-            total_item_refund = Decimal("0.00")
+            wallet_share = Decimal("0.00")
+            razorpay_share = Decimal("0.00")
 
             if order.wallet_amount and order.wallet_amount > 0:
                 wallet_share = (_d(order.wallet_amount) * proportion).quantize(
                     Decimal("0.01"), rounding=ROUND_DOWN
                 )
-                total_item_refund += wallet_share
 
             if (
                 order.payment_method in ("razorpay", "wallet_razorpay")
@@ -442,7 +428,8 @@ def cancel_order_item(
                 razorpay_share = (_d(order.paid_amount) * proportion).quantize(
                     Decimal("0.01"), rounding=ROUND_DOWN
                 )
-                total_item_refund += razorpay_share
+
+            total_item_refund = wallet_share + razorpay_share
 
             if total_item_refund > 0:
                 from wallet.models import Wallet
@@ -458,9 +445,14 @@ def cancel_order_item(
                     order=order,
                 )
                 order.wallet_amount = max(
-                    Decimal("0.00"), _d(order.wallet_amount) - total_item_refund
+                    Decimal("0.00"), _d(order.wallet_amount) - wallet_share
                 )
-                order.save(update_fields=["wallet_amount", "updated_at"])
+                order.paid_amount = max(
+                    Decimal("0.00"), _d(order.paid_amount) - razorpay_share
+                )
+                order.save(
+                    update_fields=["wallet_amount", "paid_amount", "updated_at"]
+                )
                 wallet_refund_note = f" ₹{total_item_refund} refunded to wallet."
 
         # Auto-close order if no active items remain
@@ -471,7 +463,6 @@ def cancel_order_item(
             order.save(update_fields=["status", "updated_at"])
             status_note = " Order automatically closed (no active items remain)."
 
-            # Free up coupon
             if order.coupon_code:
                 from coupons.models import CouponUsage
 
@@ -542,8 +533,6 @@ def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
         )
         order_paid = _d(order.paid_amount) if order.paid_amount else Decimal("0.00")
 
-        item_wallet_refund = _calculate_item_wallet_refund(order_item, order)
-
         order_item.item_status = "returned"
         order_item.save(update_fields=["item_status"])
 
@@ -555,6 +544,8 @@ def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
         _recalculate_order_total(order)
 
         refund_amount = Decimal("0.00")
+        wallet_share = Decimal("0.00")
+        paid_share = Decimal("0.00")
 
         if order.user and order_subtotal > 0:
             from wallet.models import Wallet
@@ -583,15 +574,11 @@ def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
                     ),
                     order=order,
                 )
-                order.wallet_amount = max(
-                    Decimal("0.00"),
-                    order_wallet - item_wallet_refund,
+                order.wallet_amount = max(Decimal("0.00"), order_wallet - wallet_share)
+                order.paid_amount = max(Decimal("0.00"), order_paid - paid_share)
+                order.save(
+                    update_fields=["wallet_amount", "paid_amount", "updated_at"]
                 )
-                order.paid_amount = max(
-                    Decimal("0.00"),
-                    order_paid - refund_amount,
-                )
-                order.save(update_fields=["wallet_amount", "paid_amount", "updated_at"])
 
         OrderStatusLog.objects.create(
             order=order,
@@ -605,8 +592,6 @@ def approve_return(order_item: OrderItem, approved_by) -> OrderItem:
         )
 
     return order_item
-
-
 # REJECT RETURN
 
 
