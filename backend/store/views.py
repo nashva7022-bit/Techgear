@@ -42,7 +42,6 @@ def _cart_count(user):
 
 # PRODUCT LIST
 
-
 @login_required
 @never_cache
 def product_list(request):
@@ -53,7 +52,7 @@ def product_list(request):
     min_price = request.GET.get("min_price", "").strip()
     max_price = request.GET.get("max_price", "").strip()
 
-    products = (
+    products_qs = (
         Product.objects.filter(
             is_active=True,
             category__is_active=True,
@@ -62,12 +61,14 @@ def product_list(request):
         .prefetch_related(
             "variants__images",
             "variants__device_model",
+            "offers",
+            "category__offers",
         )
         .distinct()
     )
 
     if search:
-        products = products.filter(
+        products_qs = products_qs.filter(
             Q(name__icontains=search)
             | Q(description__icontains=search)
             | Q(category__name__icontains=search)
@@ -75,48 +76,57 @@ def product_list(request):
         )
 
     selected_category = None
-
     if category_slug:
         selected_category = Category.objects.filter(
             slug=category_slug, is_active=True
         ).first()
         if selected_category:
-            products = products.filter(category=selected_category)
+            products_qs = products_qs.filter(category=selected_category)
 
     if brand:
-        products = products.filter(brand=brand)
+        products_qs = products_qs.filter(brand=brand)
 
-    if min_price or max_price:
-        try:
-            qs = products.filter(variants__is_active=True)
-            if min_price:
-                qs = qs.filter(variants__price__gte=float(min_price))
-            if max_price:
-                qs = qs.filter(variants__price__lte=float(max_price))
-            products = qs.distinct()
-        except ValueError:
-            pass
+    # Parse price bounds
+    min_price_val = None
+    max_price_val = None
+    try:
+        if min_price:
+            min_price_val = float(min_price)
+        if max_price:
+            max_price_val = float(max_price)
+    except ValueError:
+        pass
+
+    scored_products = []
+    for product in products_qs:
+        variant = product.active_variant
+        if not variant:
+            continue
+
+        eff_price, _ = get_effective_price(variant)
+
+        if min_price_val is not None and eff_price < min_price_val:
+            continue
+        if max_price_val is not None and eff_price > max_price_val:
+            continue
+
+        scored_products.append((product, eff_price))
 
     if sort_by == "price_asc":
-        products = products.annotate(min_variant_price=Min("variants__price")).order_by(
-            "min_variant_price"
-        )
-
+        scored_products.sort(key=lambda pair: (pair[1], pair[0].id))
     elif sort_by == "price_desc":
-        products = products.annotate(min_variant_price=Min("variants__price")).order_by(
-            "-min_variant_price"
-        )
-
+        scored_products.sort(key=lambda pair: (-pair[1], pair[0].id))
     elif sort_by == "name_asc":
-        products = products.order_by("name")
-
+        scored_products.sort(key=lambda pair: (pair[0].name.lower(), pair[0].id))
     elif sort_by == "name_desc":
-        products = products.order_by("-name")
-
+        scored_products.sort(
+            key=lambda pair: (pair[0].name.lower(), pair[0].id), reverse=True
+        )
     else:
-        products = products.order_by("-created_at")
+        scored_products.sort(key=lambda pair: pair[0].created_at, reverse=True)
 
-    # to highlight
+    products = [pair[0] for pair in scored_products]
+
     wishlist = get_or_create_wishlist(request.user)
     wishlist_ids = set(wishlist.items.values_list("variant__product_id", flat=True))
 
@@ -139,8 +149,7 @@ def product_list(request):
         "has_filters": any([search, category_slug, brand, min_price, max_price]),
     }
     return render(request, "product_list.html", context)
-
-
+    
 # PRODUCT DETAIL
 
 
@@ -359,10 +368,8 @@ def add_to_cart(request):
         existing_item.quantity = new_qty
         existing_item.save()
 
-        wishlist = get_or_create_wishlist(request.user)
-        wishlist.items.filter(variant__product=variant.product).delete()
-
         if is_ajax:
+            wishlist = get_or_create_wishlist(request.user)
             return JsonResponse(
                 {
                     "ok": True,
@@ -402,10 +409,8 @@ def add_to_cart(request):
                 cart_item.custom_image = custom_image
         cart_item.save()
 
-        wishlist = get_or_create_wishlist(request.user)
-        wishlist.items.filter(variant__product=variant.product).delete()
-
         if is_ajax:
+            wishlist = get_or_create_wishlist(request.user)
             return JsonResponse(
                 {
                     "ok": True,
